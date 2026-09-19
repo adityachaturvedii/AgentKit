@@ -59,3 +59,5 @@ The controller may retry once only when all of these are true:
 The retry removes the unjustified override and returns to the provider default. It does not guess a larger universal number, repeat an identical provider-default failure or switch providers. Every CLI launch and its reported usage is recorded. One CLI process may make several provider requests or turns; those internal counts are `unknown` unless the CLI reports them reliably.
 
 Call counts and process deadlines are enforced. Provider token categories and cost are observations. A Claude `total_cost_usd` field is retained as an estimate, never billed cost. Subscription billing and paid-overflow state remain unknown, so neither token nor dollar spend has a hard controller guarantee.
+
+Each persisted productive result includes the sanitized argument array, environment key names and set/unset markers for the three historical Claude limit variables. Environment values, prompts, credentials and authentication transcripts are excluded. This makes direct-versus-adapter restrictions reviewable without turning evidence into an environment dump.

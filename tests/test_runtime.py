@@ -416,6 +416,11 @@ class RuntimeTests(unittest.TestCase):
                 result = execute(request, self.root / (engine + '-result'), policy=LivePolicy(True, 'fixture only'))
             self.assertTrue(acceptance(result, [17, 25])['passed'])
             self.assertTrue((self.root / (engine + '-result') / 'stdout.redacted.jsonl').is_file())
+            launch = result.provider_details['launch_configuration']
+            self.assertFalse(launch['environment_values_recorded'])
+            self.assertEqual(launch['provider_limit_environment']
+                             ['CLAUDE_CODE_MAX_OUTPUT_TOKENS'],
+                             'set' if engine == 'claude' else 'unset')
 
 
 if __name__ == '__main__':

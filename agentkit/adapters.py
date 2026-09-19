@@ -344,6 +344,18 @@ def _apply_fixture_smoke_environment(request, env):
                        request.max_generated_output_tokens or 512))
 
 
+def _launch_metadata(argv, env):
+    provider_keys = ('CLAUDE_CODE_MAX_OUTPUT_TOKENS', 'CLAUDE_CODE_MAX_TURNS',
+                     'CLAUDE_CODE_MAX_RETRIES')
+    return {
+        'argv': redact(list(argv)),
+        'environment_keys': sorted(env),
+        'provider_limit_environment': {
+            name: 'set' if name in env else 'unset' for name in provider_keys},
+        'environment_values_recorded': False,
+    }
+
+
 def persist_result(directory, request, result, outcome=None):
     path = Path(directory)
     if path.exists() or path.is_symlink():
@@ -433,6 +445,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
                                        capability_profile=capability_profile(
                                            request.capability_profile, request.mode).profile_id,
                                        resource_resolution=request.resource_resolution,
+                                       launch_configuration=_launch_metadata(argv, env),
                                        execution_counts={'cli_launches': 1,
                                                          'provider_requests': None,
                                                          'turns': None})
@@ -541,6 +554,7 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
                                        denied_read_paths=[str(p) for p in denied],
                                        capability_profile=selected_profile.profile_id,
                                        resource_resolution=request.resource_resolution,
+                                       launch_configuration=_launch_metadata(argv, env),
                                        execution_counts={'cli_launches': 1,
                                                          'provider_requests': None,
                                                          'turns': None})
