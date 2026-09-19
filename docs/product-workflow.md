@@ -4,7 +4,7 @@ This Phase 4 increment adds one reusable product profile for a fresh, controller
 
 Product submission makes one accounted tech-lead provider call. The planner receives the original brief, observable controller-owned criteria, a bounded inventory, resource ceilings, and a hash-verified planning context. It returns JSON only. Controller validation rejects changed requirements or acceptance, stale inventory, unknown or unsafe paths, unsupported project operations, cycles, excessive fan-out, inconsistent interface/dependency summaries, overlapping independent write scopes, and plans that cannot reserve mandatory implementation, verification, and independent review.
 
-The Claude planning request records an explicit 8,192 generated-output-token allocation. This is a provider execution control, not a token-spend cap: reported input, output, cached and cache-creation usage remain observations, and billing remains unknown. Codex has no tested equivalent output-token option and rejects this setting.
+Productive planning leaves the provider generated-output setting unset because neither installed CLI exposes a verified noninteractive control for it. The controller still enforces the task call ledger, process deadline and captured-byte allocation. Provider token categories remain observations, internal requests/turns may be unknown, and billing remains unknown. See [CLI integration resource policy](cli-resource-policy.md).
 
 The planner supplies decomposition, not source code. There are no product-specific task graphs or finished implementations in the harness. One cohesive assignment is preferred. At most two assignments are accepted, and the existing scheduler, dependency snapshots, atomic claims, isolated worktrees, brokered integration, bounded repair, authentication recovery, routing, and usage ledger remain authoritative.
 
@@ -25,6 +25,7 @@ python3 -m agentkit product submit \
   --max-provider-calls 8 \
   --max-concurrency 2 \
   --max-repairs 2 \
+  --max-retries 1 \
   --max-escalations 2 \
   --max-elapsed-seconds 1200 \
   --planning-timeout 180 \

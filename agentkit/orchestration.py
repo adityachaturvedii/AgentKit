@@ -237,9 +237,10 @@ def _selected_skills(root, fixture):
 def build_contract(task_id, request, fixture, *, risk=None, max_calls=None,
                    max_elapsed_seconds=None, max_concurrency=None,
                    max_provider_calls=None, max_planning_calls=0, max_repairs=2,
-                   max_escalations=None,
+                   max_retries=0, max_escalations=None,
                    implementation_timeout_seconds=60, review_timeout_seconds=60,
-                   verification_timeout_seconds=10, max_timeout_seconds=60, proposal=None):
+                   verification_timeout_seconds=10, max_timeout_seconds=60,
+                   max_output_bytes_per_call=1048576, proposal=None):
     fixture = get_fixture(fixture) if isinstance(fixture, str) else fixture
     _safe_scope(fixture.scope)
     assumptions = (
@@ -268,10 +269,10 @@ def build_contract(task_id, request, fixture, *, risk=None, max_calls=None,
                              else max_elapsed_seconds),
         max_concurrency=(2 if decomposed else 1) if max_concurrency is None else max_concurrency,
         max_timeout_seconds=max_timeout_seconds, verification_reserve=1, review_reserve=1,
-        max_subtasks=subtask_count, max_output_bytes_per_call=1048576,
+        max_subtasks=subtask_count, max_output_bytes_per_call=max_output_bytes_per_call,
         context_allocation='provider-managed-unknown', max_repairs=max_repairs,
         max_provider_calls=min(provider_limit, call_limit),
-        max_planning_calls=max_planning_calls, max_retries=0,
+        max_planning_calls=max_planning_calls, max_retries=max_retries,
         max_escalations=max_repairs if max_escalations is None else max_escalations,
         implementation_timeout_seconds=implementation_timeout_seconds,
         review_timeout_seconds=review_timeout_seconds,

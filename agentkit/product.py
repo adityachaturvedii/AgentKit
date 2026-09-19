@@ -15,7 +15,7 @@ import time
 
 from .adapters import execute
 from .controller import ControllerError, UsageRecord
-from .delivery import EngineOutcome
+from .delivery import EngineOutcome, LiveImplementer
 from .doctor import clean_environment, native_sandbox_capability, verification_profile
 from .orchestration import (Phase4Workflow, _manifest, build_contract, build_plan)
 from .phase4_contracts import ModelRegistry
@@ -23,6 +23,8 @@ from .phase4_fixtures import FixtureSpec, FixtureSubtask
 from .planning import bounded_inventory
 from .process import run_process
 from .runtime_contracts import ExecutionRequest
+from .resource_policy import (output_exhaustion_recovery, resolve_product_task_budget,
+                              resolve_role_resources)
 
 
 PRODUCT_SCHEMA_VERSION = 1
@@ -288,14 +290,18 @@ def _usage(result):
 
 
 class LiveProductPlanner:
-    def __init__(self, provider, model=None, effort=None, *, timeout_seconds=180,
-                 max_output_bytes=1048576, max_generated_output_tokens=8192):
+    def __init__(self, provider, model=None, effort=None, *, timeout_seconds=None,
+                 max_output_bytes=None, max_generated_output_tokens=None):
         self.provider = provider
         self.model = model
         self.effort = effort
-        self.timeout_seconds = timeout_seconds
-        self.max_output_bytes = max_output_bytes
-        self.max_generated_output_tokens = max_generated_output_tokens
+        self.resources = resolve_role_resources(
+            'planning', task_timeout_seconds=timeout_seconds,
+            task_capture_bytes=max_output_bytes,
+            provider_output_tokens=max_generated_output_tokens)
+        self.timeout_seconds = self.resources['timeout_seconds']['value']
+        self.max_output_bytes = self.resources['max_capture_bytes']['value']
+        self.max_generated_output_tokens = self.resources['generated_output_tokens']['value']
 
     def run(self, prompt, output, policy, cancel_event=None):
         with tempfile.TemporaryDirectory(prefix='agentkit-product-plan-') as tmp:
@@ -303,16 +309,33 @@ class LiveProductPlanner:
                 self.provider, 'phase4-product-planner', prompt, str(Path(tmp).resolve()),
                 timeout_seconds=self.timeout_seconds, max_output_bytes=self.max_output_bytes,
                 model=self.model, effort=self.effort, mode='model-only',
-                max_generated_output_tokens=self.max_generated_output_tokens)
+                capability_profile='structured-planning',
+                max_generated_output_tokens=self.max_generated_output_tokens,
+                resource_resolution=self.resources)
             result = execute(request, output, policy=policy, cancel_event=cancel_event)
         return EngineOutcome(
             result.status, result.elapsed_seconds, _usage(result),
             {'error_class': result.error_class, 'proposal_document': result.structured_output,
              'artifacts': result.artifacts, 'limitations': result.limitations,
+             'resource_resolution': self.resources,
              'requested_configuration': {'model': self.model, 'effort': self.effort},
              'provider_reported_configuration': {
                  'model': result.model, 'effort': result.provider_details.get('effort')},
              'authentication_failure': result.provider_details.get('authentication_failure')})
+
+    def without_output_override(self, *, remaining_calls, remaining_seconds):
+        recovered = output_exhaustion_recovery(
+            self.resources, remaining_calls=remaining_calls,
+            remaining_seconds=remaining_seconds)
+        if recovered is None:
+            return None
+        planner = LiveProductPlanner(
+            self.provider, self.model, self.effort,
+            timeout_seconds=min(self.timeout_seconds, remaining_seconds),
+            max_output_bytes=self.max_output_bytes)
+        planner.resources['generated_output_tokens'] = recovered['generated_output_tokens']
+        planner.max_generated_output_tokens = None
+        return planner
 
 
 class StaticProductPlanner:
@@ -435,11 +458,12 @@ class ProductWorkflow(Phase4Workflow):
     @classmethod
     def submit_product(cls, root, task_id, brief, acceptance, mechanics_test, *,
                        registry=None, planner=None, live=False, authorized=False,
-                       max_calls=8, max_provider_calls=8, max_concurrency=2,
-                       max_repairs=2, max_escalations=2, max_elapsed_seconds=1200,
-                       planning_timeout_seconds=180, implementation_timeout_seconds=180,
-                       review_timeout_seconds=180, verification_timeout_seconds=10,
-                       max_output_bytes=1048576):
+                       max_calls=None, max_provider_calls=None, max_concurrency=None,
+                       max_repairs=None, max_retries=None, max_escalations=None,
+                       max_elapsed_seconds=None,
+                       planning_timeout_seconds=None, implementation_timeout_seconds=None,
+                       review_timeout_seconds=None, verification_timeout_seconds=None,
+                       max_output_bytes=None):
         root = Path(root).resolve()
         if root.exists() or root.is_symlink():
             raise ControllerError('product workflow root must be fresh')
@@ -452,22 +476,40 @@ class ProductWorkflow(Phase4Workflow):
                     for item in acceptance) or
                 len({item['id'] for item in acceptance}) != len(acceptance)):
             raise ValueError('product acceptance must contain unique bounded id/expected objects')
-        integer_limits = (max_calls, max_provider_calls, max_concurrency, max_repairs,
-                          max_escalations)
-        time_limits = (max_elapsed_seconds, planning_timeout_seconds,
-                       implementation_timeout_seconds, review_timeout_seconds,
-                       verification_timeout_seconds)
-        if (any(isinstance(value, bool) or not isinstance(value, int) for value in integer_limits) or
-                any(isinstance(value, bool) or not isinstance(value, (int, float)) or
-                    not value > 0 or not value < float('inf') for value in time_limits) or
-                not 4 <= max_calls <= 8 or not 3 <= max_provider_calls <= min(8, max_calls) or
-                not 1 <= max_concurrency <= 2 or not 0 <= max_repairs <= 2 or
-                not 0 <= max_escalations <= 2 or max_elapsed_seconds > 1200 or
-                verification_timeout_seconds > 10 or
-                any(value > 180 for value in (planning_timeout_seconds,
-                                               implementation_timeout_seconds,
-                                               review_timeout_seconds))):
-            raise ValueError('product trial exceeds the authorized resource ceiling')
+        task_budget = resolve_product_task_budget(
+            max_calls=max_calls, max_provider_calls=max_provider_calls,
+            max_concurrency=max_concurrency, max_repairs=max_repairs,
+            max_retries=max_retries, max_escalations=max_escalations,
+            max_elapsed_seconds=max_elapsed_seconds)
+        budget_values = {name: item['value'] for name, item in task_budget.items()}
+        max_calls = budget_values['max_calls']
+        max_provider_calls = budget_values['max_provider_calls']
+        max_concurrency = budget_values['max_concurrency']
+        max_repairs = budget_values['max_repairs']
+        max_retries = budget_values['max_retries']
+        max_escalations = budget_values['max_escalations']
+        max_elapsed_seconds = budget_values['max_elapsed_seconds']
+        stage_resources = {
+            'planning': resolve_role_resources(
+                'planning', task_timeout_seconds=planning_timeout_seconds,
+                task_capture_bytes=max_output_bytes),
+            'implementation': resolve_role_resources(
+                'web-implementation', task_timeout_seconds=implementation_timeout_seconds,
+                task_capture_bytes=max_output_bytes),
+            'review': resolve_role_resources(
+                'review', task_timeout_seconds=review_timeout_seconds,
+                task_capture_bytes=max_output_bytes),
+            'verification': resolve_role_resources(
+                'verification', task_timeout_seconds=verification_timeout_seconds,
+                task_capture_bytes=max_output_bytes),
+        }
+        planning_timeout_seconds = stage_resources['planning']['timeout_seconds']['value']
+        implementation_timeout_seconds = stage_resources['implementation']['timeout_seconds']['value']
+        review_timeout_seconds = stage_resources['review']['timeout_seconds']['value']
+        verification_timeout_seconds = stage_resources['verification']['timeout_seconds']['value']
+        max_output_bytes = stage_resources['planning']['max_capture_bytes']['value']
+        max_timeout_seconds = max(planning_timeout_seconds, implementation_timeout_seconds,
+                                  review_timeout_seconds, verification_timeout_seconds)
         root.mkdir(parents=True, mode=0o700)
         for name in ('evidence', 'approval'):
             (root / name).mkdir(mode=0o700)
@@ -485,16 +527,21 @@ class ProductWorkflow(Phase4Workflow):
             task_id, brief, implementer=(implementation_route.provider, implementation_route.model),
             reviewer=(review_route.provider, review_route.model), max_repairs=max_repairs,
             max_calls=max_calls, max_elapsed_seconds=max_elapsed_seconds,
-            max_concurrency=max_concurrency, max_timeout_seconds=180,
+            max_concurrency=max_concurrency, max_timeout_seconds=max_timeout_seconds,
             verification_reserve=1, review_reserve=1,
-            max_provider_calls=max_provider_calls, max_planning_calls=1)
+            max_provider_calls=max_provider_calls,
+            max_planning_calls=1 + max_retries)
         inventory = static_web_inventory()
         context = planning_context(Path(__file__).resolve().parents[1])
         limits = {
             'provider_invocations_total': max_provider_calls,
-            'planning_calls': 1, 'implementation_assignments_max': 2,
+            'planning_calls_max': 1 + max_retries, 'implementation_assignments_max': 2,
             'concurrent_workers_max': max_concurrency, 'repair_calls_max': max_repairs,
-            'per_provider_timeout_seconds': 180, 'overall_seconds': max_elapsed_seconds,
+            'stage_timeout_seconds': {
+                'planning': planning_timeout_seconds,
+                'implementation': implementation_timeout_seconds,
+                'review': review_timeout_seconds},
+            'overall_seconds': max_elapsed_seconds,
             'dependency_install': 'unsupported; use the dependency-free static stack',
             'publication': 'unsupported',
         }
@@ -508,6 +555,8 @@ class ProductWorkflow(Phase4Workflow):
         self._write_json('product-request.json', {
             'schema_version': 1, 'brief': brief, 'acceptance': acceptance,
             'inventory': inventory, 'limits': limits,
+            'resource_policy': {'task_budget': task_budget,
+                                'stage_allocations': stage_resources},
             'planning_route': planner_route.to_dict(),
             'planning_context': [{k: item[k] for k in ('path', 'sha256')}
                                  for item in context['items']],
@@ -519,9 +568,30 @@ class ProductWorkflow(Phase4Workflow):
             lambda: planner.run(prompt, self.evidence_root / 'planning-0', self.policy,
                                 cancel_event=self._cancellation(task_id)),
             effort=planner_route.effort)
+        attempts = [{'execution_id': execution_id, 'status': outcome.status,
+                     'details': outcome.details, 'usage': asdict(outcome.usage)}]
+        if (outcome.status == 'failed' and
+                outcome.details.get('error_class') == 'output_limit' and
+                max_retries > 0 and hasattr(planner, 'without_output_override')):
+            recovered = planner.without_output_override(
+                remaining_calls=max_retries,
+                remaining_seconds=max_elapsed_seconds - outcome.elapsed_seconds)
+            if recovered is not None:
+                planner = recovered
+                outcome, execution_id = self._run_engine(
+                    task_id, 'planning', planner_route.provider, planner_route.model,
+                    planner.timeout_seconds,
+                    lambda: planner.run(
+                        prompt, self.evidence_root / 'planning-1', self.policy,
+                        cancel_event=self._cancellation(task_id)),
+                    effort=planner_route.effort)
+                attempts.append({'execution_id': execution_id, 'status': outcome.status,
+                                 'details': outcome.details,
+                                 'usage': asdict(outcome.usage)})
         self._write_json('planning-result.json', {
             'execution_id': execution_id, 'status': outcome.status,
-            'details': outcome.details, 'usage': asdict(outcome.usage)})
+            'details': outcome.details, 'usage': asdict(outcome.usage),
+            'attempts': attempts})
         if outcome.status != 'succeeded':
             self._transition(task_id, 'received', 'blocked', 'planning-blocked',
                              'inspect bounded product planning failure')
@@ -556,12 +626,15 @@ class ProductWorkflow(Phase4Workflow):
             contract = build_contract(
                 task_id, brief, fixture, risk='material', max_calls=max_calls,
                 max_elapsed_seconds=max_elapsed_seconds, max_concurrency=max_concurrency,
-                max_provider_calls=max_provider_calls, max_planning_calls=1,
-                max_repairs=max_repairs, max_escalations=max_escalations,
+                max_provider_calls=max_provider_calls,
+                max_planning_calls=1 + max_retries,
+                max_repairs=max_repairs, max_retries=max_retries,
+                max_escalations=max_escalations,
                 implementation_timeout_seconds=implementation_timeout_seconds,
                 review_timeout_seconds=review_timeout_seconds,
                 verification_timeout_seconds=verification_timeout_seconds,
-                max_timeout_seconds=180, proposal=proposal)
+                max_timeout_seconds=max_timeout_seconds,
+                max_output_bytes_per_call=max_output_bytes, proposal=proposal)
             plan = build_plan(
                 contract, fixture, registry, Path(__file__).resolve().parents[1], proposal,
                 planner_accounted=True)
@@ -638,6 +711,18 @@ class ProductWorkflow(Phase4Workflow):
 
     def _requires_browser_verification(self, task_id):
         return (self.root / 'product-spec.json').is_file()
+
+    def _adapter(self, provider, fixture, model=None, effort=None):
+        if self.specialist_factory:
+            return self.specialist_factory(provider, fixture)
+        contract = json.loads((self.root / 'contract.json').read_text())
+        return (LiveImplementer(
+            provider, model, effort,
+            timeout_seconds=contract['implementation_timeout_seconds'],
+            max_output_bytes=contract['max_output_bytes_per_call'],
+            capability_profile='web-product-implementation',
+            resource_role='web-implementation') if self.live else
+                super()._adapter(provider, fixture, model, effort))
 
     def _verifier(self, task_id, fixture):
         if self.verifier_factory:

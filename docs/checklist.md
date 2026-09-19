@@ -182,9 +182,25 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 - [x] Commit reusable executable `70070e293c890a5c47bbb448b99a9b7cf34f8237` before inference and declare the eight-call, two-worker, two-repair, 180-second-per-provider and 1,200-second overall ledger.
 - [x] Attempt one bounded Breakout trial. The sole Claude planning invocation ended after 29.313421 seconds because its response exceeded the adapter's 512 generated-output-token allocation; stop without retry or provider substitution.
 - [x] Retain sanitized planning request/result/events, controller state, inputs, versions, usage and failure diagnosis in a hash-manifested archive; no browser/game artifacts exist because planning was not accepted.
-- [x] Correct the planner output allocation and terminal classification offline: persist an explicit Claude-only 8,192-token planner allocation, retain 512 for ordinary smoke, reject unsupported Codex values and classify output-limit text before allowed rate metadata.
+- [x] Apply the original interim planner correction at 8,192 and classify output-limit text before allowed rate metadata; this allocation is superseded by the later CLI resource-policy audit below.
 - [ ] The corrected product planner remains live-unvalidated. Do not use the failed `70070e2` attempt as validation or repeat inference without new authorization.
 - [ ] Dependency installation, general repositories, hostile inputs, arbitrary builds, browser credential/egress isolation and crash-safe preview containment remain unsupported.
+
+## Phase 4 — CLI integration and resource-policy correction
+
+- [x] Start from merged `main` revision `c894a7e2977d09362fcf425fa9cc46e2144046c0` on dedicated branch `correction/cli-resource-policy` and isolated worktree.
+- [x] Audit installed Codex CLI 0.154.0 and Claude Code 2.1.220 help plus official CLI/configuration documentation.
+- [x] Remove the productive Claude 8,192 output setting and confine the historical 512/one-turn/zero-retry environment to `smoke-model-only`.
+- [x] Remove the universal 300-second request/transport ceiling; keep finite positive controller deadlines bound by each task's authorized overall allocation.
+- [x] Resolve task overrides, role policies and provider defaults with persisted source, enforcement class and rationale.
+- [x] Keep captured bytes distinct from generated tokens and provider token/cost observations.
+- [x] Record one CLI launch separately from unknown internal provider requests and turns.
+- [x] Add bounded output-exhaustion recovery that changes/removes an imposed control, consumes the same call/time ledger and refuses identical/provider-default retries.
+- [x] Add explicit structured-planning, code-implementation, web-product-implementation and independent-review capability profiles.
+- [x] Allow Claude file creation while granting only role-specific Bash patterns; retain external Seatbelt, broker, credential and publication boundaries.
+- [x] Add focused offline tests for policy precedence, request construction, capability selection, parsing and recovery; pass 177 repository tests with two expected managed skips, then pass both checks separately at host level and pass `agentkit check`.
+- [ ] Complete the authorized six-launch direct-versus-adapter integration checkpoint and archive sanitized evidence.
+- [ ] The Breakout product trial remains the next acceptance milestone; spend no game inference during this checkpoint.
 
 ## Later phases (planned, not implemented)
 

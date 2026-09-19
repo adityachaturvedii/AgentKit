@@ -13,6 +13,7 @@ from agentkit.product import (PRODUCT_PROJECT_POLICY, LiveProductPlanner, Produc
                               ProductWorkflow, StaticProductPlanner,
                               static_web_inventory, validate_product_document)
 from agentkit.runtime_contracts import (CancellationStatus, ExecutionResult, UsageObservation)
+from agentkit.resource_policy import resolve_role_resources
 
 
 BRIEF = 'Build a small accessible browser counter with keyboard and touch controls.'
@@ -108,6 +109,36 @@ class ProductSpecialist:
         for relative in assignment['allowed_paths']:
             Path(workspace, relative).write_text(FILES[relative])
         return EngineOutcome('succeeded', .01, UsageRecord(source='fake'), {'simulated': True})
+
+
+class RecoveringPlanner:
+    provider = 'claude'
+    model = None
+    effort = None
+    timeout_seconds = 5
+
+    def __init__(self, document):
+        self.document = document
+        self.calls = 0
+        self.resources = resolve_role_resources('planning', task_timeout_seconds=5,
+                                                provider_output_tokens=512)
+
+    def run(self, prompt, output, policy, cancel_event=None):
+        self.calls += 1
+        Path(output).mkdir(mode=0o700)
+        if self.calls == 1:
+            return EngineOutcome('failed', .01, UsageRecord(output_tokens=512, source='fake'),
+                                 {'error_class': 'output_limit',
+                                  'resource_resolution': self.resources})
+        return EngineOutcome('succeeded', .01, UsageRecord(output_tokens=900, source='fake'),
+                             {'proposal_document': self.document,
+                              'resource_resolution': self.resources})
+
+    def without_output_override(self, *, remaining_calls, remaining_seconds):
+        if remaining_calls < 1 or remaining_seconds <= 0:
+            return None
+        self.resources = resolve_role_resources('planning', task_timeout_seconds=5)
+        return self
 
 
 class ProductTests(unittest.TestCase):
@@ -290,9 +321,43 @@ class ProductTests(unittest.TestCase):
         request = captured['request']
         self.assertEqual((request.engine, request.mode, request.effort, request.timeout_seconds),
                          ('claude', 'model-only', 'low', 12))
-        self.assertEqual(request.max_generated_output_tokens, 8192)
+        self.assertIsNone(request.max_generated_output_tokens)
+        self.assertEqual(request.capability_profile, 'structured-planning')
+        self.assertEqual(request.resource_resolution['timeout_seconds']['source'],
+                         'task-override')
+        self.assertEqual(request.resource_resolution['generated_output_tokens']['source'],
+                         'provider-default')
         self.assertIn('verified planning skill content', request.prompt)
         self.assertIsNone(result.details['provider_reported_configuration']['model'])
+
+    def test_product_workflow_selects_web_implementation_capability(self):
+        workflow, _ = self.workflow('web-capability')
+        workflow.live = True
+        workflow.specialist_factory = None
+        adapter = workflow._adapter(
+            'claude', workflow._fixture('web-capability'), model=None, effort='low')
+        self.assertEqual(adapter.capability_profile, 'web-product-implementation')
+        self.assertEqual(adapter.resources['timeout_seconds']['source'], 'task-override')
+        self.assertEqual(adapter.resources['generated_output_tokens']['source'],
+                         'provider-default')
+
+    def test_output_exhaustion_recovery_is_accounted_and_changes_control(self):
+        planner = RecoveringPlanner(proposal())
+        workflow = ProductWorkflow.submit_product(
+            self.root / 'recovery', 'recovery', BRIEF, ACCEPTANCE, MECHANICS,
+            planner=planner, live=False, max_calls=5, max_provider_calls=4,
+            max_retries=1, planning_timeout_seconds=5,
+            implementation_timeout_seconds=5, review_timeout_seconds=5,
+            verification_timeout_seconds=5)
+        record = json.loads((workflow.root / 'planning-result.json').read_text())
+        self.assertEqual(planner.calls, 2)
+        self.assertEqual([item['status'] for item in record['attempts']],
+                         ['failed', 'succeeded'])
+        self.assertEqual(record['attempts'][0]['details']['resource_resolution']
+                         ['generated_output_tokens']['value'], 512)
+        self.assertIsNone(record['attempts'][1]['details']['resource_resolution']
+                          ['generated_output_tokens']['value'])
+        self.assertTrue((workflow.root / 'plan.json').is_file())
 
     def test_screenshot_records_are_hash_checked_inside_evidence_root(self):
         workflow, _ = self.workflow('screenshot')

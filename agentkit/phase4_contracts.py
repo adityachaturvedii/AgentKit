@@ -33,7 +33,8 @@ ROLE_CONTRACTS = {
         'material ambiguity, authority change, access need, or final approval'),
     'tech_lead': RoleContract(
         'tech_lead', ('validated intake', 'fixture contract'),
-        ('decomposition', 'interfaces', 'acceptance design'), ('controller-read',),
+        ('decomposition', 'interfaces', 'acceptance design'),
+        ('controller-read', 'structured-planning'),
         'technical plan and controller-owned integration decisions',
         'bounded acyclic implementation graph and immutable acceptance are recorded',
         'contradictory requirements or unsupported integration'),
@@ -45,13 +46,14 @@ ROLE_CONTRACTS = {
         'capacity exhaustion or unresolved execution ownership'),
     'implementer': RoleContract(
         'implementer', ('assignment', 'candidate revision', 'bounded feedback'),
-        ('candidate changes', 'structured execution result'), ('owned-code',),
+        ('candidate changes', 'structured execution result'),
+        ('code-implementation', 'web-product-implementation'),
         'one controller-created worker copy and declared paths only',
         'allowed changes are brokered into the assigned worktree',
         'authentication, sandbox failure, failed acceptance, or authority request'),
     'reviewer': RoleContract(
         'reviewer', ('immutable candidate', 'task contract', 'evidence references'),
-        ('validated concrete findings',), ('model-only',),
+        ('validated concrete findings',), ('independent-review',),
         'read-only independent review of one exact revision',
         'no findings or actionable material findings with criteria',
         'authentication, unavailable cross-provider review, or unresolved finding'),

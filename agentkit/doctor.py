@@ -153,8 +153,8 @@ def detect_engine(engine, sandbox):
         cap.features['tool_sandbox_effectiveness'] = Capability('unknown', 'Requires separate per-platform canary evidence; CLI flags are not an isolation proof.')
         cap.features['usage_reporting'] = Capability('unknown', 'Doctor performs no inference. Events may omit usage; missing quantities remain unknown.')
         cap.features['zero_native_retries'] = Capability('unavailable' if engine == 'codex' else 'unknown',
-            'Codex 0.154.0 rejects built-in provider retry overrides; managed wall time and observed-retry stop bound execution.' if engine == 'codex' else
-            'Adapter requests CLAUDE_CODE_MAX_RETRIES=0; adverse behavior tested with fixtures, not quota-consuming live failures.')
+            'Codex 0.154.0 exposes no built-in subscription retry control; controller wall time bounds the CLI launch.' if engine == 'codex' else
+            'Claude Code 2.1.220 help exposes no retry-limit flag; productive requests use the provider default and controller wall time.')
         if sandbox.state == "verified":
             auth_env = clean_environment()
             auth_env["TMPDIR"] = tmp
