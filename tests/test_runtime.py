@@ -388,6 +388,29 @@ class RuntimeTests(unittest.TestCase):
         raw = b'{"type":"system","subtype":"init","tools":["Bash"]}\n'
         self.assertEqual(stop_on_limit(raw, b''), 'unexpected_tools')
 
+    def test_stopped_authentication_launch_preserves_complete_terminal_usage(self):
+        events = [
+            {'type': 'system', 'subtype': 'api_retry', 'attempt': 1,
+             'error_status': 401},
+            {'type': 'system', 'subtype': 'api_retry', 'attempt': 2,
+             'error_status': 401},
+            {'type': 'result', 'subtype': 'success', 'is_error': True,
+             'result': 'Failed to authenticate. API Error: 401', 'num_turns': 1,
+             'usage': {'input_tokens': 0, 'output_tokens': 0,
+                       'cache_read_input_tokens': 0,
+                       'cache_creation_input_tokens': 0},
+             'total_cost_usd': 0, 'modelUsage': {}}]
+        raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
+        outcome = ProcessOutcome(raw, b'', 1, .1, 'authentication',
+                                 CancellationStatus())
+        result = normalize(self.request('claude'), outcome)
+        self.assertEqual((result.status, result.error_class),
+                         ('failed', 'authentication'))
+        self.assertEqual((result.usage.input_tokens, result.usage.output_tokens), (0, 0))
+        self.assertEqual(result.usage.estimated_cost_usd, 0)
+        self.assertEqual(result.provider_details['observed_retry_events'], 2)
+        self.assertEqual(result.provider_details['reported_turns'], 1)
+
     def test_managed_adapter_pipeline_with_fake_subscription_cli(self):
         from agentkit.doctor import COMPATIBLE, REQUIRED
         for engine in ADAPTERS:

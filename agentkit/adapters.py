@@ -177,6 +177,7 @@ class ClaudeAdapter:
         allowed_tools = set(allowed_tools)
         allow_tools = bool(allowed_tools)
         finals = []
+        retry_events = 0
         for event in events:
             if event.get('type') == 'assistant':
                 message = event.get('message', {})
@@ -193,6 +194,8 @@ class ClaudeAdapter:
                 allowed_advertised = set(event.get('tools') or ()) <= allowed_tools
                 if event.get('mcp_servers') or (event.get('tools') and (not allow_tools or not allowed_advertised)):
                     result.status, result.error_class = 'failed', 'unexpected_tools'
+            if event.get('type') == 'system' and event.get('subtype') == 'api_retry':
+                retry_events += 1
             if event.get('type') == 'result':
                 finals.append(event)
         if not finals:
@@ -215,6 +218,8 @@ class ClaudeAdapter:
             result.usage.final = True
         result.usage.provider_details['model_usage'] = redact(final.get('modelUsage'))
         result.provider_details['terminal_type'] = final.get('subtype')
+        result.provider_details['observed_retry_events'] = retry_events
+        result.provider_details['reported_turns'] = _count(final.get('num_turns'))
 
 
 ADAPTERS = {'codex': CodexAdapter(), 'claude': ClaudeAdapter()}
@@ -240,9 +245,8 @@ def normalize(request, outcome):
             if not isinstance(value, dict) or not isinstance(value.get('type'), str):
                 raise ValueError('event must be typed object')
             events.append(value)
-        if not outcome.stop_reason:
-            profile = capability_profile(request.capability_profile, request.mode)
-            ADAPTERS[request.engine].parse(events, result, allowed_tools=profile.tools)
+        profile = capability_profile(request.capability_profile, request.mode)
+        ADAPTERS[request.engine].parse(events, result, allowed_tools=profile.tools)
     except IncompleteStream:
         if not outcome.stop_reason:
             result.status, result.error_class = 'failed', 'truncated_output'

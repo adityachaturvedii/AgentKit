@@ -29,6 +29,8 @@ Timeout/cancellation sends TERM to a new POSIX process group, then KILL after a 
 
 The stream monitor stops on explicit usage/auth/rate failures and unexpected tool surfaces. A provider reconnect is not a controller retry and is left to the CLI within the enforced wall deadline; internal provider requests and turns remain unknown unless reliably reported. Claude `rate_limit_event` with `status=allowed` is metadata, not a failure; `status=rejected` stops execution. UUID digits and benign metadata must not trigger error classification.
 
+When a monitored failure has already stopped the process but the captured stream contains one complete terminal record, normalization still extracts its reported usage, retry-event count and turn count. These observations do not replace the monitor's failure classification and do not establish the number of internal provider requests.
+
 ## Managed scope and evidence
 
 `execute` accepts only `model-only`, an empty disposable directory, a reviewed CLI version, verified subscription status and an effective whole-process macOS write guard. `execute_owned_code` additionally requires a trusted `ExecutionBoundary` and `owned-code` mode. `untrusted` remains blocked. Auth status is queried through official commands under a no-network/no-global-write guard; the toolkit never reads credential contents itself. Child environments use an allowlist, stripping API keys, auth overrides, proxy/provider overrides, loader variables and retry-watchdog settings. A trusted installed CLI and trusted local policy remain prerequisites.
