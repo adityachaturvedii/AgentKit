@@ -199,8 +199,11 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 - [x] Add explicit structured-planning, code-implementation, web-product-implementation and independent-review capability profiles.
 - [x] Allow Claude file creation while granting only role-specific Bash patterns; retain external Seatbelt, broker, credential and publication boundaries.
 - [x] Add focused offline tests for policy precedence, request construction, capability selection, parsing and recovery; pass 177 repository tests with two expected managed skips, then pass both checks separately at host level and pass `agentkit check`.
-- [ ] Complete the authorized six-launch direct-versus-adapter integration checkpoint and archive sanitized evidence.
-- [ ] The Breakout product trial remains the next acceptance milestone; spend no game inference during this checkpoint.
+- [x] Attempt and archive the authorized direct-versus-adapter checkpoint: both Codex planning paths passed; both Claude implementation paths failed with expired OAuth; stop after four of six launches without retry, login, provider substitution, review or game inference.
+- [x] Preserve complete terminal usage/retry/turn observations after monitored failures in offline-tested revision `1c0008c`; do not promote that correction to live-tested status.
+- [x] Bind all 22 retained checkpoint files by SHA-256 and pass the final 182-test suite with two expected managed-environment skips plus `python3 -m agentkit check`.
+- [ ] Complete Claude implementation and independent-review comparison under a future bounded authorization after authentication is restored.
+- [ ] The Breakout product trial remains the next acceptance milestone after provider integration completes; no game inference was spent during this checkpoint.
 
 ## Later phases (planned, not implemented)
 

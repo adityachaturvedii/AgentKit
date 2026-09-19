@@ -1,0 +1,184 @@
+{
+  "authorized_cli_launches": 6,
+  "billed_cost_usd": null,
+  "billing_note": "No hard token or monetary cap is inferred; billing and paid overflow remain unknown.",
+  "blocked_stage": "claude direct/adapter owned-code implementation",
+  "blocker": "Claude Code reported 401 OAuth access token has expired on both paths.",
+  "claude_failed_launch_usage": "historical normalized records are unknown; each complete raw terminal reported zero input/output/cache tokens and zero estimated cost",
+  "cli_launches": 4,
+  "elapsed_seconds_through_last_record": 127.496608583,
+  "estimated_cost_usd": null,
+  "executable_revision": "a0f2906b59d7adf0858c1749228a5b2d815ea0c6",
+  "game_trial_executed": false,
+  "launches": [
+    {
+      "acceptance": {
+        "acceptance": 9,
+        "controller_validated_shape": true,
+        "requirements": 6,
+        "serialized_bytes": 6615
+      },
+      "accepted": true,
+      "elapsed_seconds": 61.215432,
+      "engine": "codex",
+      "error_class": null,
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "direct",
+      "label": "codex-direct-plan",
+      "ordinal": 1,
+      "status": "succeeded",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": 7552,
+        "estimated_cost_usd": null,
+        "final": true,
+        "input_tokens": 16462,
+        "output_tokens": 1577,
+        "provider_details": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 7552,
+          "input_tokens": 16462,
+          "output_tokens": 1577,
+          "reasoning_output_tokens": 0
+        },
+        "reasoning_tokens": 0,
+        "source": "codex.turn.completed"
+      }
+    },
+    {
+      "acceptance": {
+        "acceptance": 10,
+        "controller_validated_shape": true,
+        "requirements": 5,
+        "serialized_bytes": 7002
+      },
+      "accepted": true,
+      "elapsed_seconds": 57.940613,
+      "engine": "codex",
+      "error_class": null,
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "adapter",
+      "label": "codex-adapter-plan",
+      "ordinal": 2,
+      "status": "succeeded",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": 7040,
+        "estimated_cost_usd": null,
+        "final": true,
+        "input_tokens": 8465,
+        "output_tokens": 1649,
+        "provider_details": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 7040,
+          "input_tokens": 8465,
+          "output_tokens": 1649,
+          "reasoning_output_tokens": 0
+        },
+        "reasoning_tokens": 0,
+        "source": "codex.turn.completed"
+      }
+    },
+    {
+      "acceptance": {
+        "changed_files": [],
+        "controller_test_passed": false,
+        "protected_canaries_unchanged": true,
+        "test_exit_code": 1,
+        "test_output": "test_widget (unittest.loader._FailedTest) ... ERROR\n\n======================================================================\nERROR: test_widget (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: test_widget\nTraceback (most recent call last):\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 436, in _find_test_path\n    module = self._get_module_from_name(name)\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/claude-direct-implementation/test_widget.py\", line 2, in <module>\n    from widget import describe\nModuleNotFoundError: No module named 'widget'\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nFAILED (errors=1)\n"
+      },
+      "accepted": false,
+      "elapsed_seconds": 3.586534,
+      "engine": "claude",
+      "error_class": "authentication",
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "direct",
+      "label": "claude-direct-implementation",
+      "ordinal": 3,
+      "status": "failed",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": null,
+        "estimated_cost_usd": null,
+        "final": false,
+        "input_tokens": null,
+        "output_tokens": null,
+        "provider_details": {},
+        "reasoning_tokens": null,
+        "source": "unavailable"
+      }
+    },
+    {
+      "acceptance": {
+        "changed_files": [],
+        "controller_test_passed": false,
+        "protected_canaries_unchanged": true,
+        "test_exit_code": 1,
+        "test_output": "test_widget (unittest.loader._FailedTest) ... ERROR\n\n======================================================================\nERROR: test_widget (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: test_widget\nTraceback (most recent call last):\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 436, in _find_test_path\n    module = self._get_module_from_name(name)\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/claude-adapter-implementation/test_widget.py\", line 2, in <module>\n    from widget import describe\nModuleNotFoundError: No module named 'widget'\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nFAILED (errors=1)\n"
+      },
+      "accepted": false,
+      "elapsed_seconds": 3.021911,
+      "engine": "claude",
+      "error_class": "authentication",
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "adapter",
+      "label": "claude-adapter-implementation",
+      "ordinal": 4,
+      "status": "failed",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": null,
+        "estimated_cost_usd": null,
+        "final": false,
+        "input_tokens": null,
+        "output_tokens": null,
+        "provider_details": {},
+        "reasoning_tokens": null,
+        "source": "unavailable"
+      }
+    }
+  ],
+  "observed_claude_retry_events_per_failed_launch": 2,
+  "overall_deadline_seconds": 1200,
+  "passed_stages": [
+    "codex direct structured planning",
+    "codex adapter structured planning"
+  ],
+  "post_run_offline_correction_note": "Complete terminal usage and retry/turn observations are now preserved after a monitored stop; this correction was not live-tested.",
+  "post_run_offline_correction_revision": "1c0008c34ef85bdcc303edfe6f7f5ac5465cafca",
+  "provider_requests": null,
+  "provider_substitution": false,
+  "reported_usage_totals_for_successful_codex_launches": {
+    "cache_creation_tokens": null,
+    "cached_input_tokens": 14592,
+    "input_tokens": 24927,
+    "output_tokens": 3226,
+    "reasoning_tokens": 0
+  },
+  "retries_by_controller": 0,
+  "review": "not_run_without_accepted_candidate",
+  "schema_version": 1,
+  "status": "blocked",
+  "turns": null,
+  "unused_cli_launches": 2
+}

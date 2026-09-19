@@ -1,0 +1,144 @@
+{
+  "engine": "claude",
+  "task_id": "checkpoint-adapter-implementation",
+  "status": "failed",
+  "error_class": "authentication",
+  "exit_code": 1,
+  "elapsed_seconds": 3.021911,
+  "session_id": null,
+  "model": null,
+  "structured_output": null,
+  "final_text": null,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null,
+    "cached_input_tokens": null,
+    "cache_creation_tokens": null,
+    "reasoning_tokens": null,
+    "estimated_cost_usd": null,
+    "billed_cost_usd": null,
+    "source": "unavailable",
+    "final": false,
+    "provider_details": {}
+  },
+  "cancellation": {
+    "requested": true,
+    "reason": "authentication",
+    "term_sent": true,
+    "kill_sent": false,
+    "leader_reaped": true,
+    "process_group_gone": true,
+    "scope": "POSIX process group; detached descendants and remote effects are not covered"
+  },
+  "artifacts": {
+    "request.json": "b8d93f9d613739f4f0554046ab36bcb2b314c7fd5e358ec6c0be453cbefafdfb",
+    "stdout.redacted.jsonl": "b79e51f45c8db9835c0c0a528cb97aa6d93a101f06a02cc3f7c79b1c5f6f0bf3",
+    "stderr.redacted.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "provider_details": {
+    "authentication_failure": "missing",
+    "version": "2.1.220",
+    "executable_sha256": "8addc857f3fe64d5a0368af9ee50321b50afb4a6918ba3ef018ab84f5dbbe081",
+    "authentication": "subscription-reported",
+    "paid_overflow": "unknown",
+    "authorization": "Authorized six-launch subscription integration checkpoint; no game inference.",
+    "managed_mode": "external-seatbelt-owned-code",
+    "denied_read_paths": [
+      "/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/sibling-adapter",
+      "/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/controller-adapter",
+      "/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/protected-adapter/fake-credentials"
+    ],
+    "capability_profile": "code-implementation",
+    "resource_resolution": {
+      "timeout_seconds": {
+        "value": 60.0,
+        "source": "task-override",
+        "classification": "enforced",
+        "rationale": "Controller wall-clock process deadline."
+      },
+      "max_capture_bytes": {
+        "value": 1048576,
+        "source": "role-policy",
+        "classification": "enforced",
+        "rationale": "Controller transport capture bound; not a generated-token limit."
+      },
+      "generated_output_tokens": {
+        "value": null,
+        "source": "provider-default",
+        "classification": "observable-only",
+        "rationale": "Unset: provider behavior and effective ceiling are unknown."
+      }
+    },
+    "launch_configuration": {
+      "argv": [
+        "/opt/homebrew/bin/claude",
+        "--print",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--safe-mode",
+        "--setting-sources",
+        "",
+        "--settings",
+        "{\"disableAllHooks\": true, \"sandbox\": {\"enabled\": false, \"failIfUnavailable\": false, \"allowUnsandboxedCommands\": false, \"excludedCommands\": [], \"filesystem\": {\"disabled\": false, \"denyRead\": [\"/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/sibling-adapter\", \"/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/controller-adapter\", \"/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/protected-adapter/fake-credentials\"]}, \"network\": {\"allowedDomains\": [], \"allowLocalBinding\": false}}, \"permissions\": {\"defaultMode\": \"dontAsk\", \"blockReadsOutsideWorkingDirectories\": true, \"allow\": [\"Read\", \"Edit\", \"Write\", \"Bash(python3 -B -m unittest*)\"], \"deny\": [\"WebFetch\", \"WebSearch\", \"Agent\"]}}",
+        "--tools",
+        "Read,Edit,Write,Bash",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "{\"mcpServers\":{}}",
+        "--disable-slash-commands",
+        "--no-session-persistence",
+        "--no-chrome",
+        "--permission-mode",
+        "dontAsk",
+        "--session-id",
+        "142d5192-a4b4-4988-a8bd-1b5f54f4e582"
+      ],
+      "environment_keys": [
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC",
+        "CLAUDE_CODE_SAFE_MODE",
+        "CLAUDE_CODE_TMPDIR",
+        "CLAUDE_TMPDIR",
+        "DISABLE_AUTOUPDATER",
+        "GIT_CONFIG_GLOBAL",
+        "GIT_CONFIG_NOSYSTEM",
+        "HOME",
+        "LANG",
+        "LC_ALL",
+        "LOGNAME",
+        "PATH",
+        "PYTHONDONTWRITEBYTECODE",
+        "TMPDIR",
+        "TMPPREFIX",
+        "USER"
+      ],
+      "provider_limit_environment": {
+        "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "unset",
+        "CLAUDE_CODE_MAX_TURNS": "unset",
+        "CLAUDE_CODE_MAX_RETRIES": "unset"
+      },
+      "environment_values_recorded": false
+    },
+    "execution_counts": {
+      "cli_launches": 1,
+      "provider_requests": null,
+      "turns": null
+    },
+    "claude_session_state": {
+      "path": "/Users/aditya/.claude/session-env/142d5192-a4b4-4988-a8bd-1b5f54f4e582",
+      "fresh_path_only": true,
+      "created": false,
+      "removed_after_run": true
+    }
+  },
+  "limitations": [
+    "Provider events and final text are claims; fixture acceptance is independently computed.",
+    "Usage counts are provider-reported. Missing fields stay null. Cost estimates are not billing.",
+    "Process groups cannot prove detached-descendant or remote cancellation.",
+    "Whole-process guard permits writes only in the disposable workspace/runtime plus the preselected fresh Claude session path.",
+    "Explicit disposable read canaries are denied; comprehensive parent credential isolation is not established.",
+    "Provider and tool traffic share the parent network boundary; tool network isolation is unsupported in this mode.",
+    "No API keys, paid-mode fallback, purchase or billing-setting change is performed. Stop on reported limits; no controller retry."
+  ],
+  "schema_version": 1
+}
