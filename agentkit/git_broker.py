@@ -123,10 +123,25 @@ class GitBroker:
         text = self._git(repository, 'ls-tree', '-r', '--name-only', revision)
         return [line for line in text.splitlines() if line]
 
-    def export_snapshot(self, repository, revision, destination, *, review=False):
+    def export_snapshot(self, repository, revision, destination, *, review=False,
+                        controlled_root=None):
         revision = self.revision(repository, revision)
         destination = Path(destination).resolve()
-        expected_parent = self.review_copies if review else self.worker_copies
+        if controlled_root is not None:
+            if not review:
+                raise GitBrokerError('external controlled roots are review-only')
+            expected_parent = Path(controlled_root).resolve()
+            temporary_root = Path('/private/tmp').resolve()
+            try:
+                metadata = expected_parent.stat()
+            except OSError as exc:
+                raise GitBrokerError('controlled review root is unavailable') from exc
+            if (expected_parent == temporary_root or temporary_root not in expected_parent.parents or
+                    expected_parent.is_symlink() or not expected_parent.is_dir() or
+                    metadata.st_uid != os.getuid() or metadata.st_mode & 0o077):
+                raise GitBrokerError('controlled review root must be private and under /private/tmp')
+        else:
+            expected_parent = self.review_copies if review else self.worker_copies
         self._inside(destination, expected_parent)
         if destination.exists() or destination.is_symlink():
             raise GitBrokerError('snapshot destination must be fresh')

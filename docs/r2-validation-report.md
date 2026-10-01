@@ -39,6 +39,14 @@ The deterministic verifier is not security evidence. Only the host Seatbelt case
 
 R2 is ready as a deterministic integration slice and host-verifier boundary for disposable fixtures. Before an operator uses it on an existing repository, AgentKit still needs the R3 terminal/package workflow and an explicitly authorized live provider validation against a nominated non-personal test repository. Applying changes to an original checkout remains outside this milestone.
 
+## Corrective follow-up
+
+The post-R2 review found five reproducible gaps. The corrective branch now rejects candidate changes made during review, enforces cross-provider profiles, adapts the existing live implementer/reviewer call contracts, creates authentication checkpoints at either provider stage, moves native verification snapshots outside the denied home tree, and asks the selected Python interpreter whether extension modules such as `math` are available. These behaviors have offline regressions; no provider inference was used.
+
+Authentication recovery is not yet complete for this workflow. The controller can validate login and restore the interrupted state, but `RepositoryDeliveryWorkflow` does not yet expose a durable restart/resume driver that continues only that stage. Live repository delivery remains blocked until that entry point is implemented and fixture-tested. The historical R2 results below predate this corrective branch and do not validate it.
+
+Corrective validation used no inference: the complete suite passed 222 tests with 3 managed-environment skips before the final private-temporary-root hardening; the focused repository suite and Phase 3 broker/verifier regressions then passed 42 tests with 2 nested-Seatbelt skips. Structural checks, Python 3.9 compilation and diff hygiene passed. The new native-verifier placement test uses a controlled process runner and establishes path construction, not a live Seatbelt pass.
+
 ## Validation results
 
 | Check | Result |

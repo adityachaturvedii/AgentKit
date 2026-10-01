@@ -5,9 +5,10 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
-from agentkit.controller import UsageRecord
-from agentkit.delivery import EngineOutcome
+from agentkit.controller import ControllerError, UsageRecord
+from agentkit.delivery import EngineOutcome, LiveImplementer, LiveReviewer
 from agentkit.git_broker import GitBroker
 from agentkit.doctor import native_sandbox_capability
 from agentkit.projects import ProjectRegistry, example_python_profile
@@ -16,7 +17,9 @@ from agentkit.repository_delivery import (
     RepositoryDeliveryError, RepositoryDeliveryWorkflow, RepositoryVerifier,
     resolve_repository_task, validate_prepared_environment,
 )
-from agentkit.runtime_contracts import Capability
+from agentkit.process import ProcessOutcome
+from agentkit.runtime_contracts import (CancellationStatus, Capability, ExecutionResult,
+                                        LivePolicy, UsageObservation)
 
 
 class FixNormalizeImplementer:
@@ -77,9 +80,9 @@ class RepositoryDeliveryTests(unittest.TestCase):
         self.git(repository, 'commit', '-m', 'fixture')
         return repository
 
-    def enrollment(self, repository, state_name='state'):
+    def enrollment(self, repository, state_name='state', profile=None):
         registry = ProjectRegistry(self.root / state_name)
-        return registry, registry.enroll(repository, example_python_profile())
+        return registry, registry.enroll(repository, profile or example_python_profile())
 
     @staticmethod
     def manifest(root):
@@ -129,6 +132,16 @@ class RepositoryDeliveryTests(unittest.TestCase):
         self.assertEqual(prepared.missing_dependencies, ('requests',))
         self.assertFalse(prepared.to_dict()['install_during_run'])
         self.assertEqual(prepared.to_dict()['network'], 'none')
+
+    def test_prepared_environment_uses_selected_interpreter_stdlib_extensions(self):
+        source = self.repository('stdlib-extension')
+        (source / 'src/tool.py').write_text('import math\n\ndef normalize(value):\n    return value.strip()\n')
+        self.git(source, 'add', 'src/tool.py')
+        self.git(source, 'commit', '-m', 'use extension stdlib')
+        registry, record = self.enrollment(source, 'stdlib-extension-state')
+        prepared = validate_prepared_environment(record['profile'], source)
+        self.assertEqual(prepared.status, 'ready')
+        self.assertNotIn('math', prepared.missing_dependencies)
 
     def test_request_resolution_is_grounded_and_conservative(self):
         source = self.repository('planning')
@@ -217,6 +230,179 @@ class RepositoryDeliveryTests(unittest.TestCase):
         self.assertNotIn('expected_patch', json.dumps(handoff))
         self.assertNotIn('return value.strip()', json.dumps(handoff))
         self.assertNotIn('test_edges', json.dumps(handoff))
+
+    def test_live_implementer_uses_owned_code_adapter_contract(self):
+        source = self.repository('live-contract')
+        registry, record = self.enrollment(source, 'live-contract-state')
+        captured = {}
+
+        def transport(request, output, boundary, *, policy, cancel_event=None):
+            captured.update(request=request, output=output, boundary=boundary, policy=policy)
+            (Path(request.cwd) / 'src/tool.py').write_text(
+                'def normalize(value):\n    return value.strip()\n')
+            return ExecutionResult(request.engine, request.task_id, 'succeeded', None, 0, .01,
+                                   usage=UsageObservation(source='fixture'))
+
+        implementer = LiveImplementer('codex', model='account-default')
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        workflow = RepositoryDeliveryWorkflow(
+            self.root / 'live-contract-run', registry, record['project_id'], implementer,
+            DeterministicReviewer(), placeholder, execution_authorized=True,
+            live_policy=LivePolicy(True, 'fixture authorization'))
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        protected = ('import unittest\nfrom tool import normalize\nclass A(unittest.TestCase):\n'
+                     ' def test_edges(self): self.assertEqual(normalize(" x "), "x")\n')
+        with mock.patch('agentkit.delivery.execute_owned_code', side_effect=transport):
+            result = workflow.run('live-contract-task', 'Fix normalize whitespace handling.', protected)
+        self.assertEqual(result['task']['state'], 'awaiting_pr_approval')
+        self.assertEqual(captured['request'].mode, 'owned-code')
+        self.assertEqual(captured['request'].capability_profile, 'code-implementation')
+        self.assertEqual(captured['request'].model, 'account-default')
+        self.assertTrue(captured['policy'].subscription_smoke_authorized)
+        self.assertIn(str(workflow.controller_root), captured['boundary'].denied_read_paths)
+
+    def test_authentication_failure_creates_revision_bound_checkpoint(self):
+        source = self.repository('auth-checkpoint')
+        registry, record = self.enrollment(source, 'auth-checkpoint-state')
+
+        def authentication_failure(request, output, boundary, *, policy, cancel_event=None):
+            return ExecutionResult(
+                request.engine, request.task_id, 'failed', 'authentication', 1, .01,
+                usage=UsageObservation(source='unavailable'),
+                provider_details={'authentication_failure': 'expired'})
+
+        implementer = LiveImplementer('codex')
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        workflow = RepositoryDeliveryWorkflow(
+            self.root / 'auth-checkpoint-run', registry, record['project_id'], implementer,
+            DeterministicReviewer(), placeholder, execution_authorized=True,
+            live_policy=LivePolicy(True, 'fixture authorization'))
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        with mock.patch('agentkit.delivery.execute_owned_code', side_effect=authentication_failure):
+            result = workflow.run(
+                'auth-checkpoint-task', 'Fix normalize whitespace handling.',
+                'import unittest\nclass A(unittest.TestCase):\n def test_ok(self): self.assertTrue(True)\n')
+        self.assertEqual(result['task']['state'], 'authentication_required')
+        checkpoint = workflow.store.authentication_checkpoint('auth-checkpoint-task')
+        self.assertEqual(checkpoint['provider'], 'codex')
+        self.assertEqual(checkpoint['interrupted_state'], 'implementing')
+        self.assertEqual(checkpoint['candidate_revision'], result['task']['head_revision'])
+        self.assertTrue(checkpoint['candidate_identity']['clean'])
+
+    def test_reviewer_authentication_checkpoint_preserves_verification(self):
+        source = self.repository('review-auth')
+        registry, record = self.enrollment(source, 'review-auth-state')
+
+        def authentication_failure(request, output, *, policy, cancel_event=None):
+            return ExecutionResult(
+                request.engine, request.task_id, 'failed', 'authentication', 1, .01,
+                usage=UsageObservation(source='unavailable'),
+                provider_details={'authentication_failure': 'expired'})
+
+        reviewer = LiveReviewer('claude')
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        workflow = RepositoryDeliveryWorkflow(
+            self.root / 'review-auth-run', registry, record['project_id'],
+            FixNormalizeImplementer(), reviewer, placeholder, execution_authorized=True,
+            live_policy=LivePolicy(True, 'fixture authorization'))
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        protected = ('import unittest\nfrom tool import normalize\nclass A(unittest.TestCase):\n'
+                     ' def test_edges(self): self.assertEqual(normalize(" x "), "x")\n')
+        with mock.patch('agentkit.delivery.execute', side_effect=authentication_failure):
+            result = workflow.run('review-auth-task', 'Fix normalize whitespace handling.', protected)
+        self.assertEqual(result['task']['state'], 'authentication_required')
+        checkpoint = workflow.store.authentication_checkpoint('review-auth-task')
+        self.assertEqual(checkpoint['provider'], 'claude')
+        self.assertEqual(checkpoint['interrupted_state'], 'reviewing')
+        self.assertEqual(checkpoint['evidence_refs'], ['verification-0'])
+        evidence = {item['evidence_id']: item for item in result['snapshot']['evidence']}
+        self.assertEqual(evidence['verification-0']['status'], 'passed')
+        self.assertFalse(evidence['verification-0']['stale'])
+
+    def test_cross_provider_review_policy_rejects_same_provider(self):
+        source = self.repository('cross-provider')
+        profile = example_python_profile()
+        profile['required_review'] = 'cross-provider'
+        registry, record = self.enrollment(source, 'cross-provider-state', profile)
+        implementer = FixNormalizeImplementer()
+        implementer.engine = 'codex'
+        reviewer = DeterministicReviewer()
+        reviewer.engine = 'codex'
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        workflow = RepositoryDeliveryWorkflow(
+            self.root / 'cross-provider-run', registry, record['project_id'],
+            implementer, reviewer, placeholder, execution_authorized=True)
+        with self.assertRaisesRegex(RepositoryDeliveryError, 'cross-provider'):
+            workflow.run('cross-provider-task', 'Fix normalize whitespace handling.', 'unused')
+        with self.assertRaisesRegex(ControllerError, 'unknown task'):
+            workflow.store.snapshot('cross-provider-task')
+
+    def test_candidate_change_during_review_prevents_packaging(self):
+        source = self.repository('stale-package')
+        registry, record = self.enrollment(source, 'stale-package-state')
+        holder = {}
+
+        case = self
+
+        class MutatingReviewer(DeterministicReviewer):
+            def run(self, snapshot, context):
+                workflow = holder['workflow']
+                task = workflow.store.task('stale-package-task')
+                path = Path(task['worktree']) / 'src/tool.py'
+                path.write_text(path.read_text() + '\n# changed during review\n')
+                case.git(Path(task['worktree']), 'add', '--', 'src/tool.py')
+                case.git(Path(task['worktree']), 'commit', '-m', 'stale candidate')
+                return super().run(snapshot, context)
+
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        workflow = RepositoryDeliveryWorkflow(
+            self.root / 'stale-package-run', registry, record['project_id'],
+            FixNormalizeImplementer(), MutatingReviewer(), placeholder, execution_authorized=True)
+        holder['workflow'] = workflow
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        protected = ('import unittest\nfrom tool import normalize\nclass A(unittest.TestCase):\n'
+                     ' def test_edges(self): self.assertEqual(normalize(" x "), "x")\n')
+        with self.assertRaisesRegex(RepositoryDeliveryError, 'candidate repository'):
+            workflow.run('stale-package-task', 'Fix normalize whitespace handling.', protected)
+        self.assertFalse((workflow.approval_root / 'approval-package.json').exists())
+
+    def test_native_verifier_places_candidate_outside_denied_home(self):
+        source = self.repository('candidate-location')
+        registry, record = self.enrollment(source, 'candidate-location-state')
+        broker = GitBroker(self.root / 'candidate-location-managed')
+        imported = IndependentRepositoryImporter(registry, broker).import_project(
+            record['project_id'], 'repository')
+        repository = Path(imported['managed_repository'])
+        _, worktree, head = broker.create_task_worktree(
+            repository, 'candidate-location-task', imported['managed_base_revision'])
+        observed = []
+
+        def runner(argv, *, cwd, env, **kwargs):
+            observed.append(Path(cwd).resolve())
+            return ProcessOutcome(b'', b'Ran 1 test in 0.001s\nOK\n', 0, .01, None,
+                                  CancellationStatus(process_group_gone=True))
+
+        verifier = RepositoryVerifier(
+            broker, self.root / 'controller', self.root / 'evidence',
+            capability_check=lambda: Capability('verified', 'fixture'), process_runner=runner)
+        result = verifier.run(
+            repository, worktree, head,
+            validate_prepared_environment(record['profile'], worktree),
+            'import unittest\nclass A(unittest.TestCase):\n def test_ok(self): self.assertTrue(True)\n')
+        self.assertEqual(result.status, 'succeeded', result.details)
+        self.assertTrue(observed)
+        self.assertTrue(all(str(path).startswith('/private/tmp/agentkit-r2-verify-')
+                            for path in observed))
+        self.assertTrue(all(not str(path).startswith(str(Path.home().resolve()))
+                            for path in observed))
+
+    def test_external_review_snapshot_root_must_be_private_temporary_storage(self):
+        broker = GitBroker(self.root / 'external-root-managed')
+        repository, head = broker.create_repository('repository', {'source.py': 'value = 1\n'})
+        (self.root / 'outside').mkdir(mode=0o700)
+        with self.assertRaisesRegex(Exception, 'under /private/tmp'):
+            broker.export_snapshot(repository, head, self.root / 'outside' / 'snapshot',
+                                   review=True, controlled_root=self.root / 'outside')
 
     def test_write_scope_rejects_worker_change_outside_declared_paths(self):
         source = self.repository('scope')
