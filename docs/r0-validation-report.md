@@ -4,7 +4,7 @@ Date: 2026-10-01. Planning base: `e5d870b8be6fe1d6eae1d9a41e2cf318acfc109a`. Tes
 
 ## Result
 
-R0 passes its acceptance gate for architecture option B: substantial selected OpenHarness behavior is adapted around the existing Agentkit controller without importing the upstream runtime. One deterministic calculator task passed implementation, controller-owned verification and independent deterministic review, reached `awaiting_pr_approval`, and rendered its exact candidate through the adapted event/terminal seam. Usage remained unknown and approval remained false.
+R0 passes its acceptance gate for architecture option B: substantial selected OpenHarness behavior is adapted around the existing AgentKit controller without importing the upstream runtime. One deterministic calculator task passed implementation, controller-owned verification and independent deterministic review, reached `awaiting_pr_approval`, and rendered its exact candidate through the adapted event/terminal seam. Usage remained unknown and approval remained false.
 
 Command:
 
@@ -33,7 +33,7 @@ Changed-profile rejection, root escape, symlink sources, malformed/oversized mes
 |---|---|
 | Focused Python R0 suite | 10 passed |
 | Dependency-free Node terminal suite | 4 passed |
-| Complete Agentkit suite | 192 total: 190 passed; 2 skipped inside the managed outer sandbox |
+| Complete AgentKit suite | 192 total: 190 passed; 2 skipped inside the managed outer sandbox |
 | Separate host execution of the two skips | 2 passed: constrained verifier boundary and loopback preview lifecycle |
 | `python3 -m agentkit check` | Passed: 10 skills, 7 domains, 10 examples, 3 foundation sources |
 | Python 3.9 compilation | Passed with an isolated bytecode cache |

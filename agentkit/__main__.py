@@ -10,7 +10,7 @@ from .validation import ValidationError, read_json, validate_handoff
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Portable skill foundation and bounded CLI integration")
+    parser = argparse.ArgumentParser(description="AgentKit engineering-agent controller and evidence toolkit")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="list available skills and explicit intents")
     selection = commands.add_parser("select", help="select a skill by explicit intent")

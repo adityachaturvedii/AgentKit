@@ -1,6 +1,6 @@
 # Planning validation
 
-Date: 2026-10-01. Scope: documentation and source-inventory metadata only, based on Agentkit `ddf6145002efd0bd59b85d54996263f6edb7f675`. No executable code, historical evidence, runtime policy or dependency declaration was changed.
+Date: 2026-10-01. Scope: documentation and source-inventory metadata only, based on AgentKit `ddf6145002efd0bd59b85d54996263f6edb7f675`. No executable code, historical evidence, runtime policy or dependency declaration was changed.
 
 ## Checks for this change
 

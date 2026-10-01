@@ -1,4 +1,4 @@
-# Agentkit reuse-first product plan
+# AgentKit reuse-first product plan
 
 Planning review: 2026-10-01. Status: R0 reuse spike implemented; R1 and later capabilities remain proposed and are not authorization for new execution profiles, paid inference or publication.
 
@@ -15,7 +15,7 @@ Read in this order:
 
 ## Baselines and evidence
 
-- Agentkit planning base: `ddf6145002efd0bd59b85d54996263f6edb7f675`, containing the resource-policy correction and preserved authentication/dependency/claim fixes.
+- AgentKit planning base: `ddf6145002efd0bd59b85d54996263f6edb7f675`, containing the resource-policy correction and preserved authentication/dependency/claim fixes.
 - Planning branch: `planning/reuse-first-product`; worktree: `/Users/aditya/agentic/portable-agentkit-reuse-plan`.
 - OpenHarness source pin: `9b2efd795c6aa09f88b0c257d269a9e518da6ae7`, resolved from the public repository and fetched into a disposable source-only Git checkout. No upstream code, installer, tests or plugins were executed.
 - The supplied product vision is preserved outside the repository. Its filename and SHA-256 are recorded in the source inventory; this proposal supersedes neither its original text nor historical evidence.
@@ -25,7 +25,7 @@ Read in this order:
 
 ## Recommended decision
 
-Proceed with a substantial, attributed OpenHarness component port around the existing Agentkit delivery core. First prove a working vertical integration of the reused terminal, profile configuration and context-discovery components. Do not rebuild those subsystems independently while the reuse spike is pending. Do not replace the durable controller merely to make an upstream runtime easier to import.
+Proceed with a substantial, attributed OpenHarness component port around the existing AgentKit delivery core. First prove a working vertical integration of the reused terminal, profile configuration and context-discovery components. Do not rebuild those subsystems independently while the reuse spike is pending. Do not replace the durable controller merely to make an upstream runtime easier to import.
 
 The first external-use milestone is one real task against an explicitly enrolled repository, executed from an independent managed copy, returning a portable review package. The repository's original checkout stays untouched. New-product work follows through the same delivery contracts, rather than a second orchestrator.
 

@@ -4,7 +4,7 @@ Status: proposal informed by the user's audience and sequencing choices. This is
 
 ## Promise
 
-Agentkit helps small engineering teams and open-source maintainers turn coding-agent changes into review-ready work, with controlled execution, independently executed checks and portable evidence tied to the exact candidate revision.
+AgentKit helps small engineering teams and open-source maintainers turn coding-agent changes into review-ready work, with controlled execution, independently executed checks and portable evidence tied to the exact candidate revision.
 
 The user can ask for a change in an enrolled repository, inspect the scope and resource allocation, run it, and receive a concise package explaining the change, its verification and remaining uncertainty. A different engineer can inspect that package without reading the agent's conversation history.
 
@@ -53,13 +53,13 @@ Public users need installation that makes no silent global changes, a no-inferen
 
 OpenHarness is a substantial source foundation. Prefer porting its usable UI, configuration, context and execution infrastructure over designing equivalents from scratch. Keep a file-level source/adaptation ledger and import upstream tests with adapted components. Upstream updates are pinned, reviewed changes, never automatic updates inside a running task.
 
-Reuse is measured by working subsystems and reduced maintenance work, not by a quota of copied lines. Existing Agentkit mechanisms may also be replaced if a reused implementation passes the same behavioral contract with lower maintenance cost. Neither codebase has automatic priority over the product requirements.
+Reuse is measured by working subsystems and reduced maintenance work, not by a quota of copied lines. Existing AgentKit mechanisms may also be replaced if a reused implementation passes the same behavioral contract with lower maintenance cost. Neither codebase has automatic priority over the product requirements.
 
 ## Evaluation and success
 
 The first success is a new operator completing a supported repository task without developer intervention, followed by another engineer understanding the package and identifying its limitations. A successful fixture or attractive game is insufficient evidence of this outcome.
 
-Pilot evaluation compares competent direct-CLI work with Agentkit on predeclared tasks and matched provider/model configurations where possible. Record:
+Pilot evaluation compares competent direct-CLI work with AgentKit on predeclared tasks and matched provider/model configurations where possible. Record:
 
 - First-pass acceptance without human source edits; label this separately from actual merge rate.
 - Active reviewer minutes, setup time, operator interventions and total human time per accepted task.
@@ -76,11 +76,11 @@ Recruit a few pilot users during onboarding design, then expand toward ten weekl
 
 The vision's assurance focus is retained; these corrections prevent unsupported roadmap decisions:
 
-- Bounded concurrent scheduling already exists in Agentkit; multi-user/RBAC/CI support does not. See the current controller and Phase 4 evidence.
+- Bounded concurrent scheduling already exists in AgentKit; multi-user/RBAC/CI support does not. See the current controller and Phase 4 evidence.
 - API credentials are a future explicit mode, not the present supported default. Existing permission to use subscriptions is not permission to add paid fallback.
 - First-party provider neutrality is not an exclusive differentiator: GitHub publicly supports Claude and Codex in Agent HQ. [Official announcement](https://github.blog/news-insights/company-news/pick-your-agent-use-claude-and-codex-on-agent-hq/).
 - Current Anthropic guidance distinguishes end-user login to the unmodified Claude Code binary from credential intermediation and third-party product/API use. Recheck exact terms at implementation/release; do not extract CLI tokens or infer authorization from another project's implementation. [Official guidance](https://code.claude.com/docs/en/legal-and-compliance).
-- The 2025 Stack Overflow primary results report 33% trust, 66% frustration with nearly correct output and 45% time-consuming debugging. These survey observations do not establish willingness to buy Agentkit. [Survey](https://survey.stackoverflow.co/2025/ai).
+- The 2025 Stack Overflow primary results report 33% trust, 66% frustration with nearly correct output and 45% time-consuming debugging. These survey observations do not establish willingness to buy AgentKit. [Survey](https://survey.stackoverflow.co/2025/ai).
 - METR's follow-up reported new estimates with serious selection/measurement limitations. Use it to motivate careful evaluation, not a universal productivity claim. [Research update](https://metr.org/blog/2026-02-24-uplift-update/).
 - Source-available with a non-compete restriction is not the same licensing choice as open source. [OSI definition](https://opensource.org/osd).
 

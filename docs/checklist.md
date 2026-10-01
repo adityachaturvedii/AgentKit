@@ -225,7 +225,15 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 
 The [new product plan](planning/README.md) proposes repository-first sequencing. The older phase list below is retained as historical roadmap context; it is not a requirement to build a GPU worker before repository onboarding. Breakout remains a later new-product acceptance case, following the user's updated priority.
 
-R0 accepts architecture option B: a component port around the durable Agentkit controller. It does not validate real-repository execution. R1 read-only repository intake is the next planned boundary.
+R0 accepts architecture option B: a component port around the durable AgentKit controller. It does not validate real-repository execution. R1 read-only repository intake is the next planned boundary.
+
+## AgentKit brand rename
+
+- [x] Adopt **AgentKit** as the product and display name in active documentation, CLI help and the adapted terminal.
+- [x] Preserve the `agentkit` command, Python module, artifact paths and temporary prefixes as stable lowercase technical identifiers.
+- [x] Preserve historical worktree/repository references and the versioned `urn:portable-agentkit:handoff:1` schema identifier.
+- [x] Document the compatibility boundary and defer the GitHub repository rename to a separately authorized publication action.
+- [ ] Select the outbound license before public distribution; the brand rename does not resolve licensing.
 
 ## Later phases (historical plan, not implemented)
 

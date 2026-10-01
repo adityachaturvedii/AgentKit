@@ -40,8 +40,8 @@ class GitBroker:
                 '-C', str(repository), *args]
         env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'LANG', 'LC_ALL')}
         env.update(GIT_CONFIG_GLOBAL='/dev/null', GIT_CONFIG_NOSYSTEM='1',
-                   GIT_AUTHOR_NAME='Agentkit Controller', GIT_AUTHOR_EMAIL='controller@localhost',
-                   GIT_COMMITTER_NAME='Agentkit Controller', GIT_COMMITTER_EMAIL='controller@localhost')
+                   GIT_AUTHOR_NAME='AgentKit Controller', GIT_AUTHOR_EMAIL='controller@localhost',
+                   GIT_COMMITTER_NAME='AgentKit Controller', GIT_COMMITTER_EMAIL='controller@localhost')
         run = subprocess.run(argv, cwd=str(cwd or repository), env=env, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, timeout=20, check=False)
         if run.returncode:

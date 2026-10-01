@@ -1,4 +1,4 @@
-# Portable Agentkit — skills, bounded CLI adapters and durable local delivery
+# AgentKit — skills, bounded CLI adapters and durable local delivery
 
 A standalone toolkit with ten curated procedures, seven domain references, versioned contracts, source attribution and disposable validation fixtures. Phase 2 adds CLI diagnosis and a narrow trusted disposable-workspace execution mode on the tested macOS host. Phase 3 adds transactional local delivery and authentication recovery. Phase 4 adds request-driven task planning, selective role graphs, bounded concurrent scheduling, explicit provider routing, separate quality reserves and a task-oriented terminal interface for controller-created disposable projects.
 
@@ -104,4 +104,4 @@ The first bounded Breakout trial against executable `70070e2` stopped after its 
 - [Phase 4 CLI guide](docs/phase4-cli-guide.md), [role contracts](docs/phase4-role-contracts.md), [graph and routing](docs/phase4-graph-routing.md), [Phase 4 validation](docs/phase4-validation-report.md), [single-assignment live evidence](evidence/phase4-corrected-live/manifest.json), [concurrent live-attempt evidence](evidence/phase4-concurrent-live/manifest.json), [CLI integration checkpoint](evidence/phase4-cli-integration/manifest.json)
 - [Original implementation specification](docs/implementation-spec.md)
 
-The repository is [adityachaturvedii/portable-agentkit](https://github.com/adityachaturvedii/portable-agentkit). Publication and merge authorization are task-specific; the current planning work remains local. Earlier validation records describe the branch and publication state at their recorded dates. Upstream MIT notices cover adapted material; an outbound license for original toolkit code will be chosen before broader distribution.
+The product name is **AgentKit**. The lowercase `agentkit` command and Python module remain stable compatibility identifiers. The existing repository is still [adityachaturvedii/portable-agentkit](https://github.com/adityachaturvedii/portable-agentkit) until a separately authorized remote rename; see the [brand migration notes](docs/brand-migration.md). Publication and merge authorization are task-specific. Upstream MIT notices cover adapted material; an outbound license for original toolkit code will be chosen before broader distribution.

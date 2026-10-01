@@ -11,7 +11,7 @@ Adapted OpenHarness terminal / plain CLI / JSON interface
                          |
                  thin command/event backend
                          |
-          Agentkit contract, policy and durable controller
+          AgentKit contract, policy and durable controller
              /           |             \
     project/Git broker   |        evidence/package builder
                          |
@@ -129,7 +129,7 @@ Estimates are rough engineering effort for one focused engineer, excluding unkno
 
 | Milestone | Work and reuse | Exit evidence | Estimate |
 |---|---|---|---|
-| R0: working reuse slice | Port OH-01..06 subsets with notices, thin backend, profile resolution and bounded context discovery | A deterministic Agentkit run rendered through actual reused components; upstream/adaptation tests; dependency closure; architecture decision with measured extraction effort | 3–5 days |
+| R0: working reuse slice | Port OH-01..06 subsets with notices, thin backend, profile resolution and bounded context discovery | A deterministic AgentKit run rendered through actual reused components; upstream/adaptation tests; dependency closure; architecture decision with measured extraction effort | 3–5 days |
 | R1: read-only repository intake | Project identity, inventory, profile enrollment, readiness/plan UX | Unsupported/dirty/sensitive-feature fixtures; zero script/hook/inference execution during inspection; useful plan on multiple held-out repository shapes | 4–6 days |
 | R2: safe supported repository delivery | Independent managed import, prepared Python environment, generalized verifier, same scheduler/auth/evidence contracts | No original changes; source/controller/credential canaries; real tests with protected acceptance; task-to-package across disposable copies of realistic repositories | 8–12 days |
 | R3: small-team preview | Package exporter/verifier, complete terminal workflow, install artifacts, docs and provenance | Another operator installs without global edits and a second reviewer understands/checks a package; offline and supported-host regressions; explicit license and compatibility matrix | 5–8 days |

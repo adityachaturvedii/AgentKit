@@ -12,6 +12,8 @@ test('renders unknown usage and a candidate-bound unapproved package', () => {
     {version: 1, type: 'package_ready', package: {head_revision: 'abc',
       verification_count: 1, findings_count: 0, approval_recorded: false}},
   ]);
+  assert.match(output, /^AgentKit$/m);
+  assert.doesNotMatch(output, /Portable AgentKit/i);
   assert.match(output, /usage: unknown/);
   assert.match(output, /candidate: abc/);
   assert.match(output, /approval recorded: no/);

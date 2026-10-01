@@ -43,7 +43,7 @@ export function renderEvents(events) {
   if (state.candidate_stale) flags.push('CANDIDATE STALE');
   if (state.cancelled) flags.push('CANCELLED');
   const lines = [
-    'Portable Agentkit',
+    'AgentKit',
     '────────────────────────────────────────────────────────────',
     `task: ${task?.task_id ?? 'unknown'} │ stage: ${state.stage ?? 'unknown'} │ usage: ${usage}`,
     `assignments: ${count(state.ready)} ready │ ${count(state.active)} active │ ${count(state.waiting)} waiting │ ${count(state.completed)} completed`,
