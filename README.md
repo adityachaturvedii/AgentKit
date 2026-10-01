@@ -29,7 +29,7 @@ Most agent demos stop when a model says the task is complete. AgentKit treats mo
 
 ## Project status
 
-AgentKit is experimental. The original Phase 4 workflow has been extended with an OpenHarness reuse slice (R0), read-only repository intake (R1) and a deterministic repository-delivery slice (R2). R2 still has unresolved review findings; its presence is not a claim that arbitrary repositories are ready for execution.
+AgentKit is experimental. The original Phase 4 workflow has been extended with an OpenHarness reuse slice (R0), read-only repository intake (R1), a corrected deterministic repository-delivery slice (R2), and the first R3 portable-package increment. This is not a claim that arbitrary repositories are ready for execution.
 
 | Area | Status |
 |---|---|
@@ -42,6 +42,7 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | OpenHarness reuse (R0) | Offline-tested profile, context, protocol and terminal adaptations around the existing controller |
 | Read-only repository intake (R1) | Fixture-tested bounded inspection, hash-bound enrollment and non-executing plans for clean standalone Python libraries |
 | Repository delivery (R2) | Deterministic integration slice; corrective boundaries and durable stage-specific authentication resume are fixture-tested; live repository-provider validation remains open |
+| Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; complete terminal workflow, signing and distribution remain open |
 | Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
 
@@ -168,6 +169,18 @@ Inspection runs no project code, hooks, filters, installers or inference. Enroll
 
 R2 adds independent reconstruction into controller-owned Git storage, prepared-environment checks, protected acceptance and a local package using deterministic providers. It has no complete end-user execution CLI or verified live repository-provider path. The corrective work closes candidate revalidation, cross-provider enforcement, actual adapter construction, verifier placement and interpreter dependency detection offline. Authentication failures create safe checkpoints; a reopened workflow revalidates the candidate and resumes only implementation or review while preserving completed verification. File additions/deletions/renames, dependency installation and applying changes to the original checkout remain unsupported. See the [R2 report](docs/r2-validation-report.md).
 
+R3 P11 can export a completed R2 result into a sanitized plain review folder and verify its hashes, revision/evidence bindings and requirement mapping without running candidate code:
+
+```sh
+python3 -m agentkit package export \
+  --workflow /absolute/path/to/workflow \
+  --task-id TASK_ID \
+  --output /fresh/path/review-package
+python3 -m agentkit package verify /path/to/review-package
+```
+
+The manifest provides unauthenticated local integrity, not proof of authorship or command execution. See the [portable-package guide](docs/r3-portable-package.md) and [P11 validation report](docs/r3-validation-report.md).
+
 ## Live CLI integration
 
 Start with the read-only diagnostic:
@@ -232,6 +245,7 @@ The first Breakout attempt failed during planning; the later integration checkpo
 | `python3 -m agentkit resource-policy` | Explain resolved controls and capability profiles | No |
 | `python3 -m agentkit reuse-demo` | Exercise adapted OpenHarness components with the existing controller | No |
 | `python3 -m agentkit project ...` | Inspect, enroll and plan a selected supported repository read-only | No |
+| `python3 -m agentkit package export`, `package verify` | Export or verify an exact-revision portable review folder | No |
 | `python3 -m agentkit product ...` | Plan and execute a bounded disposable static web product | Provider stages require explicit authorization |
 
 Run `python3 -m agentkit --help` or a subcommand's `--help` for the exact options.

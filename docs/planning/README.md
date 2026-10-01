@@ -1,6 +1,6 @@
 # AgentKit reuse-first product plan
 
-Planning review: 2026-10-01. Status: R0 reuse spike, R1 read-only intake and the R2 disposable-fixture delivery slice are implemented; R3 and later capabilities remain proposed and are not authorization for paid inference or publication.
+Planning review: 2026-10-01. Status: R0 reuse spike, R1 read-only intake, the R2 disposable-fixture delivery slice and R3 P11 portable-package verifier are implemented; P12/P13 and later capabilities remain proposed and are not authorization for paid inference or publication.
 
 The user has selected **both existing-repository engineering and new-product creation, with existing repositories first**, for **small engineering teams and some public open-source users**. Substantial reuse of OpenHarness is an explicit engineering preference. We will compare and adapt working code before writing replacements.
 
