@@ -23,6 +23,7 @@ Date: 2026-10-01. Distinguish user decisions from engineering recommendations. N
 | P-D10 | Optional adapted terminal; plain/JSON controller interface remains complete | Reuses working UI while keeping core usable without a Node runtime; release builds must avoid automatic installation |
 | P-D11 | Preserve productive provider defaults and provenance-aware resource policies | Upstream defaults and SDK retries must not reintroduce the output-limit failure |
 | P-D12 | Existing-repository preview precedes the next web-game milestone | Matches the user's priority; Breakout remains a new-product acceptance case through the same pipeline |
+| P-D13 | Accept the R2 deterministic delivery slice while retaining a separate live/provider gate | Disposable imports, checks, protected acceptance and packaging validate the architecture without authorizing personal repositories or inference. R3 can build the terminal/package experience; a nominated repository and live provider path still need their own bounded validation. |
 
 ## Working assumptions and decision deadlines
 

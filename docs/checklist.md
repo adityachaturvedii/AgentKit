@@ -236,8 +236,23 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [x] Revalidate actual repository state before producing request-sensitive read-only plans; stale enrollment blocks.
 - [x] Test hooks/filters not executing, authority expansion, tampering, bounded input, multiple repository shapes and CLI behavior using disposable fixtures.
 - [x] Pass 10 focused R1 tests, the 204-test suite with two expected outer-sandbox skips, both host checks separately, 4 terminal tests, `agentkit check`, Python 3.9 compilation and diff hygiene.
-- [ ] Implement the R2 independent importer, prepared environment and generalized verifier before running any enrolled repository task.
+- [x] Implement the R2 independent importer, prepared environment and generalized verifier on disposable enrolled repositories.
 - [ ] Validate an explicitly authorized real repository separately; disposable fixtures do not establish general compatibility.
+
+## R2 safe repository delivery
+
+- [x] Reconstruct enrolled bytes and executable modes in an independent controller-owned repository without clone, remotes, alternates, inherited templates or hard links.
+- [x] Reinspect source identity/content before and after import; reject stale state and tracked excluded content without touching the original.
+- [x] Require separate controller-side execution authorization; keep R1 enrollment and task/model text non-authoritative.
+- [x] Resolve prepared Python/check recipes without installation or network and block unprepared third-party imports.
+- [x] Ground narrow requests in enrolled filenames/content and require clarification for unmatched or contradictory requests.
+- [x] Supply revision-bound structured handoffs without expected patches or protected acceptance source.
+- [x] Run existing checks plus protected acceptance, reject empty collections, stale candidates and source/check mutation, and bind evidence to the exact head.
+- [x] Produce a deterministic local approval package through the existing transactional controller and Git broker with approval unset.
+- [x] Preserve dependency, stale-claim, cancellation and authentication-history regression families.
+- [x] Pass 11 focused tests, the 215-test repository suite (212 passed, 3 expected managed-environment skips), all three skipped checks separately at host level, 4 terminal tests, `agentkit check`, compilation and diff hygiene.
+- [ ] Validate live Codex/Claude execution and guided authentication recovery on the repository-delivery adapter under a separately declared allowance.
+- [ ] Add the complete plain/JSON/terminal package workflow in R3; no original-repository application or publication exists in R2.
 
 ## AgentKit brand rename
 
