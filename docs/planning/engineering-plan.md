@@ -1,6 +1,6 @@
 # Repository-first engineering plan
 
-Status: R0, R1 and the R2 disposable-fixture delivery slice are implemented; R3 and later work remains proposed. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
+Status: R0, R1, the R2 disposable-fixture delivery slice and R3 P11 portable-package verifier are implemented; P12/P13 and later work remain proposed. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
 
 ## Architecture and ownership
 

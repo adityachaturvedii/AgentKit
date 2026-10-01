@@ -23,6 +23,16 @@ def main(argv=None):
     commands.add_parser("check", help="check pack references, notices and blocked examples offline")
     commands.add_parser("doctor", help="read-only version, feature, authentication and sandbox observations")
     commands.add_parser("resource-policy", help="show resource precedence and role capability profiles")
+    package = commands.add_parser("package", help="export or verify a portable offline review folder")
+    package_commands = package.add_subparsers(dest="package_command", required=True)
+    package_export = package_commands.add_parser(
+        "export", help="export an awaiting-approval workflow without executing candidate code")
+    package_export.add_argument("--workflow", required=True)
+    package_export.add_argument("--task-id", required=True)
+    package_export.add_argument("--output", required=True, help="fresh destination directory")
+    package_verify = package_commands.add_parser(
+        "verify", help="verify package hashes and consistency without executing code")
+    package_verify.add_argument("path")
     reuse_demo = commands.add_parser(
         "reuse-demo", help="offline deterministic OpenHarness reuse-slice demonstration")
     reuse_demo.add_argument("--output", required=True, help="fresh R0 demonstration directory")
@@ -198,6 +208,12 @@ def main(argv=None):
         elif args.command == "resource-policy":
             from .resource_policy import policy_document
             print(json.dumps(policy_document(), indent=2))
+        elif args.command == "package":
+            from .portable_package import export_package, verify_package
+            result = (export_package(args.workflow, args.task_id, args.output)
+                      if args.package_command == 'export' else verify_package(args.path))
+            print(json.dumps(result, indent=2))
+            return 0
         elif args.command == "smoke":
             from .smoke import smoke_test
             result = smoke_test(args.engine, args.output, args.authorize_subscription_smoke)
