@@ -9,11 +9,11 @@
   "adaptations": [
     {
       "local": "agentkit/integrations/openharness/protocol.py",
-      "local_sha256": "5ffd67990df720459e56ca6a9b7d4dad8067f1d7720b9ced6ca43c7a1863eb76",
+      "local_sha256": "53d2a0ea1ce518bc2cbf0651f49a1f5f2a357dd7849a3123e3246f5d43031d64",
       "upstream": "src/openharness/ui/protocol.py",
       "upstream_sha256": "5eb25d836f99231b9143f7e17ec72c32265e2bdd783d5ca88d6b1d3a2eb0dd53",
       "decision": "adapt",
-      "changes": ["removed pydantic and runtime imports", "versioned and byte-bounded messages", "allowlisted controller commands", "removed permission, prompt, tool and approval-like commands"]
+      "changes": ["removed pydantic and runtime imports", "versioned and byte-bounded messages", "allowlisted controller lifecycle commands", "bounded status and routing projection", "removed permission, prompt, tool and approval-like commands"]
     },
     {
       "local": "agentkit/integrations/openharness/profiles.py",
@@ -41,19 +41,19 @@
     },
     {
       "local": "frontend/agentkit-terminal/src/renderer.mjs",
-      "local_sha256": "04229430aa8b509b63989529be5e39d855ec4dc8427942799fe6ea3fcf2f681a",
+      "local_sha256": "401e5116368ac0d17a9e1b6cbae47a171898d56c5c87220243ec56d3c9714f55",
       "upstream": "frontend/terminal/src/components/StatusBar.tsx",
       "upstream_sha256": "e3a1863a639cac18d960f1ace58469d74a2cfcd1eada61aff0d0d27b4fb801f9",
       "decision": "adapt",
-      "changes": ["task/evidence status fields", "unknown usage retained", "authentication, cancellation and stale-candidate display", "no React/Ink runtime dependency in R0"]
+      "changes": ["task/evidence status fields", "unknown usage retained", "next action and bounded routing display", "authentication, cancellation and stale-candidate display", "strict authority-field rejection", "no React/Ink runtime dependency"]
     },
     {
       "local": "frontend/agentkit-terminal/src/renderer.mjs",
-      "local_sha256": "04229430aa8b509b63989529be5e39d855ec4dc8427942799fe6ea3fcf2f681a",
+      "local_sha256": "401e5116368ac0d17a9e1b6cbae47a171898d56c5c87220243ec56d3c9714f55",
       "upstream": "frontend/terminal/src/components/TranscriptPane.tsx",
       "upstream_sha256": "84891d4c689ac6b9cb69e1e86abdd2e122c7721607537743586c6b142bbcba57",
       "decision": "adapt",
-      "changes": ["bounded status transcript", "model output stays display data", "candidate and approval-package summary"]
+      "changes": ["bounded status transcript", "model output stays display data", "multiline control-character rejection", "candidate and approval-package summary"]
     },
     {
       "local": "frontend/agentkit-terminal/src/render-events.mjs",
