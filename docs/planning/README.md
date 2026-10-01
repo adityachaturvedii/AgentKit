@@ -1,6 +1,6 @@
 # AgentKit reuse-first product plan
 
-Planning review: 2026-10-01. Status: R0 reuse spike implemented; R1 and later capabilities remain proposed and are not authorization for new execution profiles, paid inference or publication.
+Planning review: 2026-10-01. Status: R0 reuse spike and R1 read-only intake implemented; R2 and later capabilities remain proposed and are not authorization for new execution profiles, paid inference or publication.
 
 The user has selected **both existing-repository engineering and new-product creation, with existing repositories first**, for **small engineering teams and some public open-source users**. Substantial reuse of OpenHarness is an explicit engineering preference. We will compare and adapt working code before writing replacements.
 
@@ -35,4 +35,10 @@ All command examples in the engineering plan are **proposed interface specificat
 
 R0 accepted the recommended component-port architecture. Actual profile, context, protocol, atomic-write and terminal presentation behavior was adapted around the unchanged controller, and a deterministic workflow reached an unapproved local package through the new seam. The adopted runtime adds no Python or Node package dependency. See the [R0 validation report](../r0-validation-report.md) and [dependency/license audit](../r0-dependency-license-audit.md).
 
-The executable terminal is deliberately a dependency-free one-shot renderer. The complete React/Ink TUI remains optional pending its 80-entry locked dependency/license/build audit. R0 does not validate real-repository execution; R1 read-only onboarding remains the next gate.
+The executable terminal is deliberately a dependency-free one-shot renderer. The complete React/Ink TUI remains optional pending its 80-entry locked dependency/license/build audit.
+
+## R1 outcome
+
+R1 implements P05 for controller-created disposable repository fixtures: bounded read-only inspection, strict Python-library profile validation, private hash-bound enrollment and revision-bound non-executing plans. The inspector runs no project code, hooks, filters, dependency installation, provider calls or network operations. It fails closed on repository shapes that could escape or transform the observed content. No personal or third-party repository was accessed, so applicability beyond the tested shapes remains unverified.
+
+R1 does not authorize implementation against an enrolled repository. R2 independent import, prepared-environment and generalized verification work remains the next gate. See the [R1 intake guide](../r1-project-intake.md) and [validation report](../r1-validation-report.md).

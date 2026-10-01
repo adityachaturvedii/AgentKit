@@ -225,7 +225,19 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 
 The [new product plan](planning/README.md) proposes repository-first sequencing. The older phase list below is retained as historical roadmap context; it is not a requirement to build a GPU worker before repository onboarding. Breakout remains a later new-product acceptance case, following the user's updated priority.
 
-R0 accepts architecture option B: a component port around the durable AgentKit controller. It does not validate real-repository execution. R1 read-only repository intake is the next planned boundary.
+R0 accepts architecture option B: a component port around the durable AgentKit controller. R1 implements the read-only repository-intake boundary on disposable fixtures. It does not validate repository import or execution; R2 is the next planned boundary.
+
+## R1 read-only repository intake
+
+- [x] Add bounded standalone Git identity, revision, inventory and raw clean-state inspection without `git status` or project execution.
+- [x] Reject config includes, alternates, shared/symlinked metadata, dirty baselines, submodules, symlinks, LFS, transforms and unsupported object formats.
+- [x] Add a strict Python-library profile schema whose checks are proposals and whose execution flag must remain false.
+- [x] Persist private enrollment records outside the project, bound to root, inode, branch, revision, inventory and profile hashes.
+- [x] Revalidate actual repository state before producing request-sensitive read-only plans; stale enrollment blocks.
+- [x] Test hooks/filters not executing, authority expansion, tampering, bounded input, multiple repository shapes and CLI behavior using disposable fixtures.
+- [x] Pass 10 focused R1 tests, the 204-test suite with two expected outer-sandbox skips, both host checks separately, 4 terminal tests, `agentkit check`, Python 3.9 compilation and diff hygiene.
+- [ ] Implement the R2 independent importer, prepared environment and generalized verifier before running any enrolled repository task.
+- [ ] Validate an explicitly authorized real repository separately; disposable fixtures do not establish general compatibility.
 
 ## AgentKit brand rename
 
