@@ -269,7 +269,12 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [x] Verify hashes, sizes, paths, file inventory, revision bindings, evidence status/kind, requirement mapping and diff consistency offline without executing candidate code.
 - [x] Reject tampering, extra files, symlinks, traversal, stale/missing/failed evidence and malformed internal JSON in disposable regressions.
 - [x] Pass 8 focused package tests, the 235-test suite (232 passed, 3 unchanged managed-environment skips), structural checks, compilation with a workspace-safe bytecode cache and diff hygiene; use no inference.
-- [ ] Complete P12's equivalent plain/JSON/terminal task workflow and P13 distribution/compatibility work.
+- [x] Complete P12's equivalent plain, JSON, protocol-event and dependency-free one-shot terminal workflow for existing Phase 4 disposable tasks.
+- [x] Keep start/resume authority in CLI construction flags; reject live mode without explicit authorization and prevent task text or frontend events from granting it.
+- [x] Expose status, start, resume, cancellation and bounded package summary through one allowlisted frontend without adding approval, publication or replay authority.
+- [x] Document that the terminal is one-shot rather than a full-screen interactive TUI, and preserve unknown usage and explicit next action across views.
+- [x] Pass 23 focused Python workflow/protocol tests, 8 dependency-free Node tests and the 248-test suite (245 passed, 3 unchanged managed-environment skips), plus structural checks, compilation and diff hygiene; use no inference.
+- [ ] Complete P13 distribution/compatibility work and any separately audited optional full-screen TUI.
 - [ ] Add signed provenance or authenticated team approvals; manifest integrity is currently unauthenticated.
 
 ## Later phases (historical plan, not implemented)

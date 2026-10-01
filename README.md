@@ -29,7 +29,7 @@ Most agent demos stop when a model says the task is complete. AgentKit treats mo
 
 ## Project status
 
-AgentKit is experimental. The original Phase 4 workflow has been extended with an OpenHarness reuse slice (R0), read-only repository intake (R1), a corrected deterministic repository-delivery slice (R2), and the first R3 portable-package increment. This is not a claim that arbitrary repositories are ready for execution.
+AgentKit is experimental. The original Phase 4 workflow has been extended with an OpenHarness reuse slice (R0), read-only repository intake (R1), a corrected deterministic repository-delivery slice (R2), and R3 portable-package and terminal-workflow increments. This is not a claim that arbitrary repositories are ready for execution.
 
 | Area | Status |
 |---|---|
@@ -42,7 +42,8 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | OpenHarness reuse (R0) | Offline-tested profile, context, protocol and terminal adaptations around the existing controller |
 | Read-only repository intake (R1) | Fixture-tested bounded inspection, hash-bound enrollment and non-executing plans for clean standalone Python libraries |
 | Repository delivery (R2) | Deterministic integration slice; corrective boundaries and durable stage-specific authentication resume are fixture-tested; live repository-provider validation remains open |
-| Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; complete terminal workflow, signing and distribution remain open |
+| Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; signing and distribution remain open |
+| Terminal workflow (R3 P12) | Plain, JSON, protocol-event and one-shot terminal views over existing Phase 4 disposable workflows; no full-screen interactive TUI |
 | Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
 
@@ -98,20 +99,31 @@ python3 -m agentkit task plan \
   --root /tmp/agentkit-task \
   --task-id calculator-demo
 
-python3 -m agentkit task start \
+python3 -m agentkit workflow start \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo \
+  --format terminal
+
+python3 -m agentkit workflow status \
   --root /tmp/agentkit-task \
   --task-id calculator-demo
 
-python3 -m agentkit task status \
+python3 -m agentkit workflow package \
   --root /tmp/agentkit-task \
-  --task-id calculator-demo
-
-python3 -m agentkit task package \
-  --root /tmp/agentkit-task \
-  --task-id calculator-demo
+  --task-id calculator-demo \
+  --format json
 ```
 
 The workflow stops at `awaiting_pr_approval`. It does not push, open a pull request, merge or deploy.
+
+The `workflow` commands operate that existing controller record through the consistent R3 frontend. Other output views are selected explicitly:
+
+```sh
+python3 -m agentkit workflow status --root /tmp/agentkit-task --task-id calculator-demo --format events
+python3 -m agentkit workflow package --root /tmp/agentkit-task --task-id calculator-demo --format plain
+```
+
+The available output formats are `plain`, `json`, `events` (protocol JSONL) and `terminal`. The terminal form is the dependency-free one-shot Node renderer, not an interactive full-screen TUI. See the [R3 terminal workflow](docs/r3-terminal-workflow.md) and [P12 validation report](docs/r3-terminal-validation-report.md) for actions, authorization, evidence and boundaries.
 
 Use a fresh `--root` for each demo. The built-in projects are intentionally narrow: `calculator` exercises a single assignment; text metrics and inventory provide independent work; the text pipeline exercises dependencies; case-policy conflicts require clarification. Deterministic planning uses request terms and bounded project inventory. Unmatched or contradictory requests do not silently become calculator repairs.
 
@@ -242,6 +254,7 @@ The first Breakout attempt failed during planning; the later integration checkpo
 | `python3 -m agentkit controller-demo` | Exercise the Phase 3 delivery controller | Fake by default; live is opt-in |
 | `python3 -m agentkit auth-status`, `auth-login`, `auth-reconcile` | Inspect or recover official subscription login | Login is interactive and uncaptured |
 | `python3 -m agentkit task ...` | Propose, submit, run, inspect, cancel, resume and package disposable tasks | Fake by default; live is opt-in |
+| `python3 -m agentkit workflow ...` | Status, start, resume, cancel and package-summary views for an existing disposable task | Fake by default; live start/resume require explicit authorization |
 | `python3 -m agentkit resource-policy` | Explain resolved controls and capability profiles | No |
 | `python3 -m agentkit reuse-demo` | Exercise adapted OpenHarness components with the existing controller | No |
 | `python3 -m agentkit project ...` | Inspect, enroll and plan a selected supported repository read-only | No |

@@ -4,9 +4,80 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import tempfile
 
 from .pack import catalog, check_pack, render, select
 from .validation import ValidationError, read_json, validate_handoff
+
+
+def _workflow_plain(events):
+    """Render bounded protocol events without treating display text as authority."""
+    state = {}
+    task = None
+    package = None
+    messages = []
+    for event in events:
+        value = event.to_dict()
+        if value.get('state') is not None:
+            state = value['state']
+        if value.get('task') is not None:
+            task = value['task']
+        if value.get('package') is not None:
+            package = value['package']
+        if value.get('message'):
+            messages.append(value['message'])
+    task = task or {}
+    lines = [
+        'task: ' + str(task.get('task_id', 'unknown')),
+        'state: ' + str(state.get('stage', task.get('state', 'unknown'))),
+        'next action: ' + str(task.get('next_action') or state.get('next_action') or 'none'),
+    ]
+    if state:
+        if state.get('usage_known'):
+            usage = '{} input, {} output'.format(state.get('input_tokens'), state.get('output_tokens'))
+        else:
+            usage = 'unknown'
+        lines.append('usage: ' + usage)
+        lines.append('assignments: {} ready, {} active, {} waiting, {} completed'.format(
+            state.get('ready', 'unknown'), state.get('active', 'unknown'),
+            state.get('waiting', 'unknown'), state.get('completed', 'unknown')))
+        attention = state.get('attention') or ()
+        if attention:
+            lines.append('attention: ' + (attention if isinstance(attention, str) else
+                                          ', '.join(str(item) for item in attention)))
+        if state.get('blocker'):
+            lines.append('blocker: ' + str(state['blocker']))
+        for route in state.get('routing') or ():
+            lines.append('route: {} -> {} ({})'.format(
+                route.get('role', 'unknown'), route.get('provider', 'unknown'),
+                route.get('reason', 'unknown')))
+    if package:
+        lines.extend((
+            'candidate: ' + str(package.get('head_revision', 'unknown')),
+            'verification: ' + str(package.get('verification_count', 'unknown')),
+            'findings: ' + str(package.get('findings_count', 'unknown')),
+            'approval recorded: ' + ('yes' if package.get('approval_recorded') is True else 'no'),
+        ))
+    lines.extend('message: ' + message for message in messages)
+    return '\n'.join(lines) + '\n'
+
+
+def _emit_workflow(events, output_format):
+    from .integrations.openharness.protocol import event_stream
+
+    events = tuple(events)
+    if output_format == 'events':
+        print(event_stream(events), end='')
+    elif output_format == 'json':
+        print(json.dumps({'events': [event.to_dict() for event in events]}, indent=2))
+    elif output_format == 'plain':
+        print(_workflow_plain(events), end='')
+    else:
+        from .integrations.openharness.backend import _render_with_adapted_terminal
+        with tempfile.NamedTemporaryFile('w', encoding='utf-8', suffix='.jsonl') as stream:
+            stream.write(event_stream(events))
+            stream.flush()
+            print(_render_with_adapted_terminal(Path(stream.name)), end='')
 
 
 def main(argv=None):
@@ -189,6 +260,24 @@ def main(argv=None):
     browser_record.add_argument("--root", required=True)
     browser_record.add_argument("--task-id", required=True)
     browser_record.add_argument("--evidence", required=True)
+    workflow = commands.add_parser(
+        "workflow", help="operate an existing Phase 4 disposable workflow through the terminal protocol")
+    workflow_commands = workflow.add_subparsers(dest="workflow_command", required=True)
+    for name, help_text in (
+            ("status", "read current controller status"),
+            ("start", "start or continue the bounded workflow"),
+            ("resume", "resume a verified authentication checkpoint"),
+            ("cancel", "request cancellation and prevent subsequent launches"),
+            ("package", "read the local approval-package summary")):
+        command = workflow_commands.add_parser(name, help=help_text)
+        command.add_argument("--root", required=True, help="existing Phase 4 workflow root")
+        command.add_argument("--task-id", required=True)
+        command.add_argument("--format", choices=("plain", "json", "events", "terminal"),
+                             default="plain")
+        if name in ("start", "resume"):
+            command.add_argument("--live", action="store_true")
+            command.add_argument("--authorize-subscription-smoke", action="store_true",
+                                 help="authorize bounded live provider execution for this invocation")
     args = parser.parse_args(argv)
     try:
         if args.command == "list":
@@ -465,10 +554,25 @@ def main(argv=None):
                     raise ValueError('local product approval package is not available')
                 print(json.dumps(package, indent=2))
             return 0
+        elif args.command == "workflow":
+            from .integrations.openharness.protocol import FrontendRequest
+            from .terminal_workflow import TerminalWorkflow
+
+            live = getattr(args, 'live', False)
+            authorized = getattr(args, 'authorize_subscription_smoke', False)
+            if live and not authorized:
+                raise ValueError('live workflow execution requires explicit subscription authorization')
+            if authorized and not live:
+                raise ValueError('subscription authorization is valid only with --live')
+            request_type = 'package_summary' if args.workflow_command == 'package' else args.workflow_command
+            backend = TerminalWorkflow(args.root, args.task_id, live=live, authorized=authorized)
+            events = backend.handle(FrontendRequest(request_type, args.task_id))
+            _emit_workflow(events, args.format)
+            return 0
         else:
             print(json.dumps(check_pack(), indent=2))
         return 0
-    except (ValidationError, OSError, KeyError, ValueError) as exc:
+    except (ValidationError, OSError, KeyError, RuntimeError, ValueError) as exc:
         print("agentkit: " + str(exc), file=sys.stderr)
         return 2
 
