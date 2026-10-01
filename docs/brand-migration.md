@@ -12,12 +12,12 @@ This is a compatibility-preserving brand rename. It does not change execution au
 | CLI invocation | `python3 -m agentkit` | Stable |
 | Python package | `agentkit` | Stable |
 | Terminal package | `agentkit-openharness-terminal-slice` | Private internal package |
-| GitHub repository | `adityachaturvedii/portable-agentkit` | Legacy remote name retained until separately renamed |
+| GitHub repository | `adityachaturvedii/AgentKit` | Canonical remote name |
 | Handoff schema ID | `urn:portable-agentkit:handoff:1` | Stable v1 compatibility identifier |
 
 Historical evidence, branch names, filesystem paths, source-input filenames and recorded repository URLs are not rewritten. Their exact spelling is part of their provenance. Temporary-directory prefixes and serialized technical identifiers remain lowercase `agentkit`.
 
-Renaming the GitHub repository is an external publication action. If separately authorized, perform it through a PR/merge workflow where applicable, rely on GitHub's redirect only as a transition aid, update clone/install links, and verify remotes and documentation afterward. A new handoff schema name would require a new schema version plus migration and dual-read compatibility; it must not silently replace the v1 URN.
+The GitHub repository was renamed after separate user authorization. GitHub resolves the former `adityachaturvedii/portable-agentkit` name to `adityachaturvedii/AgentKit`, and the local `origin` uses the canonical URL. Historical records keep the old spelling as provenance. A new handoff schema name would require a new schema version plus migration and dual-read compatibility; it must not silently replace the v1 URN.
 
 ## Validation
 
@@ -26,4 +26,4 @@ Renaming the GitHub repository is an external publication action. If separately 
 - The complete Python suite contains 194 tests. In the managed command sandbox, 192 pass, the loopback preview check cannot open its host socket, and the nested macOS Seatbelt check skips because `sandbox_apply` is unavailable there. Both host-bound checks pass separately in their documented execution context.
 - `python3 -m agentkit check` passes its offline structural checks.
 
-These checks validate the local brand migration and compatibility choices. They do not rename or test the GitHub repository.
+These checks validate the local brand migration and compatibility choices. The later repository rename was verified separately through GitHub and does not alter runtime behavior.

@@ -232,7 +232,7 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [x] Adopt **AgentKit** as the product and display name in active documentation, CLI help and the adapted terminal.
 - [x] Preserve the `agentkit` command, Python module, artifact paths and temporary prefixes as stable lowercase technical identifiers.
 - [x] Preserve historical worktree/repository references and the versioned `urn:portable-agentkit:handoff:1` schema identifier.
-- [x] Document the compatibility boundary and defer the GitHub repository rename to a separately authorized publication action.
+- [x] Rename the separately authorized GitHub repository to `adityachaturvedii/AgentKit`, update `origin`, and verify the former name resolves to the canonical repository.
 - [ ] Select the outbound license before public distribution; the brand rename does not resolve licensing.
 
 ## Later phases (historical plan, not implemented)
