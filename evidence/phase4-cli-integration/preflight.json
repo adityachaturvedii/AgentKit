@@ -1,0 +1,36 @@
+{
+  "billing": {
+    "billed_cost_usd": null,
+    "mode": "subscription-reported",
+    "paid_overflow": null
+  },
+  "budget": {
+    "actual_schedule": "sequential",
+    "cli_launches": 6,
+    "game_inference": false,
+    "max_concurrency": 2,
+    "overall_seconds": 1200.0,
+    "provider_substitution": false,
+    "retries": 0
+  },
+  "cli": {
+    "claude": {
+      "authentication": "subscription-reported",
+      "sha256": "8addc857f3fe64d5a0368af9ee50321b50afb4a6918ba3ef018ab84f5dbbe081",
+      "subscription_type": "max",
+      "version": "2.1.220"
+    },
+    "codex": {
+      "authentication": "subscription-reported",
+      "sha256": "61b0194f3bb6534439c8d26a3ed57d0805f84b884588b761795323eeb92fcf70",
+      "version": "0.154.0"
+    }
+  },
+  "executable_revision": "a0f2906b59d7adf0858c1749228a5b2d815ea0c6",
+  "platform": {
+    "machine": "arm64",
+    "release": "25.6.0",
+    "system": "Darwin"
+  },
+  "schema_version": 1
+}

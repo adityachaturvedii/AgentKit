@@ -10,7 +10,7 @@ from .validation import ValidationError, read_json, validate_handoff
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Portable skill foundation and bounded CLI integration")
+    parser = argparse.ArgumentParser(description="AgentKit engineering-agent controller and evidence toolkit")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="list available skills and explicit intents")
     selection = commands.add_parser("select", help="select a skill by explicit intent")
@@ -22,6 +22,10 @@ def main(argv=None):
     validate.add_argument("file")
     commands.add_parser("check", help="check pack references, notices and blocked examples offline")
     commands.add_parser("doctor", help="read-only version, feature, authentication and sandbox observations")
+    commands.add_parser("resource-policy", help="show resource precedence and role capability profiles")
+    reuse_demo = commands.add_parser(
+        "reuse-demo", help="offline deterministic OpenHarness reuse-slice demonstration")
+    reuse_demo.add_argument("--output", required=True, help="fresh R0 demonstration directory")
     smoke = commands.add_parser("smoke", help="one disposable model-only CLI smoke; blocked by default")
     smoke.add_argument("engine", choices=("codex", "claude"))
     smoke.add_argument("--output", required=True, help="fresh result directory")
@@ -64,18 +68,53 @@ def main(argv=None):
     auth_reconcile.add_argument("--basis", required=True,
                                 choices=("process_exit_confirmed", "process_termination_unconfirmed"),
                                 help="sanitized process evidence; free-form terminal output is not accepted")
+    project = commands.add_parser(
+        "project", help="R1 read-only repository inspection, enrollment and planning")
+    project_commands = project.add_subparsers(dest="project_command", required=True)
+    project_inspect = project_commands.add_parser(
+        "inspect", help="inspect bounded Git metadata and tracked content without running project code")
+    project_inspect.add_argument("path")
+    project_commands.add_parser(
+        "profile-example", help="print the supported R1 Python-library profile example")
+    project_enroll = project_commands.add_parser(
+        "enroll", help="hash-enroll a clean supported repository for read-only planning")
+    project_enroll.add_argument("path")
+    project_enroll.add_argument("--profile", required=True)
+    project_enroll.add_argument("--state-root", required=True)
+    project_show = project_commands.add_parser("show", help="show a hash-verified enrollment")
+    project_show.add_argument("--state-root", required=True)
+    project_show.add_argument("--project-id", required=True)
+    project_plan = project_commands.add_parser(
+        "plan", help="produce a non-executing plan bound to the current enrolled revision")
+    project_plan.add_argument("--state-root", required=True)
+    project_plan.add_argument("--project-id", required=True)
+    project_plan.add_argument("--request", required=True)
     task = commands.add_parser("task", help="Phase 4 disposable task intake and orchestration")
     task_commands = task.add_subparsers(dest="task_command", required=True)
     task_commands.add_parser("fixtures", help="list supported controller-created disposable targets")
+    task_propose = task_commands.add_parser(
+        "propose", help="inspect request-driven planning without creating a workflow")
+    task_propose.add_argument("--project", required=True)
+    task_propose.add_argument("--request", required=True)
     task_submit = task_commands.add_parser("submit", help="normalize a request and propose a bounded plan")
     task_submit.add_argument("--root", required=True, help="fresh workflow directory")
     task_submit.add_argument("--task-id", required=True)
-    task_submit.add_argument("--fixture", required=True)
+    target = task_submit.add_mutually_exclusive_group(required=True)
+    target.add_argument("--project", help="controller-created disposable project scenario")
+    target.add_argument("--fixture", help="backward-compatible alias for --project")
     task_submit.add_argument("--request", required=True)
     task_submit.add_argument("--risk", choices=("routine", "material"))
     task_submit.add_argument("--max-calls", type=int)
     task_submit.add_argument("--max-elapsed-seconds", type=float)
     task_submit.add_argument("--max-concurrency", type=int, choices=(1, 2))
+    task_submit.add_argument("--max-provider-calls", type=int)
+    task_submit.add_argument("--max-planning-calls", type=int, default=0)
+    task_submit.add_argument("--max-repairs", type=int, choices=(0, 1, 2), default=2)
+    task_submit.add_argument("--max-escalations", type=int, choices=(0, 1, 2))
+    task_submit.add_argument("--implementation-timeout", type=float, default=60)
+    task_submit.add_argument("--review-timeout", type=float, default=60)
+    task_submit.add_argument("--verification-timeout", type=float, default=10)
+    task_submit.add_argument("--routing-config", help="validated portable model registry JSON")
     task_submit.add_argument("--implementer-provider", choices=("codex", "claude"), default="codex",
                              help="account-default provider for implementation and bounded repair")
     task_submit.add_argument("--reviewer-provider", choices=("codex", "claude"), default="claude",
@@ -95,6 +134,51 @@ def main(argv=None):
         command.add_argument("--task-id", required=True)
         command.add_argument("--live", action="store_true")
         command.add_argument("--authorize-subscription-smoke", action="store_true")
+    product = commands.add_parser(
+        "product", help="provider-planned controller-created static web product")
+    product_commands = product.add_subparsers(dest="product_command", required=True)
+    product_submit = product_commands.add_parser(
+        "submit", help="run one bounded provider planning call and record a validated proposal")
+    product_submit.add_argument("--root", required=True, help="fresh workflow directory")
+    product_submit.add_argument("--task-id", required=True)
+    product_submit.add_argument("--brief-file", required=True)
+    product_submit.add_argument("--acceptance-file", required=True)
+    product_submit.add_argument("--mechanics-test", required=True)
+    product_submit.add_argument("--routing-config")
+    product_submit.add_argument("--max-calls", type=int)
+    product_submit.add_argument("--max-provider-calls", type=int)
+    product_submit.add_argument("--max-concurrency", type=int, choices=(1, 2))
+    product_submit.add_argument("--max-repairs", type=int, choices=(0, 1, 2))
+    product_submit.add_argument("--max-retries", type=int, choices=(0, 1, 2))
+    product_submit.add_argument("--max-escalations", type=int, choices=(0, 1, 2))
+    product_submit.add_argument("--max-elapsed-seconds", type=float)
+    product_submit.add_argument("--planning-timeout", type=float)
+    product_submit.add_argument("--implementation-timeout", type=float)
+    product_submit.add_argument("--review-timeout", type=float)
+    product_submit.add_argument("--verification-timeout", type=float)
+    product_submit.add_argument("--live", action="store_true")
+    product_submit.add_argument("--authorize-subscription-smoke", action="store_true")
+    for name, help_text in (
+            ("plan", "show the provider proposal and validated graph"),
+            ("status", "show product stage, resources, blockers and attention"),
+            ("cancel", "request bounded workflow cancellation"),
+            ("package", "read the revision-bound local approval package"),
+            ("preview-serve", "serve the reviewed candidate until Ctrl+C and confirm cleanup")):
+        command = product_commands.add_parser(name, help=help_text)
+        command.add_argument("--root", required=True)
+        command.add_argument("--task-id", required=True)
+    for name, help_text in (("start", "execute the validated product plan"),
+                            ("resume", "resume a verified product authentication checkpoint")):
+        command = product_commands.add_parser(name, help=help_text)
+        command.add_argument("--root", required=True)
+        command.add_argument("--task-id", required=True)
+        command.add_argument("--live", action="store_true")
+        command.add_argument("--authorize-subscription-smoke", action="store_true")
+    browser_record = product_commands.add_parser(
+        "browser-record", help="validate exact-revision controller-owned browser evidence")
+    browser_record.add_argument("--root", required=True)
+    browser_record.add_argument("--task-id", required=True)
+    browser_record.add_argument("--evidence", required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "list":
@@ -111,6 +195,9 @@ def main(argv=None):
         elif args.command == "doctor":
             from .doctor import doctor
             print(json.dumps(doctor(), indent=2))
+        elif args.command == "resource-policy":
+            from .resource_policy import policy_document
+            print(json.dumps(policy_document(), indent=2))
         elif args.command == "smoke":
             from .smoke import smoke_test
             result = smoke_test(args.engine, args.output, args.authorize_subscription_smoke)
@@ -213,6 +300,11 @@ def main(argv=None):
                         authority=store.authority)
             print(json.dumps(result.to_dict(), indent=2))
             return 0 if result.status in ('succeeded', 'already_authenticated') else 1
+        elif args.command == "reuse-demo":
+            from .integrations.openharness import run_deterministic_demo
+            result = run_deterministic_demo(args.output)
+            print(json.dumps(result, indent=2))
+            return 0 if result['metadata']['final_state'] == 'awaiting_pr_approval' else 1
         elif args.command == "auth-reconcile":
             from .controller import ControllerStore
             root = Path(args.workflow).resolve()
@@ -226,20 +318,51 @@ def main(argv=None):
             print(json.dumps({'task_id': args.task_id, 'session_id': checkpoint['login_session_id'],
                               'status': status}, indent=2))
             return 0
+        elif args.command == "project":
+            from .projects import (ProjectRegistry, example_python_profile, inspect_project,
+                                   validate_project_profile)
+            if args.project_command == "inspect":
+                print(json.dumps(inspect_project(args.path), indent=2))
+            elif args.project_command == "profile-example":
+                print(json.dumps(example_python_profile(), indent=2))
+            elif args.project_command == "enroll":
+                profile = validate_project_profile(read_json(args.profile))
+                print(json.dumps(ProjectRegistry(args.state_root).enroll(args.path, profile), indent=2))
+            elif args.project_command == "show":
+                print(json.dumps(ProjectRegistry(args.state_root).load(args.project_id), indent=2))
+            else:
+                print(json.dumps(ProjectRegistry(args.state_root).plan(
+                    args.project_id, args.request), indent=2))
+            return 0
         elif args.command == "task":
             from .orchestration import Phase4Workflow, phase4_fixture_catalog
             if args.task_command == 'fixtures':
                 print(json.dumps({'execution_profile': 'trusted-disposable-macos',
                                   'fixtures': phase4_fixture_catalog()}, indent=2))
                 return 0
+            if args.task_command == 'propose':
+                from .phase4_fixtures import get_fixture
+                from .planning import bounded_inventory, propose
+                fixture = get_fixture(args.project)
+                print(json.dumps({'inventory': bounded_inventory(fixture),
+                                  'proposal': propose(args.request, fixture)}, indent=2))
+                return 0
             if args.task_command == 'submit':
                 from .phase4_contracts import ModelRegistry
-                registry = ModelRegistry.account_defaults(args.implementer_provider,
-                                                          args.reviewer_provider)
+                registry = (ModelRegistry.from_dict(read_json(args.routing_config))
+                            if args.routing_config else
+                            ModelRegistry.account_defaults(args.implementer_provider,
+                                                           args.reviewer_provider))
                 workflow = Phase4Workflow.submit(
-                    args.root, args.task_id, args.request, args.fixture, risk=args.risk,
+                    args.root, args.task_id, args.request, args.project or args.fixture, risk=args.risk,
                     max_calls=args.max_calls, max_elapsed_seconds=args.max_elapsed_seconds,
-                    max_concurrency=args.max_concurrency, registry=registry)
+                    max_concurrency=args.max_concurrency, registry=registry,
+                    max_provider_calls=args.max_provider_calls,
+                    max_planning_calls=args.max_planning_calls, max_repairs=args.max_repairs,
+                    max_escalations=args.max_escalations,
+                    implementation_timeout_seconds=args.implementation_timeout,
+                    review_timeout_seconds=args.review_timeout,
+                    verification_timeout_seconds=args.verification_timeout)
                 print(json.dumps({'contract': json.loads((workflow.root / 'contract.json').read_text()),
                                   'plan': json.loads((workflow.root / 'plan.json').read_text()),
                                   'status': workflow.status(args.task_id)}, indent=2))
@@ -264,6 +387,66 @@ def main(argv=None):
                 package = workflow.result(args.task_id)['approval_package']
                 if package is None:
                     raise ValueError('local approval package is not available')
+                print(json.dumps(package, indent=2))
+            return 0
+        elif args.command == "product":
+            from .product import ProductWorkflow
+            if args.product_command == 'submit':
+                if not args.live or not args.authorize_subscription_smoke:
+                    raise ValueError(
+                        'product planning uses a provider and requires explicit live subscription authorization')
+                from .phase4_contracts import ModelRegistry
+                registry = (ModelRegistry.from_dict(read_json(args.routing_config))
+                            if args.routing_config else ModelRegistry.account_defaults())
+                acceptance = read_json(args.acceptance_file)
+                workflow = ProductWorkflow.submit_product(
+                    args.root, args.task_id, Path(args.brief_file).read_text(), acceptance,
+                    Path(args.mechanics_test).read_text(), registry=registry, live=True,
+                    authorized=True, max_calls=args.max_calls,
+                    max_provider_calls=args.max_provider_calls,
+                    max_concurrency=args.max_concurrency, max_repairs=args.max_repairs,
+                    max_retries=args.max_retries,
+                    max_escalations=args.max_escalations,
+                    max_elapsed_seconds=args.max_elapsed_seconds,
+                    planning_timeout_seconds=args.planning_timeout,
+                    implementation_timeout_seconds=args.implementation_timeout,
+                    review_timeout_seconds=args.review_timeout,
+                    verification_timeout_seconds=args.verification_timeout)
+                result = workflow.status(args.task_id)
+                if (workflow.root / 'plan.json').is_file():
+                    result = {'contract': read_json(workflow.root / 'contract.json'),
+                              'plan': read_json(workflow.root / 'plan.json'), 'status': result}
+                print(json.dumps(result, indent=2))
+                return 0 if result.get('state', result.get('status', {}).get('state')) != 'blocked' else 1
+            live = getattr(args, 'live', False)
+            authorized = getattr(args, 'authorize_subscription_smoke', False)
+            if live and not authorized:
+                raise ValueError('live product execution requires explicit subscription authorization')
+            workflow = ProductWorkflow(args.root, live=live, authorized=authorized)
+            if args.product_command == 'plan':
+                print(json.dumps({'request': read_json(workflow.root / 'product-request.json'),
+                                  'contract': read_json(workflow.root / 'contract.json'),
+                                  'plan': read_json(workflow.root / 'plan.json')}, indent=2))
+            elif args.product_command == 'status':
+                print(json.dumps(workflow.status(args.task_id), indent=2))
+            elif args.product_command == 'start':
+                print(json.dumps(workflow.start(args.task_id), indent=2))
+            elif args.product_command == 'resume':
+                print(json.dumps(workflow.resume(args.task_id), indent=2))
+            elif args.product_command == 'cancel':
+                print(json.dumps(workflow.cancel(args.task_id), indent=2))
+            elif args.product_command == 'preview-serve':
+                workflow.serve_preview(
+                    args.task_id,
+                    ready_callback=lambda session: print(json.dumps(session), flush=True))
+                print(json.dumps({'status': 'stopped', 'cleanup_confirmed': True}, indent=2))
+            elif args.product_command == 'browser-record':
+                print(json.dumps(workflow.record_browser_evidence(
+                    args.task_id, read_json(args.evidence)), indent=2))
+            else:
+                package = workflow.result(args.task_id)['approval_package']
+                if package is None:
+                    raise ValueError('local product approval package is not available')
                 print(json.dumps(package, indent=2))
             return 0
         else:

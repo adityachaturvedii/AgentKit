@@ -1,0 +1,28 @@
+{
+  "executable_revision": "a0f2906b59d7adf0858c1749228a5b2d815ea0c6",
+  "files": {
+    "01-codex-direct-plan/request.json": "abf3d02d036267ea246701b8826581f795913474d69bbcb8a0ae8cc0c3f8d821",
+    "01-codex-direct-plan/result.json": "0f8f39c7a7e6700294c2532cca1fd2b410e353785560af14cf38006e795085c5",
+    "01-codex-direct-plan/stderr.redacted.txt": "f120436ca338ab444dca7e286993d2158fa5777751b865f197c46fb3be214aad",
+    "01-codex-direct-plan/stdout.redacted.jsonl": "2172e209a84d1e51a871647a39c39102373a8b0cb3d2505bcd1b9d3f2db4b8be",
+    "02-codex-adapter-plan/request.json": "049348324ef6c4995c11a77cd4cf1460abe8bd14d3d610f6a46694ea69255e12",
+    "02-codex-adapter-plan/result.json": "7bc7fa30a7ed2d2add7a583a83ea849fa5cf239049438d013d9381d45027599e",
+    "02-codex-adapter-plan/stderr.redacted.txt": "85907ea2d29a3625683926e34192a407d8b927ed2f0a00a512884030e7b9031b",
+    "02-codex-adapter-plan/stdout.redacted.jsonl": "3d8559aa8a3fb28a39c60af8aebb089341246a6289339a4747c27e053c60f74b",
+    "03-claude-direct-implementation/request.json": "6784d4ced6b583bcc511067f3855e85c51e9fd4a4b3c6903272eb90fb7e5eedf",
+    "03-claude-direct-implementation/result.json": "5c33e290c539b026eda6f6ca0f37c6b4ca508dcc84141ed9be99754d4b4541a8",
+    "03-claude-direct-implementation/stderr.redacted.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "03-claude-direct-implementation/stdout.redacted.jsonl": "8f2109cf9bc7f436e3325f9207dc4fc7deb0ddbde5ebcfd4e99de51907fbaa68",
+    "04-claude-adapter-implementation/request.json": "b8d93f9d613739f4f0554046ab36bcb2b314c7fd5e358ec6c0be453cbefafdfb",
+    "04-claude-adapter-implementation/result.json": "c7178c77054060d4ac1f2d0cbcd169831c8aa2db56b7e857c793d9387f4df8b3",
+    "04-claude-adapter-implementation/stderr.redacted.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "04-claude-adapter-implementation/stdout.redacted.jsonl": "b79e51f45c8db9835c0c0a528cb97aa6d93a101f06a02cc3f7c79b1c5f6f0bf3",
+    "checkpoint-progress.json": "457d0a51a10d297a304a12ebf549deff0258a15440fae89b6bf9d822f6ef7456",
+    "comparison.json": "b4fbaa532c92d22e6c2e58771ff842c7f213824e01ca4595733aab874a415b60",
+    "finalize_checkpoint.py": "637b2a68c4b07a615391b5bf81cdff0fca6ef00bc50f2437d5b36236731f700f",
+    "preflight.json": "2678ff024afc4fd525e2c8c7ec0aba8083010c461c6d8496b6b71f8da620fe8c",
+    "run_checkpoint.py": "59b6e5fc487e5b26571cc936f0de82b2c6c997e55029b3863cd862eef8f18b07",
+    "summary.json": "bc2cba0bd554a9bf461e4d497ee02bcf67bd7f504f876002f70b19cd2160dc69"
+  },
+  "schema_version": 1
+}

@@ -135,9 +135,134 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 - [x] Correct scope claims: decomposition is fixture-defined, execution is sequential, management roles are deterministic and routing is not calibrated optimization.
 - [x] Preserve the prior live archive unchanged and label it historical evidence for `af80791` rather than validation of the corrected revision.
 - [x] Complete the 137-test repository suite with status `OK` and one expected nested-Seatbelt skip, pass that boundary regression separately at host level and pass `agentkit check`.
-- [ ] Run a new bounded live workflow for the corrected revision only under separate authorization; no live inference is spent in this corrective pass.
+- [x] Validate exact executable revision `342423ea27700e7d46a977d47e3307bd8fa58c23` in one fresh bounded live calculator workflow: one Codex implementation, one constrained verification and one Claude review reached a candidate-bound local package with no repair or approval.
+- [x] Archive sanitized prompts, redacted provider records, controller state, verification, candidate identity/diff, usage and package in a 28-file SHA-256 manifest distinct from the historical `af80791` archive.
 
-## Later phases (planned, not implemented)
+## Phase 4 — request-driven planning and bounded concurrency increment
+
+- [x] Start from verified evidence-bearing descendant `41290944ca3a6048e0ed7c3eb85331d028f18a43` with executable baseline `342423ea27700e7d46a977d47e3307bd8fa58c23` on dedicated branch `implementation/phase-4-dynamic-scheduling`.
+- [x] Add inspectable request-driven proposals bound to a path/hash/interface inventory, with user requirements separated from assumptions and expected patches excluded.
+- [x] Add controller-created small, parallel, ordered and conflicting-requirement project scenarios, including independently testable request-selected subsets.
+- [x] Deterministically reject stale inventory, changed acceptance, unsafe paths, cycles, excessive fan-out, overlapping independent writes and call/time infeasibility before execution.
+- [x] Launch up to two ready provider assignments concurrently with atomic reservations, separate worktrees/copies, persisted owner identity and controller-only integration.
+- [x] Preserve completed siblings through authentication pause; propagate cancellation to both active workers; block uncertain ownership and conservative integration conflicts.
+- [x] Add portable routing-registry JSON, dated exact-model evidence, explicit defaults, node/risk/difficulty policies and independent-review exclusion across implementation/repair providers.
+- [x] Propagate configured model, supported effort, per-stage timeout and output bounds through actual adapter requests while keeping provider-reported metadata separate.
+- [x] Track total/provider/planning calls transactionally and preserve total and provider review capacity under concurrent implementation pressure.
+- [x] Extend structured handoffs with interfaces, dependencies, exact revision, evidence references and remaining allocation; retain role-bounded hash-verified skills.
+- [x] Add status groups for ready, active, waiting and completed assignments with routing reasons and remaining total/provider budgets.
+- [x] Pass 16 focused request-planning/concurrency tests, then the 154-test repository regression suite after the shell-runtime correction (`OK`, one expected nested-Seatbelt skip), and pass `python3 -m agentkit check`.
+- [x] Attempt the separately authorized live demonstration against exact executable `b22020c`: two Codex implementations overlapped for 43.367214 seconds; one contribution committed, one produced no change after sandboxed Git/heredoc failures, and the controller blocked before integration, verification, review or packaging without retry.
+- [x] Preserve sanitized requests, redacted events, results, controller state, contribution diff, usage and preflight in a hash manifest; record that no approval was created.
+- [x] Correct the narrow owned-code compatibility gap at `b9df1ad` by routing zsh `TMPPREFIX` into the disposable runtime and allowing only the literal `/dev/null` sink; pass a host no-inference canary while retaining protected-path denial.
+- [ ] Complete a future bounded concurrent live workflow against the corrected executable. The `b22020c` attempt does not validate `b9df1ad`, and no additional inference was authorized or used for the correction.
+- [ ] General repositories, detached-process containment, Linux/GPU/remote workers, dashboards and publication remain unsupported.
+
+## Phase 4 — dependency, claim and request correction
+
+- [x] Assemble each dependent assignment from validated predecessor deltas in deterministic graph order and record its actual starting revision plus dependency revisions.
+- [x] Measure worker changes against that assembled start and integrate each assignment's own delta once, preserving dependent overlays while rejecting independent conflicts.
+- [x] Add a behavioral regression whose downstream worker succeeds only after reading predecessor content created at runtime.
+- [x] Atomically claim an exact pending/failed implementation selection with status, version, attempts, dependency, cancellation and ownership checks.
+- [x] Remove the generic direct `succeeded → running` transition and retain explicit quality-stage resets.
+- [x] Add a synchronized stale-selection regression proving one provider invocation and preservation of the winning result.
+- [x] Reject unmatched requests rather than falling back to fixture tasks; require clarification for negated or contradictory matched requirements.
+- [x] Pass 19 focused dynamic-scheduler tests, all 41 Phase 4 tests, the 157-test repository suite (`OK`, one expected nested-Seatbelt skip), and `python3 -m agentkit check`; use no live inference.
+
+## Phase 4 — bounded static-web product acceptance
+
+- [x] Add one accounted provider tech-lead planning path for a product brief, protected acceptance, bounded inventory, capabilities, verified planning context and resource limits.
+- [x] Reject planner authority expansion, changed requirements/acceptance, stale inventory, unsafe paths, unsupported operations, inconsistent interfaces/dependencies, cycles, excessive fan-out, independent path overlap and infeasible calls/time.
+- [x] Create a fresh dependency-free static project separate from harness source, controller state, evidence, approval data and controller-owned acceptance.
+- [x] Reuse the durable scheduler, dependency snapshots, isolated assignments, integration, routing, authentication recovery, cancellation, bounded repair and usage accounting without a product-specific task graph.
+- [x] Pin the installed Node executable, copy it into the verifier runtime, run the documented syntax build plus protected mechanics test in a separate candidate copy and confirm the candidate remains unchanged.
+- [x] Gate packaging on exact-revision browser observations covering every predeclared criterion and on confirmed cleanup of the owned loopback preview.
+- [x] Add `product submit|plan|start|status|cancel|resume|preview-serve|browser-record|package` and document the exact live budget interface; the foreground preview retains one owner through Ctrl+C.
+- [x] Pass nine focused product tests; the loopback lifecycle case is explicitly skipped inside the managed outer sandbox and passes separately at host level with confirmed foreground cleanup.
+- [x] Commit reusable executable `70070e293c890a5c47bbb448b99a9b7cf34f8237` before inference and declare the eight-call, two-worker, two-repair, 180-second-per-provider and 1,200-second overall ledger.
+- [x] Attempt one bounded Breakout trial. The sole Claude planning invocation ended after 29.313421 seconds because its response exceeded the adapter's 512 generated-output-token allocation; stop without retry or provider substitution.
+- [x] Retain sanitized planning request/result/events, controller state, inputs, versions, usage and failure diagnosis in a hash-manifested archive; no browser/game artifacts exist because planning was not accepted.
+- [x] Apply the original interim planner correction at 8,192 and classify output-limit text before allowed rate metadata; this allocation is superseded by the later CLI resource-policy audit below.
+- [ ] The corrected product planner remains live-unvalidated. Do not use the failed `70070e2` attempt as validation or repeat inference without new authorization.
+- [ ] Dependency installation, general repositories, hostile inputs, arbitrary builds, browser credential/egress isolation and crash-safe preview containment remain unsupported.
+
+## Phase 4 — CLI integration and resource-policy correction
+
+- [x] Start from merged `main` revision `c894a7e2977d09362fcf425fa9cc46e2144046c0` on dedicated branch `correction/cli-resource-policy` and isolated worktree.
+- [x] Audit installed Codex CLI 0.154.0 and Claude Code 2.1.220 help plus official CLI/configuration documentation.
+- [x] Remove the productive Claude 8,192 output setting and confine the historical 512/one-turn/zero-retry environment to `smoke-model-only`.
+- [x] Remove the universal 300-second request/transport ceiling; keep finite positive controller deadlines bound by each task's authorized overall allocation.
+- [x] Resolve task overrides, role policies and provider defaults with persisted source, enforcement class and rationale.
+- [x] Keep captured bytes distinct from generated tokens and provider token/cost observations.
+- [x] Record one CLI launch separately from unknown internal provider requests and turns.
+- [x] Add bounded output-exhaustion recovery that changes/removes an imposed control, consumes the same call/time ledger and refuses identical/provider-default retries.
+- [x] Add explicit structured-planning, code-implementation, web-product-implementation and independent-review capability profiles.
+- [x] Allow Claude file creation while granting only role-specific Bash patterns; retain external Seatbelt, broker, credential and publication boundaries.
+- [x] Add focused offline tests for policy precedence, request construction, capability selection, parsing and recovery; pass 177 repository tests with two expected managed skips, then pass both checks separately at host level and pass `agentkit check`.
+- [x] Attempt and archive the authorized direct-versus-adapter checkpoint: both Codex planning paths passed; both Claude implementation paths failed with expired OAuth; stop after four of six launches without retry, login, provider substitution, review or game inference.
+- [x] Preserve complete terminal usage/retry/turn observations after monitored failures in offline-tested revision `1c0008c`; do not promote that correction to live-tested status.
+- [x] Bind all 22 retained checkpoint files by SHA-256 and pass the final 182-test suite with two expected managed-environment skips plus `python3 -m agentkit check`.
+- [ ] Complete Claude implementation and independent-review comparison under a future bounded authorization after authentication is restored.
+- [ ] The Breakout product trial remains the next acceptance milestone after provider integration completes; no game inference was spent during this checkpoint.
+
+## Repository-first product planning — 2026-10-01
+
+- [x] Preserve corrective baseline `ddf6145002efd0bd59b85d54996263f6edb7f675` in dedicated `planning/reuse-first-product` worktree.
+- [x] Record the user's priorities: both existing repositories and new products, existing repositories first; small engineering teams and some public open-source users.
+- [x] Review the supplied product vision against current implementation and primary sources; separate supported claims from proposed positioning.
+- [x] Pin OpenHarness to `9b2efd795c6aa09f88b0c257d269a9e518da6ae7`; inventory 50 source/config/test files without importing or executing upstream code.
+- [x] Produce a module-level substantial-reuse map, license/dependency adoption gates, architecture alternatives and a working reuse-spike specification.
+- [x] Draft repository enrollment, policy, verification, evidence, team UX, migration, milestone and ticket contracts in the [engineering plan](planning/engineering-plan.md).
+- [x] Separate user decisions, engineering recommendations and remaining decisions in the [planning register](planning/decisions.md).
+- [x] Implement and evaluate P01–P04 as R0: attributed profile/context/protocol/fs ports, dependency-free terminal renderer and a deterministic existing-controller vertical slice.
+- [x] Preserve the complete OpenHarness MIT text, file hashes, adaptation decisions and selected dependency/license closure without installing upstream packages.
+- [x] Demonstrate complete, cancelled, authentication-wait, candidate-stale and unknown-usage presentation; reject changed profiles and UI authority expansion.
+- [x] Pass 10 focused Python tests, 4 Node tests, the 192-test repository suite (190 passed, two expected nested-environment skips), both skipped checks separately at host level, and `agentkit check`.
+- [ ] Build the optional React/Ink TUI only after reviewing its complete locked license/install closure; R0 ships an executable dependency-free terminal slice.
+- [ ] Validate real-repository onboarding and execution before exposing it; existing disposable macOS limitations remain.
+- [ ] Complete remaining provider integration under a future declared authorization; no live inference belongs to this planning task.
+- [ ] Select the distribution license and pass packaging/dependency gates before public distribution.
+
+The [new product plan](planning/README.md) proposes repository-first sequencing. The older phase list below is retained as historical roadmap context; it is not a requirement to build a GPU worker before repository onboarding. Breakout remains a later new-product acceptance case, following the user's updated priority.
+
+R0 accepts architecture option B: a component port around the durable AgentKit controller. R1 implements the read-only repository-intake boundary on disposable fixtures. It does not validate repository import or execution; R2 is the next planned boundary.
+
+## R1 read-only repository intake
+
+- [x] Add bounded standalone Git identity, revision, inventory and raw clean-state inspection without `git status` or project execution.
+- [x] Reject config includes, alternates, shared/symlinked metadata, dirty baselines, submodules, symlinks, LFS, transforms and unsupported object formats.
+- [x] Add a strict Python-library profile schema whose checks are proposals and whose execution flag must remain false.
+- [x] Persist private enrollment records outside the project, bound to root, inode, branch, revision, inventory and profile hashes.
+- [x] Revalidate actual repository state before producing request-sensitive read-only plans; stale enrollment blocks.
+- [x] Test hooks/filters not executing, authority expansion, tampering, bounded input, multiple repository shapes and CLI behavior using disposable fixtures.
+- [x] Pass 10 focused R1 tests, the 204-test suite with two expected outer-sandbox skips, both host checks separately, 4 terminal tests, `agentkit check`, Python 3.9 compilation and diff hygiene.
+- [x] Implement the R2 independent importer, prepared environment and generalized verifier on disposable enrolled repositories.
+- [ ] Validate an explicitly authorized real repository separately; disposable fixtures do not establish general compatibility.
+
+## R2 safe repository delivery
+
+- [x] Reconstruct enrolled bytes and executable modes in an independent controller-owned repository without clone, remotes, alternates, inherited templates or hard links.
+- [x] Reinspect source identity/content before and after import; reject stale state and tracked excluded content without touching the original.
+- [x] Require separate controller-side execution authorization; keep R1 enrollment and task/model text non-authoritative.
+- [x] Resolve prepared Python/check recipes without installation or network and block unprepared third-party imports.
+- [x] Ground narrow requests in enrolled filenames/content and require clarification for unmatched or contradictory requests.
+- [x] Supply revision-bound structured handoffs without expected patches or protected acceptance source.
+- [x] Run existing checks plus protected acceptance, reject empty collections, stale candidates and source/check mutation, and bind evidence to the exact head.
+- [x] Produce a deterministic local approval package through the existing transactional controller and Git broker with approval unset.
+- [x] Preserve dependency, stale-claim, cancellation and authentication-history regression families.
+- [x] Pass 11 focused tests, the 215-test repository suite (212 passed, 3 expected managed-environment skips), all three skipped checks separately at host level, 4 terminal tests, `agentkit check`, compilation and diff hygiene.
+- [ ] Validate live Codex/Claude execution and guided authentication recovery on the repository-delivery adapter under a separately declared allowance.
+- [ ] Add the complete plain/JSON/terminal package workflow in R3; no original-repository application or publication exists in R2.
+
+## AgentKit brand rename
+
+- [x] Adopt **AgentKit** as the product and display name in active documentation, CLI help and the adapted terminal.
+- [x] Preserve the `agentkit` command, Python module, artifact paths and temporary prefixes as stable lowercase technical identifiers.
+- [x] Preserve historical worktree/repository references and the versioned `urn:portable-agentkit:handoff:1` schema identifier.
+- [x] Rename the separately authorized GitHub repository to `adityachaturvedii/AgentKit`, update `origin`, and verify the former name resolves to the canonical repository.
+- [ ] Select the outbound license before public distribution; the brand rename does not resolve licensing.
+
+## Later phases (historical plan, not implemented)
 
 - [ ] Phase 5: hardware domain validation and optional GPU worker.
 - [ ] Phase 6: GitHub broker, installation/update/rollback and machine handover.
@@ -145,7 +270,7 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 
 ## Project documentation
 
-- [x] Reorganize the README as a public project landing page with an offline quick start, architecture, exact CLI scope, support matrix, validation evidence, contribution guidance and explicit license status.
+- [x] Preserve the historical public README redesign from `afad0a7` in branch ancestry; its layout predates the current mainline documentation and is not a claim about the active README format.
 
 ## Exit status
 
@@ -161,4 +286,27 @@ Phase 4 now provides fixture-only natural-language intake, a reviewable plan, se
 
 The Phase 4 corrective review fixes the live cancellation interface, decomposed authentication resume, requested model/effort propagation and verified worker skill context. The corrected revision completes its 137-test repository suite with status `OK` and one expected nested-Seatbelt skip; the skipped boundary test passes separately at host level. The earlier live package remains historical evidence for `af80791`. No live inference was used for the correction, so the corrected live implementation → verification → review path still needs one future bounded validation.
 
+The corrected Phase 4 live gate is now complete for exact executable revision `342423ea27700e7d46a977d47e3307bd8fa58c23`. Under a three-call/130-second controller budget, one Codex implementation, one constrained verification and one Claude review reached `awaiting_pr_approval` at disposable candidate `ee3f6ffc260f6cf1ee5537db1913debb0f4168ff`. Only `calculator.py` changed, both prompt hashes matched the recorded role-specific contexts, verification and review passed, no repair/login/publication ran and no approval was recorded. Broader platforms, repositories and isolation claims remain unchanged.
+
+The next Phase 4 increment replaces fixture-ID-only sequential decomposition with request/inventory-bound plans and a two-worker scheduler. Offline behavioral coverage proves synchronized overlap, dependency gates, duplicate-controller suppression, sibling authentication progress, two-worker cancellation, conservative conflict blocking, provider-review reservation and actual adapter-request propagation with only external transports stubbed. Its executable revision still requires the separately authorized bounded live parallel demonstration; the earlier calculator archive is not repeated or promoted to validate this increment.
+
+The bounded concurrent live attempt used exact executable `b22020c` and launched only its two authorized Codex implementation calls. The executions overlapped, proving the live scheduler path, and the word contribution was broker-committed. The line worker then produced no change because zsh heredoc temporary files and Git's `/dev/null` sink were denied by the owned-code profile. The controller blocked safely with the main candidate unchanged; verification and Claude review did not run, no package or approval was created, and no repair/retry/escalation occurred. The narrow correction is committed at `b9df1ad` and passes 154 tests plus a host no-inference boundary canary, but remains live-unvalidated.
+
+The dependency/claim/request corrective milestone is committed at `dd8da0e`. The next local increment adds only the bounded dependency-free static-web profile described above. Offline evidence establishes proposal validation, protected mechanics verification, revision-bound browser gating and adapter request construction. It does not yet establish that the live Breakout trial, browser interaction or host preview succeeds; those remain separate validation steps against the committed executable revision.
+
+The first authorized Breakout trial tested exact executable `70070e2` and consumed one Claude planning call. Claude generated partial plan text but terminated with an API error after exceeding the adapter's 512 generated-output-token allocation. The task failed closed in `blocked` before a plan, workspace or candidate existed. No Codex call, local verification, repair, review, preview, browser interaction, package, approval or publication occurred. The adapter recorded the failure as `rate_limit` because an allowed rate metadata event appeared in the same stream; retained terminal evidence establishes an output-allocation failure instead. The provider reported 8 input, 2,048 output, 25,570 cached-input and 9,678 cache-creation tokens, plus a USD 0.160805 estimate. Reasoning tokens and billed cost remain unknown.
+
 Publication follow-up, 2026-09-19: the user subsequently authorized creating a private GitHub repository and pushing all committed toolkit branches. This supersedes the local-only publication restriction without changing the Phase 2 findings or granting PR/merge permission. See D025 in the [decision log](decisions.md).
+
+## Integration branch reconciliation
+
+- [x] Compare every local/remote branch tip and check all AgentKit worktrees for uncommitted work.
+- [x] Prepare a normal merge of `origin/main` (`3ea1416`) into a dedicated branch based on `origin/implementation/phase-2` (`2d0a078`), retaining R0–R2 and the older documentation history.
+- [x] Resolve documentation conflicts without reverting the AgentKit name or later capability documentation; preserve the earlier colliding decision as D111.
+- [x] Record feature PR → `implementation/phase-2` → separate release PR → `main` in AGENTS.md.
+- [x] Independently review the staged reconciliation with GPT-5.6 Sol at medium reasoning; verify all files except AGENTS.md and these checklist/decision records equal `origin/main`.
+- [x] Run offline validation: 215 regression tests, 212 passed and 3 skipped (two Seatbelt initialization checks and one loopback preview check unavailable inside this execution environment); structural `agentkit check` and both branding tests passed. No live inference or new sandbox validation claimed.
+- [ ] Publish the reconciliation PR into `implementation/phase-2` after authorization.
+- [ ] Separately authorize and merge the release PR from `implementation/phase-2` into `main`.
+- [ ] Address the R2 review findings; branch reconciliation does not close them.
+- [ ] Review/correct `fix/process-group-liveness` separately; its code is not included in this reconciliation.

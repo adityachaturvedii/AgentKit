@@ -16,6 +16,7 @@ from .git_broker import GitBroker
 from .process import run_process
 from .redaction import redacted_stream
 from .runtime_contracts import ExecutionBoundary, ExecutionRequest, LivePolicy
+from .resource_policy import resolve_role_resources
 
 
 SOURCE_BROKEN = '''def total(left, right):
@@ -209,21 +210,33 @@ def _usage_from_result(result):
 
 
 class LiveImplementer:
-    def __init__(self, engine='codex', model=None, effort=None):
+    def __init__(self, engine='codex', model=None, effort=None, *, timeout_seconds=None,
+                 max_output_bytes=None, capability_profile='code-implementation',
+                 resource_role='implementation'):
         self.engine = engine
         self.model = model
         self.effort = effort
+        self.capability_profile = capability_profile
+        self.resources = resolve_role_resources(
+            resource_role, task_timeout_seconds=timeout_seconds,
+            task_capture_bytes=max_output_bytes)
+        self.timeout_seconds = self.resources['timeout_seconds']['value']
+        self.max_output_bytes = self.resources['max_capture_bytes']['value']
 
     def run(self, workspace, output, boundary, prompt, policy, cancel_event=None):
         request = ExecutionRequest(self.engine, 'phase3-live-implementer', prompt, str(Path(workspace).resolve()),
-                                   timeout_seconds=60, max_output_bytes=1048576,
-                                   model=self.model, effort=self.effort, mode='owned-code')
+                                   timeout_seconds=self.timeout_seconds,
+                                   max_output_bytes=self.max_output_bytes,
+                                   model=self.model, effort=self.effort, mode='owned-code',
+                                   capability_profile=self.capability_profile,
+                                   resource_resolution=self.resources)
         result = execute_owned_code(request, output, boundary, policy=policy,
                                     cancel_event=cancel_event)
         return EngineOutcome(result.status, result.elapsed_seconds, _usage_from_result(result),
                              {'error_class': result.error_class, 'artifacts': result.artifacts,
                               'limitations': result.limitations,
                               'requested_configuration': {'model': self.model, 'effort': self.effort},
+                              'resource_resolution': self.resources,
                               'provider_reported_configuration': {
                                   'model': result.model,
                                   'effort': result.provider_details.get('effort')},
@@ -231,10 +244,16 @@ class LiveImplementer:
 
 
 class LiveReviewer:
-    def __init__(self, engine='claude', model=None, effort=None):
+    def __init__(self, engine='claude', model=None, effort=None, *, timeout_seconds=None,
+                 max_output_bytes=None):
         self.engine = engine
         self.model = model
         self.effort = effort
+        self.resources = resolve_role_resources(
+            'review', task_timeout_seconds=timeout_seconds,
+            task_capture_bytes=max_output_bytes)
+        self.timeout_seconds = self.resources['timeout_seconds']['value']
+        self.max_output_bytes = self.resources['max_capture_bytes']['value']
 
     def run(self, snapshot, revision, output, prompt, policy, cancel_event=None):
         files = {}
@@ -246,8 +265,11 @@ class LiveReviewer:
                           '{"id":"...","severity":"material","path":"...","criterion":"...","description":"..."}]}')
         with tempfile.TemporaryDirectory(prefix='agentkit-review-empty-') as tmp:
             request = ExecutionRequest(self.engine, 'phase3-live-reviewer', review_prompt, str(Path(tmp).resolve()),
-                                       timeout_seconds=60, max_output_bytes=1048576,
-                                       model=self.model, effort=self.effort, mode='model-only')
+                                       timeout_seconds=self.timeout_seconds,
+                                       max_output_bytes=self.max_output_bytes,
+                                       model=self.model, effort=self.effort, mode='model-only',
+                                       capability_profile='independent-review',
+                                       resource_resolution=self.resources)
             result = execute(request, output, policy=policy, cancel_event=cancel_event)
         findings = ()
         parse_error = None
@@ -264,6 +286,7 @@ class LiveReviewer:
                               'artifacts': result.artifacts, 'limitations': result.limitations,
                               'candidate_revision': revision,
                               'requested_configuration': {'model': self.model, 'effort': self.effort},
+                              'resource_resolution': self.resources,
                               'provider_reported_configuration': {
                                   'model': result.model,
                                   'effort': result.provider_details.get('effort')},

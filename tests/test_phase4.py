@@ -142,8 +142,12 @@ class Phase4Tests(unittest.TestCase):
 
     def workflow(self, name, fixture='calculator', **kwargs):
         target = self.root / name
-        return Phase4Workflow.submit(target, name, 'Repair the selected disposable fixture.',
-                                     fixture, **kwargs)
+        requests = {
+            'calculator': 'Correct total arithmetic.',
+            'text-metrics': 'Repair word and line metrics.',
+            'inventory': 'Repair pricing and stock calculations.',
+        }
+        return Phase4Workflow.submit(target, name, requests[fixture], fixture, **kwargs)
 
     def test_simple_task_uses_minimum_workflow_and_binds_package(self):
         workflow = self.workflow('simple', max_calls=5)
@@ -186,7 +190,7 @@ class Phase4Tests(unittest.TestCase):
         with self.assertRaises(ValueError):
             GraphNode('bad', 'implementer', 'implementation', 'bad',
                       allowed_paths=('/tmp/outside',), provider='codex')
-        contract = build_contract('graph', 'repair fixture', CALCULATOR)
+        contract = build_contract('graph', 'Correct total arithmetic.', CALCULATOR)
         plan = build_plan(contract, CALCULATOR, ModelRegistry.account_defaults(), ROOT)
         implementation = next(node for node in plan.nodes if node.kind == 'implementation')
         verify = next(node for node in plan.nodes if node.kind == 'verification')
@@ -501,12 +505,8 @@ class Phase4Tests(unittest.TestCase):
                 self.assertTrue(assignment['clean'])
                 sibling = node_ids[1 - index]
                 sibling_before = workflow.state.node('decomposed-auth-' + str(index), sibling)
-                if index == 1:
-                    self.assertEqual(sibling_before['status'], 'succeeded')
-                    sibling_revision = sibling_before['result']['revision']
-                else:
-                    self.assertEqual(sibling_before['status'], 'pending')
-                    sibling_revision = None
+                self.assertEqual(sibling_before['status'], 'succeeded')
+                sibling_revision = sibling_before['result']['revision']
                 claim = workflow.store.claim_authentication_login(
                     'decomposed-auth-' + str(index), 'codex', authority=workflow.store.authority)
                 workflow.store.finish_authentication_login(
@@ -516,10 +516,9 @@ class Phase4Tests(unittest.TestCase):
                 self.assertEqual(resumed['task']['state'], 'awaiting_pr_approval')
                 self.assertEqual(specialist.calls[target], 2)
                 self.assertEqual(specialist.calls[sibling], 1)
-                if sibling_revision:
-                    self.assertEqual(workflow.state.node(
-                        'decomposed-auth-' + str(index), sibling)['result']['revision'],
-                        sibling_revision)
+                self.assertEqual(workflow.state.node(
+                    'decomposed-auth-' + str(index), sibling)['result']['revision'],
+                    sibling_revision)
 
     def test_changed_decomposed_assignment_identity_blocks_authentication_resume(self):
         task_id = 'changed-assignment'

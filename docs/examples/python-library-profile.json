@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "profile_id": "python-library-readonly",
+  "stack": "python-library",
+  "read_paths": [
+    "."
+  ],
+  "context_paths": [
+    "README.md",
+    "src",
+    "tests"
+  ],
+  "write_paths": [
+    "src",
+    "tests"
+  ],
+  "excludes": [
+    ".venv",
+    "build",
+    "dist"
+  ],
+  "checks": [
+    {
+      "id": "unit-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 120,
+      "result": "unittest"
+    }
+  ],
+  "environment": {
+    "kind": "prepared",
+    "install_during_run": false
+  },
+  "network": "none",
+  "data_disclosure": "selected-source-to-configured-provider",
+  "execution_profile": "trusted-disposable-macos-owned-code",
+  "required_review": "independent",
+  "execution_enabled": false
+}
