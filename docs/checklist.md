@@ -235,6 +235,7 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [x] Persist private enrollment records outside the project, bound to root, inode, branch, revision, inventory and profile hashes.
 - [x] Revalidate actual repository state before producing request-sensitive read-only plans; stale enrollment blocks.
 - [x] Test hooks/filters not executing, authority expansion, tampering, bounded input, multiple repository shapes and CLI behavior using disposable fixtures.
+- [x] Pass 10 focused R1 tests, the 204-test suite with two expected outer-sandbox skips, both host checks separately, 4 terminal tests, `agentkit check`, Python 3.9 compilation and diff hygiene.
 - [ ] Implement the R2 independent importer, prepared environment and generalized verifier before running any enrolled repository task.
 - [ ] Validate an explicitly authorized real repository separately; disposable fixtures do not establish general compatibility.
 

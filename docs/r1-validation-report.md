@@ -1,6 +1,6 @@
 # R1 validation report
 
-Date: 2026-10-01. Executable base: `cac3f113fda373b28a94b2a923b9ddcdce8c6bfb`. Scope: offline read-only project intake using controller-created disposable Git fixtures only.
+Date: 2026-10-01. Executable revision: `48dae6d0c7b9990b719c858206b05498a62908a7`, based on merged `cac3f113fda373b28a94b2a923b9ddcdce8c6bfb`. Scope: offline read-only project intake using controller-created disposable Git fixtures only.
 
 ## Implemented and tested
 
@@ -27,4 +27,18 @@ The focused suite uses only disposable repositories. It plants executable hooks 
 | Completeness of secret detection | Unsupported claim; filename screening only |
 | Linux, containers, linked worktrees, submodules, LFS and transformed worktrees | Unsupported |
 
-No provider inference, authentication access, network dependency, plugin installation, global configuration change, project command or paid API usage was used. The final complete regression result and exact executable revision are recorded after the implementation commit.
+No provider inference, authentication access, network dependency, plugin installation, global configuration change, project command or paid API usage was used.
+
+## Validation results
+
+| Check | Result |
+|---|---|
+| `python3 -m unittest tests.test_projects -v` | 10 passed |
+| `python3 -m unittest discover -s tests -v` | 204 total: 202 passed, 2 skipped in the managed outer sandbox |
+| Separate macOS host checks | 2 passed: constrained verifier boundary and loopback preview lifecycle |
+| Dependency-free terminal `npm test` | 4 passed |
+| `python3 -m agentkit check` | Passed: 10 skills, 7 domains, 10 examples, 3 sources |
+| Python 3.9 compilation | Passed with an isolated `/private/tmp` bytecode cache |
+| `git diff --check` | Passed |
+
+The two complete-suite skips are existing host-context checks and are not R1 feature gaps. No live provider or existing personal/project repository was used. The test repositories include `src` and flat package layouts, but they do not establish compatibility with arbitrary Git repositories.
