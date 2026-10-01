@@ -8,6 +8,7 @@ import subprocess
 import time
 
 from ...orchestration import Phase4Workflow
+from ...paths import resource_path, resource_root
 from .context import discover_context, render_context
 from .fs import atomic_private_write
 from .profiles import PublicProviderProfile, resolve_profile
@@ -93,8 +94,7 @@ def _render_with_adapted_terminal(stream_path):
     node = shutil.which("node")
     if node is None:
         raise RuntimeError("R0 adapted terminal requires Node.js; no runtime install is attempted")
-    renderer = (Path(__file__).resolve().parents[3] / "frontend" / "agentkit-terminal" /
-                "src" / "render-events.mjs")
+    renderer = resource_path("frontend", "agentkit-terminal", "src", "render-events.mjs")
     process = subprocess.run(
         [node, str(renderer), str(stream_path)], cwd=str(renderer.parent),
         env={"PATH": "/usr/bin:/bin:/usr/local/bin"}, stdout=subprocess.PIPE,
@@ -109,8 +109,7 @@ def _request_from_adapted_terminal():
     node = shutil.which("node")
     if node is None:
         raise RuntimeError("R0 adapted terminal requires Node.js; no runtime install is attempted")
-    frontend = (Path(__file__).resolve().parents[3] / "frontend" / "agentkit-terminal" /
-                "src" / "request-demo.mjs")
+    frontend = resource_path("frontend", "agentkit-terminal", "src", "request-demo.mjs")
     process = subprocess.run(
         [node, str(frontend)], cwd=str(frontend.parent),
         env={"PATH": "/usr/bin:/bin:/usr/local/bin"}, stdout=subprocess.PIPE,
@@ -129,7 +128,7 @@ def run_deterministic_demo(output):
         raise ValueError("R0 demonstration output must be a fresh path")
     backend = ReuseBackend(output / "workflow")
     profile = resolve_profile(DEFAULT_PROFILE, expected_sha256=DEFAULT_PROFILE.sha256)
-    toolkit_root = Path(__file__).resolve().parents[3]
+    toolkit_root = resource_root()
     sources = discover_context(toolkit_root, toolkit_root, max_files=4)
     events = backend.handle(_request_from_adapted_terminal())
     output.mkdir(mode=0o700, exist_ok=True)

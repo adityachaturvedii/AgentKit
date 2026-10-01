@@ -73,7 +73,7 @@
     },
     {
       "local": "agentkit/integrations/openharness/backend.py",
-      "local_sha256": "d2bb3f12e045037fe02eb342879d2d5335588c76837881946c4efe801ccfd1d3",
+      "local_sha256": "a544b5f4c0cb6192a0d657a204118b6f219b4c79dcd9ac5f2077aab000484685",
       "upstream": "src/openharness/cli.py",
       "upstream_sha256": "c728e2de958af42535d8b184a445580d402829542fdf5b2ba130eed05d054256",
       "decision": "adapt",

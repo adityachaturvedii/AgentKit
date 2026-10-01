@@ -1,6 +1,6 @@
 # Repository-first engineering plan
 
-Status: R0, R1, the R2 disposable-fixture delivery slice and R3 P11 portable-package verifier plus P12 one-shot terminal workflow are implemented; P13 and later work remain proposed. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
+Status: R0, R1, the R2 disposable-fixture delivery slice and R3 P11 portable-package verifier plus P12 one-shot terminal workflow are implemented. P13 source-checkout/wheel onboarding, compatibility and data-flow documentation is implemented, while public distribution remains blocked on an outbound license. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
 
 ## Architecture and ownership
 
@@ -168,7 +168,7 @@ Each ticket should fit a reviewable change, with attribution and tests in the sa
 | P10 | Delivery integration and preserved lifecycle regressions | P08, P09 | Unknown predecessor content consumed; stale contender cannot rerun; auth history/resume intact |
 | P11 | Portable package and offline consistency verifier | P10 | Tampering, stale evidence, escaping paths and missing required checks fail; no execution on import |
 | P12 | **Implemented:** plain/JSON/protocol-event/one-shot terminal workflow | P04, P11 | Equivalent status/next action, unknown usage and cancellation; no hidden authority in frontend; optional full-screen TUI deferred |
-| P13 | Distribution, notices, compatibility and data-flow docs | P12, license decision | Clean-machine no-inference onboarding; optional frontend; reviewed assets/locks, no global mutation |
+| P13 | **Private onboarding implemented; public release incomplete:** source checkout, isolated wheel, compatibility and data-flow boundaries | P12; outbound license still open | Clean-environment no-inference install; no global mutation; public/package-index distribution remains blocked |
 | P14 | Pilot protocol and user discovery | P05; collection after P13 | Matched baseline, failures counted, reviewer/operator effort and escaped defects recorded |
 | P15 | Product-project creation and web acceptance profile | P10, P11; stack decision | Same graph/controller, independent browser/mechanics checks, owned preview cleanup; no game graph hardcode |
 | P16 | Optional container/API engine feasibility | Explicit need and authority | Real tool/credential/lifecycle tests; per-request accounting and auth terms; never a silent CLI fallback |
