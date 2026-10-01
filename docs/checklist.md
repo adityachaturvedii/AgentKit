@@ -262,6 +262,26 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [x] Rename the separately authorized GitHub repository to `adityachaturvedii/AgentKit`, update `origin`, and verify the former name resolves to the canonical repository.
 - [ ] Select the outbound license before public distribution; the brand rename does not resolve licensing.
 
+## R3 portable package
+
+- [x] Export an exact-revision `awaiting_pr_approval` R2 result to a fresh private plain folder without recording approval or publication authority.
+- [x] Include a sanitized summary, full diff, requirement matrix, passed verification/review records, limitations, resource observations, provenance and replay guidance.
+- [x] Verify hashes, sizes, paths, file inventory, revision bindings, evidence status/kind, requirement mapping and diff consistency offline without executing candidate code.
+- [x] Reject tampering, extra files, symlinks, traversal, stale/missing/failed evidence and malformed internal JSON in disposable regressions.
+- [x] Pass 8 focused package tests, the 235-test suite (232 passed, 3 unchanged managed-environment skips), structural checks, compilation with a workspace-safe bytecode cache and diff hygiene; use no inference.
+- [x] Complete P12's equivalent plain, JSON, protocol-event and dependency-free one-shot terminal workflow for existing Phase 4 disposable tasks.
+- [x] Keep start/resume authority in CLI construction flags; reject live mode without explicit authorization and prevent task text or frontend events from granting it.
+- [x] Expose status, start, resume, cancellation and bounded package summary through one allowlisted frontend without adding approval, publication or replay authority.
+- [x] Document that the terminal is one-shot rather than a full-screen interactive TUI, and preserve unknown usage and explicit next action across views.
+- [x] Pass 23 focused Python workflow/protocol tests, 8 dependency-free Node tests and the 248-test suite (245 passed, 3 unchanged managed-environment skips), plus structural checks, compilation and diff hygiene; use no inference.
+- [x] Document P13 source-checkout and isolated-wheel onboarding/uninstall, tested compatibility, provider/local data flow and retained-data boundaries without network, inference or global mutation.
+- [x] Add offline link/consistency regressions covering the distribution, compatibility, data-flow and license-status claims.
+- [x] Add isolated Python wheel/sdist metadata that bundles required immutable resources and installs no provider or Node dependency.
+- [x] Pass the 266-test Python suite (263 passed, 3 unchanged managed-environment skips), 8 Node renderer tests, installed-wheel commands, uninstall checks, compilation and diff hygiene without inference or network access.
+- [ ] Select an outbound license before calling P13 public distribution complete.
+- [ ] Build any optional full-screen TUI only after a separate dependency, license, build and runtime review.
+- [ ] Add signed provenance or authenticated team approvals; manifest integrity is currently unauthenticated.
+
 ## Later phases (historical plan, not implemented)
 
 - [ ] Phase 5: hardware domain validation and optional GPU worker.
@@ -278,7 +298,7 @@ Phase 0 complete. Phase 1 offline foundation complete on the observed macOS/Pyth
 
 Phase 2 implementation and authorized feasibility experiments are recorded. Both engines now pass the trusted disposable-workspace coding fixture on the tested macOS host. No merge, push, PR, global CLI edit, plugin installation, GPU connection, API-key introduction or billing change occurred in the follow-up. Phase 3 may begin only for that narrow mode; untrusted or broad local execution remains blocked.
 
-Phase 3 now implements the minimum local delivery graph for that narrow mode. After the corrective review, the deterministic workflow reaches a revision-bound `awaiting_pr_approval` package and 91 tests cover controller, Git, repair feedback, constrained verification, budget, numeric, lifecycle, restart and evidence invariants. The bounded live attempt validated Codex implementation plus an independent test, then blocked when Claude reported an expired OAuth token. No reauthentication was attempted, no billing fact was inferred, and no live approval package was created. Phase 4 should wait for a successful cross-provider live review and remains limited to trusted controller-created disposable repositories.
+Phase 3 now implements the minimum local delivery graph for that narrow mode. R3 P11 additionally exports its exact-revision result as a sanitized, offline-verifiable review folder. P12 and private P13 onboarding are now implemented; public distribution remains blocked on the outbound license. After the corrective review, the deterministic workflow reaches a revision-bound `awaiting_pr_approval` package and the regressions cover controller, Git, repair feedback, constrained verification, budget, numeric, lifecycle, restart and evidence invariants. The bounded live attempt validated Codex implementation plus an independent test, then blocked when Claude reported an expired OAuth token. No reauthentication was attempted, no billing fact was inferred, and no live approval package was created. Phase 4 should wait for a successful cross-provider live review and remains limited to trusted controller-created disposable repositories.
 
 The authentication-recovery follow-up supersedes that live gate: guided first-party subscription recovery is implemented and 107 tests pass, including the host macOS boundary test. One fresh bounded live workflow reached `awaiting_pr_approval` with Codex implementation, constrained local verification and Claude review. Existing authentication worked, so no interactive login was launched. A strict offline correction accepted Claude's single fenced JSON result after verifying its archived stream hash, provider-success terminal, candidate and snapshot, avoiding any repeat inference. Phase 4 may begin only for the same trusted disposable macOS mode; all broader limitations remain.
 

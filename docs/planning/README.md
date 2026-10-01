@@ -1,6 +1,6 @@
 # AgentKit reuse-first product plan
 
-Planning review: 2026-10-01. Status: R0 reuse spike, R1 read-only intake and the R2 disposable-fixture delivery slice are implemented; R3 and later capabilities remain proposed and are not authorization for paid inference or publication.
+Planning review: 2026-10-01. Status: R0 reuse spike, R1 read-only intake, the R2 disposable-fixture delivery slice, R3 P11 portable-package verifier, P12 one-shot terminal workflow and P13 source-checkout/wheel compatibility and data-flow documentation are implemented. P13 public distribution remains incomplete until an outbound license exists; later capabilities are not authorization for paid inference or publication.
 
 The user has selected **both existing-repository engineering and new-product creation, with existing repositories first**, for **small engineering teams and some public open-source users**. Substantial reuse of OpenHarness is an explicit engineering preference. We will compare and adapt working code before writing replacements.
 
@@ -36,6 +36,14 @@ All command examples in the engineering plan are **proposed interface specificat
 R0 accepted the recommended component-port architecture. Actual profile, context, protocol, atomic-write and terminal presentation behavior was adapted around the unchanged controller, and a deterministic workflow reached an unapproved local package through the new seam. The adopted runtime adds no Python or Node package dependency. See the [R0 validation report](../r0-validation-report.md) and [dependency/license audit](../r0-dependency-license-audit.md).
 
 The executable terminal is deliberately a dependency-free one-shot renderer. The complete React/Ink TUI remains optional pending its 80-entry locked dependency/license/build audit.
+
+## R3 terminal outcome
+
+P12 adds one allowlisted frontend for existing Phase 4 disposable workflows with equivalent plain, JSON, protocol-event and one-shot terminal output. It reads status without relaunching work and supports start, authentication resume, cancellation and bounded package summary. Live start/resume authority comes only from explicit CLI construction flags. This is not a full-screen interactive TUI; public distribution licensing and any optional frontend package remain open P13 gates. See the [terminal workflow guide](../r3-terminal-workflow.md).
+
+## R3 distribution documentation outcome
+
+P13 now records exact source-checkout and isolated no-index wheel procedures, removal steps, tested Python/Node/macOS boundaries, provider data flow, authentication separation, retained local data and portable-export limits. It adds no runtime dependency, global configuration change, network installation or inference. The absence of an outbound `LICENSE` keeps public distribution incomplete; npm publication and a full-screen frontend remain excluded. See the [distribution guide](../r3-distribution.md), [compatibility matrix](../r3-compatibility.md) and [data-flow contract](../r3-data-flow.md).
 
 ## R1 outcome
 

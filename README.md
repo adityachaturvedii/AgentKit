@@ -29,7 +29,7 @@ Most agent demos stop when a model says the task is complete. AgentKit treats mo
 
 ## Project status
 
-AgentKit is experimental. The original Phase 4 workflow has been extended with an OpenHarness reuse slice (R0), read-only repository intake (R1) and a deterministic repository-delivery slice (R2). R2 still has unresolved review findings; its presence is not a claim that arbitrary repositories are ready for execution.
+AgentKit is experimental. The original Phase 4 workflow has been extended with an OpenHarness reuse slice (R0), read-only repository intake (R1), a corrected deterministic repository-delivery slice (R2), and R3 portable-package and terminal-workflow increments. This is not a claim that arbitrary repositories are ready for execution.
 
 | Area | Status |
 |---|---|
@@ -42,6 +42,9 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | OpenHarness reuse (R0) | Offline-tested profile, context, protocol and terminal adaptations around the existing controller |
 | Read-only repository intake (R1) | Fixture-tested bounded inspection, hash-bound enrollment and non-executing plans for clean standalone Python libraries |
 | Repository delivery (R2) | Deterministic integration slice; corrective boundaries and durable stage-specific authentication resume are fixture-tested; live repository-provider validation remains open |
+| Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; signing and distribution remain open |
+| Terminal workflow (R3 P12) | Plain, JSON, protocol-event and one-shot terminal views over existing Phase 4 disposable workflows; no full-screen interactive TUI |
+| [Distribution and compatibility (R3 P13)](docs/r3-distribution-validation-report.md) | Offline source-checkout and isolated-wheel onboarding plus data-flow boundaries; public release remains blocked on an outbound license |
 | Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
 
@@ -56,6 +59,8 @@ The archived `af80791` demonstration predates the corrected Phase 4 run. Later C
 - Optional: subscription-authenticated Codex and/or Claude Code CLI for explicitly authorized live disposable runs
 
 Runtime code has no third-party Python dependencies. The toolkit does not install CLIs, plugins or credentials and does not modify global CLI configuration.
+
+AgentKit runs from a complete source checkout or an isolated `agentkit-controller` wheel. It has no npm release or supported system-wide installation. Follow the [offline distribution guide](docs/r3-distribution.md), check the [compatibility matrix](docs/r3-compatibility.md), and review the [provider/local data flow](docs/r3-data-flow.md) before moving code or artifacts to another machine. Those documents include exact removal steps. Public distribution remains blocked because the original AgentKit code has no outbound `LICENSE`.
 
 ## Quick start
 
@@ -97,20 +102,31 @@ python3 -m agentkit task plan \
   --root /tmp/agentkit-task \
   --task-id calculator-demo
 
-python3 -m agentkit task start \
+python3 -m agentkit workflow start \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo \
+  --format terminal
+
+python3 -m agentkit workflow status \
   --root /tmp/agentkit-task \
   --task-id calculator-demo
 
-python3 -m agentkit task status \
+python3 -m agentkit workflow package \
   --root /tmp/agentkit-task \
-  --task-id calculator-demo
-
-python3 -m agentkit task package \
-  --root /tmp/agentkit-task \
-  --task-id calculator-demo
+  --task-id calculator-demo \
+  --format json
 ```
 
 The workflow stops at `awaiting_pr_approval`. It does not push, open a pull request, merge or deploy.
+
+The `workflow` commands operate that existing controller record through the consistent R3 frontend. Other output views are selected explicitly:
+
+```sh
+python3 -m agentkit workflow status --root /tmp/agentkit-task --task-id calculator-demo --format events
+python3 -m agentkit workflow package --root /tmp/agentkit-task --task-id calculator-demo --format plain
+```
+
+The available output formats are `plain`, `json`, `events` (protocol JSONL) and `terminal`. The terminal form is the dependency-free one-shot Node renderer, not an interactive full-screen TUI. See the [R3 terminal workflow](docs/r3-terminal-workflow.md) and [P12 validation report](docs/r3-terminal-validation-report.md) for actions, authorization, evidence and boundaries.
 
 Use a fresh `--root` for each demo. The built-in projects are intentionally narrow: `calculator` exercises a single assignment; text metrics and inventory provide independent work; the text pipeline exercises dependencies; case-policy conflicts require clarification. Deterministic planning uses request terms and bounded project inventory. Unmatched or contradictory requests do not silently become calculator repairs.
 
@@ -167,6 +183,18 @@ python3 -m agentkit project --help
 Inspection runs no project code, hooks, filters, installers or inference. Enrollment records a profile and content hashes; planning revalidates the repository and remains non-executing. Unsupported Git layouts, dirty baselines, symlinks and transforms fail closed. See the [R1 guide](docs/r1-project-intake.md).
 
 R2 adds independent reconstruction into controller-owned Git storage, prepared-environment checks, protected acceptance and a local package using deterministic providers. It has no complete end-user execution CLI or verified live repository-provider path. The corrective work closes candidate revalidation, cross-provider enforcement, actual adapter construction, verifier placement and interpreter dependency detection offline. Authentication failures create safe checkpoints; a reopened workflow revalidates the candidate and resumes only implementation or review while preserving completed verification. File additions/deletions/renames, dependency installation and applying changes to the original checkout remain unsupported. See the [R2 report](docs/r2-validation-report.md).
+
+R3 P11 can export a completed R2 result into a sanitized plain review folder and verify its hashes, revision/evidence bindings and requirement mapping without running candidate code:
+
+```sh
+python3 -m agentkit package export \
+  --workflow /absolute/path/to/workflow \
+  --task-id TASK_ID \
+  --output /fresh/path/review-package
+python3 -m agentkit package verify /path/to/review-package
+```
+
+The manifest provides unauthenticated local integrity, not proof of authorship or command execution. See the [portable-package guide](docs/r3-portable-package.md) and [P11 validation report](docs/r3-validation-report.md).
 
 ## Live CLI integration
 
@@ -229,9 +257,11 @@ The first Breakout attempt failed during planning; the later integration checkpo
 | `python3 -m agentkit controller-demo` | Exercise the Phase 3 delivery controller | Fake by default; live is opt-in |
 | `python3 -m agentkit auth-status`, `auth-login`, `auth-reconcile` | Inspect or recover official subscription login | Login is interactive and uncaptured |
 | `python3 -m agentkit task ...` | Propose, submit, run, inspect, cancel, resume and package disposable tasks | Fake by default; live is opt-in |
+| `python3 -m agentkit workflow ...` | Status, start, resume, cancel and package-summary views for an existing disposable task | Fake by default; live start/resume require explicit authorization |
 | `python3 -m agentkit resource-policy` | Explain resolved controls and capability profiles | No |
 | `python3 -m agentkit reuse-demo` | Exercise adapted OpenHarness components with the existing controller | No |
 | `python3 -m agentkit project ...` | Inspect, enroll and plan a selected supported repository read-only | No |
+| `python3 -m agentkit package export`, `package verify` | Export or verify an exact-revision portable review folder | No |
 | `python3 -m agentkit product ...` | Plan and execute a bounded disposable static web product | Provider stages require explicit authorization |
 
 Run `python3 -m agentkit --help` or a subcommand's `--help` for the exact options.
@@ -313,7 +343,8 @@ The [reuse-first engineering plan](docs/planning/README.md) prioritizes existing
 
 - **Implemented:** audited skills, adapters, disposable delivery, authentication checkpoints, concurrent scenario workflows, resource policies, R0 component reuse and R1 read-only intake.
 - **Corrective gate:** resolve R2 review findings and validate the real adapter, authentication and verifier paths before extending repository execution.
-- **Next planned milestones:** R3 portable package, terminal workflow and distribution; R4 measured pilot evaluation; R5 new-product acceptance through shared delivery contracts.
+- **Implemented R3 documentation:** portable review export, the one-shot terminal workflow, and source-checkout compatibility/data-flow guidance.
+- **Next release gate:** choose an outbound license before calling P13 public distribution complete; signing/publication remain separate, and R4 measured pilot evaluation and R5 new-product acceptance remain later work.
 - **Deferred:** optional Linux/GPU workers, broader isolation, GitHub publication and deployment.
 
 The [implementation checklist](docs/checklist.md), [decision log](docs/decisions.md) and [original specification](docs/implementation-spec.md) distinguish implemented, simulated, live-tested and planned behavior.
@@ -336,4 +367,4 @@ Please open an issue before proposing a new execution platform, authentication m
 
 Adapted procedures and selected OpenHarness components preserve source attribution and applicable MIT notices. See the [source audit](docs/source-audit.md), [pinned source lock](audit/sources.lock.json), [third-party notices](THIRD_PARTY_NOTICES.md) and [OpenHarness reuse audit](docs/r0-dependency-license-audit.md).
 
-The original AgentKit code does not yet have an outbound `LICENSE` file. Until the maintainer selects and adds one, the repository is available for review but is **not formally offered under an open-source license**. Third-party notice files cover only their respective upstream material.
+The original AgentKit code does not yet have an outbound `LICENSE` file. Until the maintainer selects and adds one, the repository is available for review but is **not formally offered under an open-source license**. Third-party notice files cover only their respective upstream material. The P13 documentation does not resolve this blocker or authorize redistribution.

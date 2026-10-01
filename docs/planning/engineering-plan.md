@@ -1,6 +1,6 @@
 # Repository-first engineering plan
 
-Status: R0, R1 and the R2 disposable-fixture delivery slice are implemented; R3 and later work remains proposed. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
+Status: R0, R1, the R2 disposable-fixture delivery slice and R3 P11 portable-package verifier plus P12 one-shot terminal workflow are implemented. P13 source-checkout/wheel onboarding, compatibility and data-flow documentation is implemented, while public distribution remains blocked on an outbound license. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
 
 ## Architecture and ownership
 
@@ -103,7 +103,17 @@ Exports/imports require traversal/symlink/size tests; reading a package must not
 
 Reuse OpenHarness's terminal components early, then adapt them to task status, findings and evidence. Keep a plain/JSON CLI with equivalent controller operations. The frontend has a small versioned command surface; reconnect requests status, never replays an execution start. Separate model text from buttons that carry user intent.
 
-Proposed interface, **not current executable commands**:
+The implemented P12 interface for existing Phase 4 disposable workflows is:
+
+```sh
+python3 -m agentkit workflow status --root WORKFLOW_ROOT --task-id TASK_ID --format plain
+python3 -m agentkit workflow start --root WORKFLOW_ROOT --task-id TASK_ID --format json
+python3 -m agentkit workflow resume --root WORKFLOW_ROOT --task-id TASK_ID --format events
+python3 -m agentkit workflow cancel --root WORKFLOW_ROOT --task-id TASK_ID --format terminal
+python3 -m agentkit workflow package --root WORKFLOW_ROOT --task-id TASK_ID --format json
+```
+
+`terminal` is a one-shot dependency-free renderer, not a full-screen interactive TUI. The broader repository-first interface remains proposed:
 
 ```sh
 agentkit project inspect /explicit/repository --json
@@ -157,8 +167,8 @@ Each ticket should fit a reviewable change, with attribution and tests in the sa
 | P09 | Repository task adapter and structured handoffs | P03, P06 | No fixture-solution context; different real requests produce relevant validated plans or clarification |
 | P10 | Delivery integration and preserved lifecycle regressions | P08, P09 | Unknown predecessor content consumed; stale contender cannot rerun; auth history/resume intact |
 | P11 | Portable package and offline consistency verifier | P10 | Tampering, stale evidence, escaping paths and missing required checks fail; no execution on import |
-| P12 | Complete plain/JSON/TUI workflow | P04, P11 | Equivalent status/next action, unknown usage and cancellation; no hidden authority in frontend |
-| P13 | Distribution, notices, compatibility and data-flow docs | P12, license decision | Clean-machine no-inference onboarding; optional frontend; reviewed assets/locks, no global mutation |
+| P12 | **Implemented:** plain/JSON/protocol-event/one-shot terminal workflow | P04, P11 | Equivalent status/next action, unknown usage and cancellation; no hidden authority in frontend; optional full-screen TUI deferred |
+| P13 | **Private onboarding implemented; public release incomplete:** source checkout, isolated wheel, compatibility and data-flow boundaries | P12; outbound license still open | Clean-environment no-inference install; no global mutation; public/package-index distribution remains blocked |
 | P14 | Pilot protocol and user discovery | P05; collection after P13 | Matched baseline, failures counted, reviewer/operator effort and escaped defects recorded |
 | P15 | Product-project creation and web acceptance profile | P10, P11; stack decision | Same graph/controller, independent browser/mechanics checks, owned preview cleanup; no game graph hardcode |
 | P16 | Optional container/API engine feasibility | Explicit need and authority | Real tool/credential/lifecycle tests; per-request accounting and auth terms; never a silent CLI fallback |

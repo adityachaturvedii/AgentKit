@@ -19,6 +19,7 @@ from .delivery import EngineOutcome, LiveImplementer
 from .doctor import clean_environment, native_sandbox_capability, verification_profile
 from .orchestration import (Phase4Workflow, _manifest, build_contract, build_plan)
 from .phase4_contracts import ModelRegistry
+from .paths import resource_root
 from .phase4_fixtures import FixtureSpec, FixtureSubtask
 from .planning import bounded_inventory
 from .process import run_process
@@ -532,7 +533,7 @@ class ProductWorkflow(Phase4Workflow):
             max_provider_calls=max_provider_calls,
             max_planning_calls=1 + max_retries)
         inventory = static_web_inventory()
-        context = planning_context(Path(__file__).resolve().parents[1])
+        context = planning_context(resource_root())
         limits = {
             'provider_invocations_total': max_provider_calls,
             'planning_calls_max': 1 + max_retries, 'implementation_assignments_max': 2,
@@ -636,7 +637,7 @@ class ProductWorkflow(Phase4Workflow):
                 max_timeout_seconds=max_timeout_seconds,
                 max_output_bytes_per_call=max_output_bytes, proposal=proposal)
             plan = build_plan(
-                contract, fixture, registry, Path(__file__).resolve().parents[1], proposal,
+                contract, fixture, registry, resource_root(), proposal,
                 planner_accounted=True)
         except Exception as exc:
             self._write_json('planner-rejection.json', {

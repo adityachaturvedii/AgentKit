@@ -13,7 +13,13 @@ Historical red evidence may reference a previous revision; green/current accepta
 Delivery stores only a proposed PR. There is no approval field or approval format in Phase 1. Usage null means unknown and cannot be treated as zero. An immutable source package and trusted environment are prerequisites for using the validator. Schema version changes will require explicit migrations; no migration is implemented.
 
 
-For a filled, observed synthetic example, see [the invoice test handoff](../audit/evaluations/skills/handoffs/behavioral-testing.json), [its raw evidence](../audit/evaluations/skills/evidence/green.txt) and [the evaluation report](../audit/evaluations/skills/forward-report.md). Temporary absolute paths are retained for provenance; archive/manifest mapping is described in audit/evaluations/manifest.json. Validate one JSON file at a time; directories are not input documents.
+The complete source checkout retains a filled synthetic invoice example under
+`audit/evaluations/skills/`, including its handoff, raw evidence and evaluation
+report. Those historical evaluation records are not runtime resources and are
+excluded from the installed wheel; `audit/sources.lock.json` remains bundled
+for source provenance. Temporary absolute paths in the source archive are
+retained for provenance. Validate one JSON file at a time; directories are not
+input documents.
 
 Environment digest convention: write an environment.json containing interpreter/tool versions, OS/architecture, dependency identities, relevant configuration and dataset/hardware identities (where applicable). Exclude credentials and unnecessary personal paths. SHA-256 the exact UTF-8 file bytes and retain that file beside logs. This identifies recorded metadata; it does not establish hermetic execution. The forward run predates this convention and includes its interpreter path.
 
