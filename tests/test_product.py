@@ -1,9 +1,12 @@
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import threading
 import unittest
+from urllib.error import HTTPError
+from urllib.request import urlopen
 from unittest.mock import patch
 
 from agentkit.controller import ControllerError, UsageRecord
@@ -12,8 +15,10 @@ from agentkit.orchestration import DeterministicReviewer
 from agentkit.product import (PRODUCT_PROJECT_POLICY, LiveProductPlanner, ProductPlanningError,
                               ProductWorkflow, StaticProductPlanner,
                               static_web_inventory, validate_product_document)
+from agentkit.portable_package import export_package
 from agentkit.runtime_contracts import (CancellationStatus, ExecutionResult, UsageObservation)
 from agentkit.resource_policy import resolve_role_resources
+from agentkit.web_acceptance import create_preview_snapshot
 
 
 BRIEF = 'Build a small accessible browser counter with keyboard and touch controls.'
@@ -52,7 +57,10 @@ def proposal(assignments=None):
             'interfaces': interfaces,
             'dependencies': dependencies,
             'integration_strategy': 'Apply broker-validated changes after dependencies succeed.',
-            'verification_requirements': ['Run protected mechanics acceptance.'],
+            'verification_requirements': [
+                'Run controller-owned mechanics acceptance.',
+                'Record exact-revision browser interaction through the controller-owned preview.',
+            ],
             'review_requirements': ['Review the exact verified candidate independently.'],
             'roles': ['chief_of_staff', 'tech_lead', 'implementer', 'verifier', 'reviewer'],
             'model_profiles': {'implementer': 'controller-route', 'repair': 'controller-route',
@@ -158,6 +166,53 @@ class ProductTests(unittest.TestCase):
         workflow.reviewer_override = DeterministicReviewer('claude')
         return workflow, specialist
 
+    def bind_stopped_preview(self, workflow, task_id):
+        task = workflow.store.task(task_id)
+        worktree = Path(task['worktree'])
+        manifest = workflow.broker.manifest(worktree, exclude_git=True)
+        destination = self.root / ('snapshot-' + task_id)
+        snapshot = create_preview_snapshot(
+            worktree, destination, manifest, task['head_revision'])
+        shutil.rmtree(destination)
+        receipt = {
+            'schema_version': 1, 'candidate_revision': task['head_revision'],
+            'session_id': snapshot['session_id'],
+            'snapshot_sha256': snapshot['snapshot_sha256'],
+            'status': 'stopped', 'cleanup_confirmed': True,
+        }
+        digest = workflow.store.put_artifact(json.dumps(receipt, sort_keys=True))
+        workflow.store.append_event(
+            task_id, task_id + '-preview-stopped-' + snapshot['session_id'],
+            'product_preview_stopped',
+            {'session_id': snapshot['session_id'], 'artifact_sha256': digest},
+            authority=workflow.store.authority)
+        session = dict(receipt, receipt_artifact_sha256=digest)
+        (workflow.evidence_root / 'preview-session.json').write_text(json.dumps(session))
+        return snapshot
+
+    def browser_report(self, workflow, task_id, snapshot, *, failed=()):
+        task = workflow.store.task(task_id)
+        return {
+            'schema_version': 1,
+            'candidate_revision': task['head_revision'],
+            'session_id': snapshot['session_id'],
+            'snapshot_sha256': snapshot['snapshot_sha256'],
+            'browser': {'name': 'Fixture Browser', 'version': '1.0'},
+            'verifier': {'id': 'fixture-human-reviewer', 'type': 'human'},
+            'implementation_authors': workflow._implementation_authors(task_id),
+            'checks': [
+                {'id': item['id'],
+                 'status': 'failed' if item['id'] in failed else 'passed',
+                 'action': 'Exercise ' + item['id'],
+                 'assertion': item['expected'],
+                 'observation': 'Fixture observation for ' + item['id']}
+                for item in task['contract']['acceptance']
+            ],
+            'screenshots': [],
+            'visual_judgment': {'status': 'passed',
+                                'observation': 'Fixture layout remained readable.'},
+        }
+
     def test_provider_plan_is_validated_and_drives_a_disposable_product(self):
         workflow, specialist = self.workflow()
         plan = workflow.state.plan('product')['plan']
@@ -181,27 +236,20 @@ class ProductTests(unittest.TestCase):
         result = workflow.start('browser')
         head = result['task']['head_revision']
         self.assertIsNone(result['approval_package'])
-        (workflow.evidence_root / 'preview-session.json').write_text(json.dumps({
-            'candidate_revision': head, 'status': 'stopped', 'cleanup_confirmed': True,
-            'test_fixture': True,
-        }))
-        evidence = {
-            'schema_version': 1,
-            'candidate_revision': head,
-            'browser': {'name': 'fixture-browser', 'version': 'fixture'},
-            'checks': [{'id': item['id'], 'status': 'passed',
-                        'observation': 'fixture observed ' + item['id']}
-                       for item in ACCEPTANCE],
-            'screenshots': [],
-            'visual_judgment': 'user_review_required',
-            'preview_cleanup': True,
-        }
+        snapshot = self.bind_stopped_preview(workflow, 'browser')
+        evidence = self.browser_report(workflow, 'browser', snapshot)
         final = workflow.record_browser_evidence('browser', evidence)
         self.assertEqual(final['task']['state'], 'awaiting_pr_approval')
         package = final['approval_package']
         self.assertEqual(package['head_revision'], head)
         self.assertFalse(package['approval']['recorded'])
         self.assertEqual(package['browser_verification'][0]['revision'], head)
+        self.assertEqual({item['kind'] for item in package['required_evidence']},
+                         {'independent-check', 'independent-review', 'browser-check',
+                          'approval-package'})
+        portable = export_package(workflow.root, 'browser', self.root / 'portable-browser')
+        self.assertTrue(portable['valid'])
+        self.assertEqual(portable['head_revision'], head)
 
     def test_preview_process_lifecycle_when_loopback_is_available(self):
         workflow, _ = self.workflow('preview')
@@ -226,8 +274,15 @@ class ProductTests(unittest.TestCase):
             if not thread.is_alive() and not ready.is_set():
                 self.skipTest(str(errors[0]) if errors else
                               'loopback preview is unavailable in this execution context')
-            self.assertTrue(ready.wait(3))
+            if not ready.wait(3) and errors:
+                self.skipTest(str(errors[0]))
+            self.assertTrue(ready.is_set())
             self.assertTrue(observed['url'].startswith('http://127.0.0.1:'))
+            with urlopen(observed['url'], timeout=2) as response:
+                self.assertIn(b'<title>Counter</title>', response.read())
+            with self.assertRaises(HTTPError) as denied:
+                urlopen(observed['url'] + '.git', timeout=2)
+            self.assertEqual(denied.exception.code, 404)
         finally:
             stop.set()
             thread.join(3)
@@ -235,19 +290,15 @@ class ProductTests(unittest.TestCase):
             session = json.loads((workflow.evidence_root / 'preview-session.json').read_text())
             self.assertEqual(session['status'], 'stopped')
             self.assertTrue(session['cleanup_confirmed'])
+            self.assertTrue(workflow.store.artifact_intact(session['receipt_artifact_sha256']))
+            self.assertFalse(any((workflow.root / 'preview').iterdir()))
 
     def test_browser_evidence_rejects_a_changed_candidate(self):
         workflow, _ = self.workflow('stale')
         result = workflow.start('stale')
+        snapshot = self.bind_stopped_preview(workflow, 'stale')
         Path(result['task']['worktree'], 'styles.css').write_text('changed outside controller')
-        evidence = {
-            'schema_version': 1, 'candidate_revision': result['task']['head_revision'],
-            'browser': {'name': 'fixture-browser'},
-            'checks': [{'id': item['id'], 'status': 'passed', 'observation': 'observed'}
-                       for item in ACCEPTANCE],
-            'screenshots': [], 'visual_judgment': 'user_review_required',
-            'preview_cleanup': True,
-        }
+        evidence = self.browser_report(workflow, 'stale', snapshot)
         with self.assertRaisesRegex(ControllerError, 'another candidate'):
             workflow.record_browser_evidence('stale', evidence)
         self.assertIsNone(workflow.result('stale')['approval_package'])
@@ -359,28 +410,129 @@ class ProductTests(unittest.TestCase):
                           ['generated_output_tokens']['value'])
         self.assertTrue((workflow.root / 'plan.json').is_file())
 
+    def test_recovered_plan_counts_both_planning_attempts_before_future_reserves(self):
+        two = proposal([
+            {'id': 'implement-logic', 'objective': 'Logic',
+             'allowed_paths': ['game.js', 'README.md'], 'dependencies': [],
+             'interfaces': ['logic API']},
+            {'id': 'implement-ui', 'objective': 'UI',
+             'allowed_paths': ['index.html', 'styles.css'], 'dependencies': [],
+             'interfaces': ['DOM API']},
+        ])
+        workflow = ProductWorkflow.submit_product(
+            self.root / 'recovery-budget', 'recovery-budget', BRIEF, ACCEPTANCE, MECHANICS,
+            planner=RecoveringPlanner(two), live=False, max_calls=5, max_provider_calls=4,
+            max_retries=1, max_concurrency=2, planning_timeout_seconds=5,
+            implementation_timeout_seconds=5, review_timeout_seconds=5,
+            verification_timeout_seconds=5, max_elapsed_seconds=30)
+        self.assertEqual(workflow.store.task('recovery-budget')['state'], 'blocked')
+        rejection = json.loads((workflow.root / 'planner-rejection.json').read_text())
+        self.assertIn('cannot fit', rejection['reason'])
+
+    def test_product_acceptance_and_quality_stage_contracts_are_bounded(self):
+        with self.assertRaisesRegex(ValueError, 'bounded'):
+            ProductWorkflow.submit_product(
+                self.root / 'large-acceptance', 'large-acceptance', BRIEF,
+                [{'id': 'criterion', 'expected': 'x' * 2049}], MECHANICS,
+                planner=StaticProductPlanner(proposal()), live=False)
+        changed = proposal()
+        changed['proposal']['verification_requirements'] = ['Trust the implementation report.']
+        with self.assertRaisesRegex(ProductPlanningError, 'quality stages'):
+            validate_product_document(changed, BRIEF, ACCEPTANCE, static_web_inventory(),
+                                      max_subtasks=2, max_concurrency=2)
+        changed = proposal()
+        changed['proposal']['objective'] = 'Build an unrelated advertising page.'
+        with self.assertRaisesRegex(ProductPlanningError, 'controller-owned objective'):
+            validate_product_document(changed, BRIEF, ACCEPTANCE, static_web_inventory(),
+                                      max_subtasks=2, max_concurrency=2)
+
     def test_screenshot_records_are_hash_checked_inside_evidence_root(self):
         workflow, _ = self.workflow('screenshot')
         result = workflow.start('screenshot')
+        snapshot = self.bind_stopped_preview(workflow, 'screenshot')
         screenshot = workflow.evidence_root / 'actual.png'
         screenshot.write_bytes(b'fixture png')
-        (workflow.evidence_root / 'preview-session.json').write_text(json.dumps({
-            'candidate_revision': result['task']['head_revision'], 'status': 'stopped',
-            'cleanup_confirmed': True, 'test_fixture': True,
-        }))
-        evidence = {
-            'schema_version': 1, 'candidate_revision': result['task']['head_revision'],
-            'browser': {'name': 'fixture-browser'},
-            'checks': [{'id': item['id'], 'status': 'passed', 'observation': 'observed'}
-                       for item in ACCEPTANCE],
-            'screenshots': [{'path': 'actual.png',
-                             'sha256': hashlib.sha256(b'fixture png').hexdigest(),
-                             'viewport': '800x600'}],
-            'visual_judgment': 'user_review_required', 'preview_cleanup': True,
-        }
+        evidence = self.browser_report(workflow, 'screenshot', snapshot)
+        evidence['screenshots'] = [{'path': 'actual.png',
+                                    'sha256': hashlib.sha256(b'fixture png').hexdigest(),
+                                    'viewport': '800x600'}]
         evidence['screenshots'][0]['sha256'] = '0' * 64
         with self.assertRaisesRegex(ControllerError, 'changed'):
             workflow.record_browser_evidence('screenshot', evidence)
+
+    def test_browser_receipt_tamper_and_failed_acceptance_block_without_package(self):
+        workflow, _ = self.workflow('browser-failure')
+        workflow.start('browser-failure')
+        snapshot = self.bind_stopped_preview(workflow, 'browser-failure')
+        report = self.browser_report(workflow, 'browser-failure', snapshot)
+        session_path = workflow.evidence_root / 'preview-session.json'
+        session = json.loads(session_path.read_text())
+        session['snapshot_sha256'] = '0' * 64
+        session_path.write_text(json.dumps(session))
+        with self.assertRaisesRegex(ControllerError, 'receipt'):
+            workflow.record_browser_evidence('browser-failure', report)
+        session['snapshot_sha256'] = snapshot['snapshot_sha256']
+        session_path.write_text(json.dumps(session))
+        report['checks'][0]['status'] = 'failed'
+        blocked = workflow.record_browser_evidence('browser-failure', report)
+        self.assertEqual(blocked['task']['state'], 'blocked')
+        self.assertIsNone(blocked['approval_package'])
+
+    def test_preview_callback_failure_still_closes_and_records_cleanup(self):
+        workflow, _ = self.workflow('preview-callback')
+        workflow.start('preview-callback')
+
+        class FakeServer:
+            server_address = ('127.0.0.1', 43123)
+            closed = False
+
+            def handle_request(self):
+                raise AssertionError('callback failure must stop before serving')
+
+            def server_close(self):
+                self.closed = True
+
+        server = FakeServer()
+        with patch('agentkit.product.ThreadingHTTPServer', return_value=server):
+            with self.assertRaisesRegex(RuntimeError, 'fixture callback failure'):
+                workflow.serve_preview(
+                    'preview-callback',
+                    ready_callback=lambda session: (_ for _ in ()).throw(
+                        RuntimeError('fixture callback failure')))
+        self.assertTrue(server.closed)
+        session = json.loads((workflow.evidence_root / 'preview-session.json').read_text())
+        self.assertEqual(session['status'], 'stopped')
+        self.assertTrue(session['cleanup_confirmed'])
+        self.assertTrue(workflow.store.artifact_intact(session['receipt_artifact_sha256']))
+        self.assertFalse(any((workflow.root / 'preview').iterdir()))
+
+    def test_candidate_mutation_during_preview_copy_fails_and_removes_snapshot(self):
+        workflow, _ = self.workflow('preview-race')
+        result = workflow.start('preview-race')
+        real_snapshot = create_preview_snapshot
+
+        def mutate_after_copy(*args, **kwargs):
+            snapshot = real_snapshot(*args, **kwargs)
+            Path(result['task']['worktree'], 'styles.css').write_text('changed during copy')
+            return snapshot
+
+        with patch('agentkit.product.create_preview_snapshot', side_effect=mutate_after_copy):
+            with self.assertRaisesRegex(ControllerError, 'changed while'):
+                workflow.serve_preview('preview-race')
+        self.assertFalse(any((workflow.root / 'preview').iterdir()))
+
+    def test_visual_only_browser_failure_reaches_bounded_repair_feedback(self):
+        workflow, specialist = self.workflow('visual-repair', max_repairs=1)
+        workflow.start('visual-repair')
+        snapshot = self.bind_stopped_preview(workflow, 'visual-repair')
+        report = self.browser_report(workflow, 'visual-repair', snapshot)
+        report['visual_judgment'] = {
+            'status': 'failed', 'observation': 'Controls overlap on the narrow viewport.'}
+        repairing = workflow.record_browser_evidence('visual-repair', report)
+        self.assertEqual(repairing['task']['state'], 'repairing')
+        feedback = workflow._latest_feedback('visual-repair')
+        self.assertEqual(feedback['findings'][0]['id'], 'visual-judgment')
+        self.assertIn('Controls overlap', feedback['findings'][0]['observation'])
 
 
 if __name__ == '__main__':

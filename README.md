@@ -45,7 +45,7 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; signing and distribution remain open |
 | Terminal workflow (R3 P12) | Plain, JSON, protocol-event and one-shot terminal views over existing Phase 4 disposable workflows; no full-screen interactive TUI |
 | [Distribution and compatibility (R3 P13)](docs/r3-distribution-validation-report.md) | Offline source-checkout and isolated-wheel onboarding plus data-flow boundaries; public release remains blocked on an outbound license |
-| Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
+| [Provider-planned static web products](docs/r5-validation-report.md) | Offline workflow hardened through snapshot-bound browser evidence and portable review export; real browser/live delivery remains pending |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
 
 The archived `af80791` demonstration predates the corrected Phase 4 run. Later CLI integration evidence records successful Codex planning and Claude authentication failures; it does not establish current account status. Consult the [Phase 4 validation report](docs/phase4-validation-report.md) and [implementation checklist](docs/checklist.md) for the boundaries of each milestone.
@@ -238,9 +238,9 @@ See [resource policy and role capabilities](docs/cli-resource-policy.md) for enf
 
 ### Static web product work
 
-The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments; the controller validates scope, dependencies, acceptance and budget before execution. Protected mechanics checks and exact-revision browser evidence are required for acceptance. Browser interaction is externally driven, not a general built-in browser agent.
+The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments; the controller validates scope, dependencies, acceptance and budget before execution. Protected mechanics checks and exact-revision browser evidence are required for acceptance. The preview serves a private plain-file snapshot rather than its Git worktree. Browser interaction is externally driven, and the controller validates its independent verifier identity, action/assertion records, visual verdict, screenshots, stopped-session receipt and candidate binding. This is evidence validation, not a built-in browser agent or proof that a browser ran.
 
-The first Breakout attempt failed during planning; the later integration checkpoint stopped on Claude authentication failures. No playable game or completed product acceptance is claimed. See the [product workflow](docs/product-workflow.md) for commands, prerequisites and retained evidence.
+The resulting product package can use the same offline portable exporter/verifier as repository work. The first Breakout attempt failed during planning; the later integration checkpoint stopped on Claude authentication failures. No playable game or completed browser acceptance is claimed. See the [product workflow](docs/product-workflow.md) for commands, prerequisites and retained evidence.
 
 ## CLI overview
 
@@ -344,7 +344,7 @@ The [reuse-first engineering plan](docs/planning/README.md) prioritizes existing
 - **Implemented:** audited skills, adapters, disposable delivery, authentication checkpoints, concurrent scenario workflows, resource policies, R0 component reuse and R1 read-only intake.
 - **Corrective gate:** resolve R2 review findings and validate the real adapter, authentication and verifier paths before extending repository execution.
 - **Implemented R3 documentation:** portable review export, the one-shot terminal workflow, and source-checkout compatibility/data-flow guidance.
-- **Next release gate:** choose an outbound license before calling P13 public distribution complete; signing/publication remain separate, and R4 measured pilot evaluation and R5 new-product acceptance remain later work.
+- **Next release gates:** choose an outbound license before calling P13 public distribution complete; signing/publication remain separate, R4 measured pilot evaluation remains pending, and the R5 foundation still needs a supported-host live product/browser trial.
 - **Deferred:** optional Linux/GPU workers, broader isolation, GitHub publication and deployment.
 
 The [implementation checklist](docs/checklist.md), [decision log](docs/decisions.md) and [original specification](docs/implementation-spec.md) distinguish implemented, simulated, live-tested and planned behavior.

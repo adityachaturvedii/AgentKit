@@ -45,6 +45,10 @@ P12 adds one allowlisted frontend for existing Phase 4 disposable workflows with
 
 P13 now records exact source-checkout and isolated no-index wheel procedures, removal steps, tested Python/Node/macOS boundaries, provider data flow, authentication separation, retained local data and portable-export limits. It adds no runtime dependency, global configuration change, network installation or inference. The absence of an outbound `LICENSE` keeps public distribution incomplete; npm publication and a full-screen frontend remain excluded. See the [distribution guide](../r3-distribution.md), [compatibility matrix](../r3-compatibility.md) and [data-flow contract](../r3-data-flow.md).
 
+## R5 product-path outcome
+
+P15 now reuses the durable graph, isolated assignments, protected mechanics verifier, independent review and P11 exporter for fresh dependency-free static-web projects. The controller validates provider proposals, counts planning recovery attempts, serves a private exact-revision snapshot, and accepts only bounded session-bound browser evidence from an identity separate from implementation providers. Offline fixtures do not prove that a real browser ran; a supported-host product trial, planning authentication continuation and broader stacks remain pending. See the [product workflow](../product-workflow.md) and [R5 validation report](../r5-validation-report.md).
+
 ## R1 outcome
 
 R1 implements P05 for controller-created disposable repository fixtures: bounded read-only inspection, strict Python-library profile validation, private hash-bound enrollment and revision-bound non-executing plans. The inspector runs no project code, hooks, filters, dependency installation, provider calls or network operations. It fails closed on repository shapes that could escape or transform the observed content. No personal or third-party repository was accessed, so applicability beyond the tested shapes remains unverified.

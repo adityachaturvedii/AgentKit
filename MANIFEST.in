@@ -11,6 +11,8 @@ include docs/r3-license-review.md
 include docs/r3-portable-package.md
 include docs/r3-provenance-manifest.md
 include docs/r3-terminal-workflow.md
+include docs/product-workflow.md
+include docs/r5-validation-report.md
 include docs/skill-contract.md
 recursive-include domains *
 recursive-include notices *

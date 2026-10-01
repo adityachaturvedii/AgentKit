@@ -20,6 +20,8 @@ EVIDENCE_ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$')
 MAX_FILES = 100
 MAX_FILE_BYTES = 5 * 1024 * 1024
 MAX_TOTAL_BYTES = 20 * 1024 * 1024
+PRODUCT_EVIDENCE_KINDS = frozenset((
+    'independent-check', 'independent-review', 'browser-check', 'approval-package'))
 
 
 def _hash(payload):
@@ -80,6 +82,45 @@ def _sanitized(value, workflow_root):
     return value
 
 
+def _required_evidence(approval):
+    """Return canonical evidence references for legacy and product packages."""
+    declared = approval.get('required_evidence')
+    if declared is None:
+        verification = approval.get('verification_evidence')
+        review = approval.get('review_evidence')
+        if not isinstance(verification, list) or not verification:
+            raise PortablePackageError('approval package has no required verification evidence')
+        references = ([{'id': evidence_id, 'kind': 'independent-check'}
+                       for evidence_id in verification] +
+                      [{'id': review, 'kind': 'independent-review'},
+                       {'id': 'approval-package', 'kind': 'approval-package'}])
+        legacy = True
+    else:
+        if not isinstance(declared, list) or not 4 <= len(declared) <= MAX_FILES - 4:
+            raise PortablePackageError('approval package has invalid required evidence')
+        references = []
+        for item in declared:
+            if (not isinstance(item, dict) or set(item) != {'id', 'kind'} or
+                    not isinstance(item['id'], str) or
+                    not EVIDENCE_ID.fullmatch(item['id']) or
+                    not isinstance(item['kind'], str) or
+                    item['kind'] not in PRODUCT_EVIDENCE_KINDS):
+                raise PortablePackageError('approval package has invalid required evidence')
+            references.append(dict(item))
+        counts = {kind: sum(item['kind'] == kind for item in references)
+                  for kind in PRODUCT_EVIDENCE_KINDS}
+        if (counts['independent-check'] < 1 or counts['independent-review'] != 1 or
+                counts['browser-check'] < 1 or counts['approval-package'] != 1):
+            raise PortablePackageError('product package lacks required evidence kinds')
+        legacy = False
+    identifiers = [item['id'] for item in references]
+    if (len(set(identifiers)) != len(identifiers) or
+            any(not isinstance(item, str) or not EVIDENCE_ID.fullmatch(item)
+                for item in identifiers)):
+        raise PortablePackageError('approval package has invalid evidence references')
+    return references, legacy
+
+
 def export_package(workflow_root, task_id, output):
     workflow_root = Path(workflow_root).resolve()
     output = Path(output).resolve()
@@ -96,31 +137,24 @@ def export_package(workflow_root, task_id, output):
             approval.get('head_revision') != task['head_revision'] or
             approval.get('approval', {}).get('recorded') is not False):
         raise PortablePackageError('workflow is not an unapproved exact-revision candidate')
-    verification_refs = approval.get('verification_evidence')
-    review_ref = approval.get('review_evidence')
-    if not isinstance(verification_refs, list) or not verification_refs:
-        raise PortablePackageError('approval package has no required verification evidence')
-    required = list(verification_refs)
-    required.append(review_ref)
-    required.append('approval-package')
-    if (len(set(required)) != len(required) or
-            any(not isinstance(item, str) or not EVIDENCE_ID.fullmatch(item)
-                for item in required)):
-        raise PortablePackageError('approval package has invalid evidence references')
+    required_evidence, legacy_evidence = _required_evidence(approval)
+    required = [item['id'] for item in required_evidence]
+    managed_base = approval.get('managed_base_revision')
+    if (not OID.fullmatch(str(managed_base or '')) or
+            managed_base != task['base_revision']):
+        raise PortablePackageError('approval package is not bound to the managed base')
     evidence = {item['evidence_id']: item for item in snapshot['evidence']}
     if len(evidence) != len(snapshot['evidence']):
         raise PortablePackageError('controller contains duplicate evidence identifiers')
     prepared_evidence = []
-    for evidence_id in required:
+    for reference in required_evidence:
+        evidence_id = reference['id']
         record = evidence.get(evidence_id)
         if (not record or record['revision'] != task['head_revision'] or record['stale'] or
                 record['status'] != 'passed' or
                 not store.artifact_intact(record['artifact_sha256'])):
             raise PortablePackageError('required evidence is absent, stale or not passed')
-        expected_kind = ('independent-check' if evidence_id in approval['verification_evidence'] else
-                         'independent-review' if evidence_id == approval['review_evidence'] else
-                         'approval-package')
-        if record['kind'] != expected_kind:
+        if record['kind'] != reference['kind']:
             raise PortablePackageError('required evidence has the wrong kind')
         try:
             details = json.loads(record['details_json'])
@@ -134,8 +168,10 @@ def export_package(workflow_root, task_id, output):
     if (not store.artifact_intact(original_artifact) or
             _hash(json.dumps(original_approval, sort_keys=True).encode('utf-8')) != original_artifact):
         raise PortablePackageError('local approval artifact is absent or inconsistent')
+    approval_evidence_id = next(item['id'] for item in required_evidence
+                                if item['kind'] == 'approval-package')
     approval_record = next(record for evidence_id, record, _ in prepared_evidence
-                           if evidence_id == 'approval-package')
+                           if evidence_id == approval_evidence_id)
     if approval_record['artifact_sha256'] != original_artifact:
         raise PortablePackageError('approval evidence does not identify the local approval artifact')
     if redact_text(str(approval.get('diff', ''))) != approval.get('diff', ''):
@@ -170,6 +206,8 @@ def export_package(workflow_root, task_id, output):
         files[relative] = {'sha256': _hash(payload), 'bytes': len(payload)}
 
     portable_approval = redact(_sanitized(approval, workflow_root))
+    if not legacy_evidence:
+        portable_approval['required_evidence'] = required_evidence
     portable_approval['portable_provenance'] = {
         'source_inventory_sha256': approval.get('import', {}).get('source_inventory_sha256'),
         'profile_sha256': approval.get('import', {}).get('profile_sha256'),
@@ -197,7 +235,7 @@ def export_package(workflow_root, task_id, output):
     })
     write('candidate.diff', approval.get('diff', '').encode('utf-8'))
     manifest = {'schema_version': 1, 'task_id': task_id,
-                'base_revision': approval.get('managed_base_revision'),
+                'base_revision': managed_base,
                 'head_revision': task['head_revision'], 'files': files,
                 'execution_on_import': False}
     _private_write(output / 'manifest.json', _json_bytes(manifest))
@@ -258,24 +296,21 @@ def verify_package(root):
             approval.get('status') != 'awaiting_pr_approval' or
             approval.get('approval', {}).get('recorded') is not False):
         raise PortablePackageError('approval package is inconsistent with the manifest')
-    verification_refs = approval.get('verification_evidence')
-    if not isinstance(verification_refs, list) or not verification_refs:
-        raise PortablePackageError('portable approval has no verification evidence')
-    required = list(verification_refs)
-    required.append(approval.get('review_evidence'))
-    required.append('approval-package')
-    if (len(set(required)) != len(required) or
-            any(not isinstance(item, str) or not EVIDENCE_ID.fullmatch(item)
-                for item in required)):
-        raise PortablePackageError('portable approval has invalid evidence references')
-    for evidence_id in required:
+    required_evidence, legacy_evidence = _required_evidence(approval)
+    required = [item['id'] for item in required_evidence]
+    expected_evidence_paths = {'evidence/' + item + '.json' for item in required}
+    declared_evidence_paths = {item for item in declared if item.startswith('evidence/')}
+    if declared_evidence_paths != expected_evidence_paths:
+        raise PortablePackageError('portable package contains unknown evidence')
+    for reference in required_evidence:
+        evidence_id = reference['id']
         path = root / 'evidence' / (str(evidence_id) + '.json')
         record = _read_json(path, 'required evidence file')
-        expected_kind = ('independent-check' if evidence_id in approval['verification_evidence'] else
-                         'independent-review' if evidence_id == approval['review_evidence'] else
-                         'approval-package')
         if (record.get('evidence_id') != evidence_id or record.get('revision') != head or
-                record.get('kind') != expected_kind or record.get('status') != 'passed'):
+                record.get('kind') != reference['kind'] or record.get('status') != 'passed' or
+                (not legacy_evidence and
+                 (not isinstance(record.get('source_artifact_sha256'), str) or
+                  not re.fullmatch(r'[0-9a-f]{64}', record['source_artifact_sha256'])))):
             raise PortablePackageError('required evidence is incomplete or inconsistent')
     matrix = _read_json(root / 'requirement-matrix.json', 'requirement matrix')
     rows = matrix.get('requirements')

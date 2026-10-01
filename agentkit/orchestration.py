@@ -915,9 +915,16 @@ class Phase4Workflow:
                 return {'kind': 'review_findings', 'revision': item['revision'],
                         'findings': details.get('findings', [])}
             if item['kind'] == 'browser-check':
+                findings = [check for check in details.get('checks', [])
+                            if check.get('status') == 'failed']
+                visual = details.get('visual_judgment')
+                if isinstance(visual, dict) and visual.get('status') == 'failed':
+                    findings.append({
+                        'id': 'visual-judgment', 'status': 'failed',
+                        'observation': visual.get('observation', 'visual acceptance failed'),
+                    })
                 return {'kind': 'browser_findings', 'revision': item['revision'],
-                        'findings': [check for check in details.get('checks', [])
-                                     if check.get('status') == 'failed']}
+                        'findings': findings}
         return None
 
     def _schedule_implementations(self, task_id, fixture, repository, worktree):

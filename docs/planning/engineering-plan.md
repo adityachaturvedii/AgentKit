@@ -170,7 +170,7 @@ Each ticket should fit a reviewable change, with attribution and tests in the sa
 | P12 | **Implemented:** plain/JSON/protocol-event/one-shot terminal workflow | P04, P11 | Equivalent status/next action, unknown usage and cancellation; no hidden authority in frontend; optional full-screen TUI deferred |
 | P13 | **Private onboarding implemented; public release incomplete:** source checkout, isolated wheel, compatibility and data-flow boundaries | P12; outbound license still open | Clean-environment no-inference install; no global mutation; public/package-index distribution remains blocked |
 | P14 | Pilot protocol and user discovery | P05; collection after P13 | Matched baseline, failures counted, reviewer/operator effort and escaped defects recorded |
-| P15 | Product-project creation and web acceptance profile | P10, P11; stack decision | Same graph/controller, independent browser/mechanics checks, owned preview cleanup; no game graph hardcode |
+| P15 | **Offline foundation implemented; live browser acceptance pending:** dependency-free product-project creation, protected mechanics, snapshot-bound browser evidence and portable package | P10, P11; vanilla-static profile selected | Same graph/controller, independent evidence identity, owned preview cleanup and no game graph hardcode; actual supported-browser trial still required |
 | P16 | Optional container/API engine feasibility | Explicit need and authority | Real tool/credential/lifecycle tests; per-request accounting and auth terms; never a silent CLI fallback |
 
 ## Validation and migration

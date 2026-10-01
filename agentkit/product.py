@@ -7,6 +7,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -26,11 +27,24 @@ from .process import run_process
 from .runtime_contracts import ExecutionRequest
 from .resource_policy import (output_exhaustion_recovery, resolve_product_task_budget,
                               resolve_role_resources)
+from .web_acceptance import (WebAcceptanceError, create_preview_snapshot,
+                             validate_browser_report)
 
 
 PRODUCT_SCHEMA_VERSION = 1
+PRODUCT_ACCEPTANCE_ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$')
 WEB_EDITABLE_PATHS = ('README.md', 'game.js', 'index.html', 'styles.css')
 WEB_CORE_PATHS = frozenset(('game.js', 'index.html', 'styles.css'))
+PRODUCT_VERIFICATION_REQUIREMENTS = (
+    'Run controller-owned mechanics acceptance.',
+    'Record exact-revision browser interaction through the controller-owned preview.',
+)
+PRODUCT_REVIEW_REQUIREMENTS = ('Review the exact verified candidate independently.',)
+PRODUCT_ROLES = ('chief_of_staff', 'tech_lead', 'implementer', 'verifier', 'reviewer')
+PRODUCT_MODEL_PROFILES = {
+    'implementer': 'controller-route', 'repair': 'controller-route',
+    'reviewer': 'controller-independent-route',
+}
 WEB_SEED_FILES = {
     'README.md': '# Controller-created static web product\n',
     'game.js': '',
@@ -57,10 +71,6 @@ def _bounded(value, name, maximum=32768):
     if not isinstance(value, str) or not value.strip() or len(value.encode()) > maximum:
         raise ValueError(name + ' must be a nonempty bounded string')
     return value.strip()
-
-
-def _sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def static_web_inventory():
@@ -106,11 +116,10 @@ def planner_prompt(brief, acceptance, inventory, limits, context):
             'interfaces': [{'assignment': 'implement-<name>', 'contract': '<contract>'}],
             'dependencies': [],
             'integration_strategy': '<controller-owned strategy>',
-            'verification_requirements': ['controller-owned mechanics checks'],
-            'review_requirements': ['independent review of exact revision'],
-            'roles': ['chief_of_staff', 'tech_lead', 'implementer', 'verifier', 'reviewer'],
-            'model_profiles': {'implementer': 'controller-route', 'repair': 'controller-route',
-                               'reviewer': 'controller-independent-route'},
+            'verification_requirements': list(PRODUCT_VERIFICATION_REQUIREMENTS),
+            'review_requirements': list(PRODUCT_REVIEW_REQUIREMENTS),
+            'roles': list(PRODUCT_ROLES),
+            'model_profiles': PRODUCT_MODEL_PROFILES,
             'resource_allocations': {'implementation_calls': 1,
                                      'verification_calls': 1, 'review_calls': 1,
                                      'maximum_concurrent_implementers': 1},
@@ -153,9 +162,17 @@ def validate_product_document(document, brief, acceptance, inventory, *, max_sub
         raise ProductPlanningError('product proposal changed controller-owned acceptance')
     if proposal['requirements'] != [{'source': 'user', 'text': brief}]:
         raise ProductPlanningError('product proposal changed the user requirement')
-    if (not isinstance(proposal['objective'], str) or not proposal['objective'].strip() or
-            not isinstance(proposal['assumptions'], list) or not proposal['assumptions'] or
-            any(not isinstance(item, str) or not item.strip() for item in proposal['assumptions'])):
+    if proposal['objective'] != brief:
+        raise ProductPlanningError('product proposal changed the controller-owned objective')
+    try:
+        _bounded(proposal['objective'], 'proposal objective', 4096)
+        _bounded(proposal['integration_strategy'], 'integration strategy', 4096)
+    except ValueError as exc:
+        raise ProductPlanningError(str(exc)) from exc
+    if (not isinstance(proposal['assumptions'], list) or
+            not 1 <= len(proposal['assumptions']) <= 16 or
+            any(not isinstance(item, str) or not item.strip() or
+                len(item.encode()) > 2048 for item in proposal['assumptions'])):
         raise ProductPlanningError('product proposal lacks a bounded objective or assumptions')
     planner = proposal['planner']
     if planner != {'kind': 'provider-tech-lead', 'model_call': True}:
@@ -234,10 +251,12 @@ def validate_product_document(document, brief, acceptance, inventory, *, max_sub
                             'verification_calls': 1, 'review_calls': 1,
                             'maximum_concurrent_implementers': min(max_concurrency, len(assignments))}):
         raise ProductPlanningError('product proposal resource allocation is infeasible')
-    if not all(isinstance(value, list) and value for value in
-               (proposal['verification_requirements'], proposal['review_requirements'],
-                proposal['roles'], proposal['interfaces'])):
-        raise ProductPlanningError('product proposal lacks verification, review, roles or interfaces')
+    if (proposal['verification_requirements'] != list(PRODUCT_VERIFICATION_REQUIREMENTS) or
+            proposal['review_requirements'] != list(PRODUCT_REVIEW_REQUIREMENTS) or
+            proposal['roles'] != list(PRODUCT_ROLES) or
+            proposal['model_profiles'] != PRODUCT_MODEL_PROFILES or
+            not proposal['interfaces']):
+        raise ProductPlanningError('product proposal changed required roles or quality stages')
     return proposal
 
 
@@ -472,11 +491,16 @@ class ProductWorkflow(Phase4Workflow):
         mechanics_test = _bounded(mechanics_test, 'controller mechanics test')
         if (not isinstance(acceptance, list) or not acceptance or len(acceptance) > 32 or
                 any(not isinstance(item, dict) or set(item) != {'id', 'expected'} or
-                    not isinstance(item['id'], str) or not item['id'] or
-                    not isinstance(item['expected'], str) or not item['expected']
+                    not isinstance(item['id'], str) or
+                    not PRODUCT_ACCEPTANCE_ID.fullmatch(item['id']) or
+                    not isinstance(item['expected'], str) or not item['expected'].strip() or
+                    len(item['expected'].encode()) > 2048
                     for item in acceptance) or
+                sum(len(item['expected'].encode()) for item in acceptance) > 16384 or
                 len({item['id'] for item in acceptance}) != len(acceptance)):
             raise ValueError('product acceptance must contain unique bounded id/expected objects')
+        acceptance = [{'id': item['id'], 'expected': item['expected'].strip()}
+                      for item in acceptance]
         task_budget = resolve_product_task_budget(
             max_calls=max_calls, max_provider_calls=max_provider_calls,
             max_concurrency=max_concurrency, max_repairs=max_repairs,
@@ -570,6 +594,7 @@ class ProductWorkflow(Phase4Workflow):
                                 cancel_event=self._cancellation(task_id)),
             effort=planner_route.effort)
         attempts = [{'execution_id': execution_id, 'status': outcome.status,
+                     'elapsed_seconds': outcome.elapsed_seconds,
                      'details': outcome.details, 'usage': asdict(outcome.usage)}]
         if (outcome.status == 'failed' and
                 outcome.details.get('error_class') == 'output_limit' and
@@ -587,6 +612,7 @@ class ProductWorkflow(Phase4Workflow):
                         cancel_event=self._cancellation(task_id)),
                     effort=planner_route.effort)
                 attempts.append({'execution_id': execution_id, 'status': outcome.status,
+                                 'elapsed_seconds': outcome.elapsed_seconds,
                                  'details': outcome.details,
                                  'usage': asdict(outcome.usage)})
         self._write_json('planning-result.json', {
@@ -604,9 +630,11 @@ class ProductWorkflow(Phase4Workflow):
                 raw_document, brief, acceptance, inventory,
                 max_subtasks=2, max_concurrency=max_concurrency)
             implementation_count = len(raw_proposal['assignments'])
-            mandatory_calls = 1 + implementation_count + 1 + 1
-            provider_calls = 1 + implementation_count + 1
-            allocated_time = (planning_timeout_seconds +
+            planning_calls = len(attempts)
+            planning_elapsed = sum(item['elapsed_seconds'] for item in attempts)
+            mandatory_calls = planning_calls + implementation_count + 1 + 1
+            provider_calls = planning_calls + implementation_count + 1
+            allocated_time = (planning_elapsed +
                               implementation_count * implementation_timeout_seconds +
                               verification_timeout_seconds + review_timeout_seconds)
             if (mandatory_calls > max_calls or provider_calls > max_provider_calls or
@@ -639,6 +667,11 @@ class ProductWorkflow(Phase4Workflow):
             plan = build_plan(
                 contract, fixture, registry, resource_root(), proposal,
                 planner_accounted=True)
+            self.store.append_event(
+                task_id, task_id + '-product-routes-finalized', 'product_routes_finalized',
+                {'routes': [route.to_dict() for route in plan.routes],
+                 'task_row_routes': 'provisional-preplanning-summary'},
+                authority=self.store.authority)
         except Exception as exc:
             self._write_json('planner-rejection.json', {
                 'error': type(exc).__name__, 'reason': str(exc),
@@ -751,7 +784,27 @@ class ProductWorkflow(Phase4Workflow):
 
     def _package(self, task_id, repository):
         package = super()._package(task_id, repository)
-        package['summary'] = self.store.task(task_id)['objective']
+        task = self.store.task(task_id)
+        snapshot = self.store.snapshot(task_id)
+        current = [item for item in snapshot['evidence']
+                   if (item['revision'] == task['head_revision'] and not item['stale'] and
+                       item['status'] == 'passed')]
+        verification = [item['evidence_id'] for item in current
+                        if item['kind'] == 'independent-check']
+        reviews = [item['evidence_id'] for item in current
+                   if item['kind'] == 'independent-review']
+        browser = [item['evidence_id'] for item in current
+                   if item['kind'] == 'browser-check']
+        if not verification or len(reviews) != 1 or not browser:
+            raise ControllerError('product package lacks current mechanics, review, or browser evidence')
+        package['summary'] = task['objective']
+        package['managed_base_revision'] = task['base_revision']
+        package['requirements'] = list(task['contract']['acceptance'])
+        package['required_evidence'] = (
+            [{'id': item, 'kind': 'independent-check'} for item in verification] +
+            [{'id': reviews[0], 'kind': 'independent-review'}] +
+            [{'id': item, 'kind': 'browser-check'} for item in browser] +
+            [{'id': 'phase4-approval-package', 'kind': 'approval-package'}])
         package['proposed_pr'] = {
             'title': 'Build controller-planned static web product',
             'body': ('Implements the validated product brief and records deterministic mechanics, '
@@ -765,7 +818,7 @@ class ProductWorkflow(Phase4Workflow):
         return package
 
     def serve_preview(self, task_id, *, stop_event=None, ready_callback=None):
-        """Serve the exact reviewed candidate in the foreground and clean up in this owner."""
+        """Serve a plain exact-revision snapshot in the foreground and clean it up."""
         task = self.store.task(task_id)
         if task['state'] != 'review_complete' or not self._requires_browser_verification(task_id):
             raise ControllerError('preview requires a reviewed product awaiting browser acceptance')
@@ -777,10 +830,25 @@ class ProductWorkflow(Phase4Workflow):
             previous = json.loads(session_path.read_text())
             if previous.get('status') == 'running':
                 raise ControllerError('existing preview ownership requires explicit reconciliation')
-        handler = partial(SimpleHTTPRequestHandler, directory=task['worktree'])
+        worktree = Path(task['worktree']).resolve()
+        tracked_manifest = self.broker.manifest(worktree, exclude_git=True)
+        preview_root = self.root / 'preview'
+        preview_root.mkdir(mode=0o700, exist_ok=True)
+        snapshot_path = preview_root / (task_id + '-' + str(task['repair_count']))
+        try:
+            snapshot = create_preview_snapshot(
+                worktree, snapshot_path, tracked_manifest, task['head_revision'])
+        except WebAcceptanceError as exc:
+            raise ControllerError('preview snapshot could not be prepared: ' + str(exc)) from exc
+        after_snapshot = self._candidate_identity(task_id)
+        if after_snapshot != identity:
+            shutil.rmtree(snapshot_path, ignore_errors=True)
+            raise ControllerError('candidate changed while the preview snapshot was prepared')
+        handler = partial(SimpleHTTPRequestHandler, directory=snapshot['snapshot_root'])
         try:
             server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
         except OSError as exc:
+            shutil.rmtree(snapshot_path, ignore_errors=True)
             raise ControllerError('loopback preview is unavailable on this host: ' +
                                   type(exc).__name__) from exc
         server.timeout = .1
@@ -789,84 +857,120 @@ class ProductWorkflow(Phase4Workflow):
             'schema_version': 1, 'status': 'running', 'pid': os.getpid(),
             'process_group': os.getpgrp(), 'argv': ['agentkit', 'product', 'preview-serve'],
             'port': port, 'url': 'http://127.0.0.1:' + str(port) + '/',
+            'session_id': snapshot['session_id'],
+            'snapshot_sha256': snapshot['snapshot_sha256'],
+            'manifest_sha256': snapshot['manifest_sha256'],
             'candidate_revision': task['head_revision'], 'candidate_identity': identity,
             'started_monotonic': time.monotonic(),
             'containment_limit': ('Foreground controller-owned loopback server only; browser egress '
                                   'and remote browser effects are not contained.'),
         }
-        session_path.write_text(json.dumps(session, indent=2, sort_keys=True) + '\n')
-        if ready_callback:
-            ready_callback(dict(session))
         try:
-            while stop_event is None or not stop_event.is_set():
-                server.handle_request()
-        except KeyboardInterrupt:
-            pass
+            session_path.write_text(json.dumps(session, indent=2, sort_keys=True) + '\n')
+            if ready_callback:
+                ready_callback(dict(session))
+            try:
+                while stop_event is None or not stop_event.is_set():
+                    server.handle_request()
+            except KeyboardInterrupt:
+                pass
         finally:
             server.server_close()
-            session.update(status='stopped', cleanup_confirmed=True,
+            shutil.rmtree(snapshot_path, ignore_errors=True)
+            receipt = {
+                'schema_version': 1, 'candidate_revision': task['head_revision'],
+                'session_id': snapshot['session_id'],
+                'snapshot_sha256': snapshot['snapshot_sha256'],
+                'status': 'stopped', 'cleanup_confirmed': not snapshot_path.exists(),
+            }
+            receipt_payload = json.dumps(receipt, sort_keys=True)
+            receipt_digest = self.store.put_artifact(receipt_payload)
+            self.store.append_event(
+                task_id, task_id + '-preview-stopped-' + snapshot['session_id'],
+                'product_preview_stopped',
+                {'session_id': snapshot['session_id'], 'artifact_sha256': receipt_digest},
+                authority=self.store.authority)
+            session.update(status='stopped', cleanup_confirmed=not snapshot_path.exists(),
+                           receipt_artifact_sha256=receipt_digest,
                            stopped_monotonic=time.monotonic())
             session_path.write_text(json.dumps(session, indent=2, sort_keys=True) + '\n')
         return session
+
+    def _implementation_authors(self, task_id):
+        nodes = self.state.snapshot(task_id)['nodes']
+        authors = sorted({
+            'provider:' + node['provider'] for node in nodes
+            if node['status'] == 'succeeded' and node.get('provider') and
+            node['kind'] in ('implementation', 'repair')
+        })
+        if not authors:
+            raise ControllerError('browser evidence has no recorded implementation authors')
+        return authors
+
+    def _validated_preview_receipt(self, task_id, session):
+        required = ('schema_version', 'candidate_revision', 'session_id', 'snapshot_sha256',
+                    'status', 'cleanup_confirmed')
+        receipt = {name: session.get(name) for name in required}
+        artifact = session.get('receipt_artifact_sha256')
+        if not isinstance(artifact, str) or not self.store.artifact_intact(artifact):
+            raise ControllerError('browser evidence requires an intact preview receipt')
+        expected = hashlib.sha256(json.dumps(receipt, sort_keys=True).encode()).hexdigest()
+        events = [item for item in self.store.snapshot(task_id)['events']
+                  if item['event_type'] == 'product_preview_stopped']
+        bound = False
+        for event in events:
+            try:
+                payload = json.loads(event['payload_json'])
+            except (TypeError, ValueError):
+                continue
+            if (payload.get('session_id') == receipt['session_id'] and
+                    payload.get('artifact_sha256') == artifact):
+                bound = True
+                break
+        if artifact != expected or not bound:
+            raise ControllerError('browser evidence preview receipt is not controller-bound')
+        return receipt
 
     def record_browser_evidence(self, task_id, evidence):
         task = self.store.task(task_id)
         if task['state'] != 'review_complete':
             raise ControllerError('browser evidence requires the reviewed candidate')
         actual = self._candidate_identity(task_id)
-        if (not isinstance(evidence, dict) or
-                set(evidence) != {'schema_version', 'candidate_revision', 'browser', 'checks',
-                                 'screenshots', 'visual_judgment', 'preview_cleanup'} or
-                evidence.get('schema_version') != 1 or
-                evidence.get('candidate_revision') != task['head_revision'] or
-                actual['revision'] != task['head_revision'] or not actual['clean']):
+        if (actual['revision'] != task['head_revision'] or not actual['clean']):
             raise ControllerError('browser evidence is malformed or bound to another candidate')
-        checks = evidence['checks']
-        required_check_ids = {item['id'] for item in task['contract']['acceptance']}
-        if (not isinstance(checks, list) or len(checks) != len(required_check_ids) or
-                {item.get('id') for item in checks if isinstance(item, dict)} != required_check_ids or
-                any(set(item) != {'id', 'status', 'observation'} or
-                    item['status'] not in ('passed', 'failed') or
-                    not isinstance(item['observation'], str) or not item['observation'].strip()
-                    for item in checks)):
-            raise ControllerError('browser evidence does not cover every required interaction')
-        if (not isinstance(evidence['browser'], dict) or
-                not isinstance(evidence['browser'].get('name'), str) or
-                not evidence['browser']['name'] or
-                evidence['visual_judgment'] != 'user_review_required' or
-                evidence['preview_cleanup'] is not True):
-            raise ControllerError('browser identity, visual judgment and preview cleanup are required')
         session_path = self.evidence_root / 'preview-session.json'
         if not session_path.is_file():
             raise ControllerError('browser evidence requires a recorded owned preview session')
-        session = json.loads(session_path.read_text())
-        if (session.get('candidate_revision') != task['head_revision'] or
-                session.get('status') != 'stopped' or session.get('cleanup_confirmed') is not True):
-            raise ControllerError('browser evidence requires confirmed cleanup of the exact preview')
-        screenshots = evidence['screenshots']
-        if not isinstance(screenshots, list):
-            raise ControllerError('browser screenshots must be a list')
-        for item in screenshots:
-            if not isinstance(item, dict) or set(item) != {'path', 'sha256', 'viewport'}:
-                raise ControllerError('invalid browser screenshot record')
-            target = (self.evidence_root / item['path']).resolve()
-            if (self.evidence_root not in target.parents or not target.is_file() or
-                    _sha256(target) != item['sha256']):
-                raise ControllerError('browser screenshot is absent, escaping, or changed')
-        passed = all(item['status'] == 'passed' for item in checks)
-        artifact = self.store.put_artifact(json.dumps(evidence, sort_keys=True))
+        try:
+            session = json.loads(session_path.read_text())
+            receipt = self._validated_preview_receipt(task_id, session)
+            normalized = validate_browser_report(
+                evidence, acceptance=task['contract']['acceptance'],
+                candidate_revision=task['head_revision'], preview_receipt=receipt,
+                evidence_root=self.evidence_root,
+                implementation_authors=self._implementation_authors(task_id))
+        except (OSError, TypeError, ValueError, WebAcceptanceError) as exc:
+            raise ControllerError('browser evidence is invalid: ' + str(exc)) from exc
+        passed = normalized['status'] == 'passed'
+        artifact = self.store.put_artifact(json.dumps(normalized, sort_keys=True))
         evidence_id = 'product-browser-' + str(task['repair_count'])
         self.store.add_evidence(task_id, evidence_id, task['head_revision'], 'browser-check',
-                                'passed' if passed else 'failed', artifact, evidence,
+                                'passed' if passed else 'failed', artifact, normalized,
                                 authority=self.store.authority)
-        self._write_json('evidence/browser-evidence-' + str(task['repair_count']) + '.json', evidence)
+        self._write_json('evidence/browser-evidence-' + str(task['repair_count']) + '.json',
+                         normalized)
         if not passed:
-            failed = [item for item in checks if item['status'] == 'failed']
+            failed = [item for item in normalized['checks'] if item['status'] == 'failed']
+            if normalized['visual_judgment']['status'] == 'failed':
+                failed.append({'id': 'visual-judgment',
+                               'observation': normalized['visual_judgment']['observation']})
             signature = hashlib.sha256(json.dumps(failed, sort_keys=True).encode()).hexdigest()
             decision = self.store.record_failure(task_id, signature, json.dumps(failed),
                                                  authority=self.store.authority)
             if decision == 'repair_allowed':
-                self._transition(task_id, 'review_complete', 'repairing', 'repair-browser',
+                repair_count = self.store.task(task_id)['repair_count']
+                self._transition(task_id, 'review_complete', 'repairing',
+                                 'repair-browser-' + str(repair_count),
                                  'repair concrete browser acceptance failure')
             self._write_status(task_id)
             return self.result(task_id)

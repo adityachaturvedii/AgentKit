@@ -23,6 +23,8 @@ RESOURCE_DOCS = (
     "docs/r3-portable-package.md",
     "docs/r3-provenance-manifest.md",
     "docs/r3-terminal-workflow.md",
+    "docs/product-workflow.md",
+    "docs/r5-validation-report.md",
     "docs/skill-contract.md",
 )
 FRONTEND_FILES = (

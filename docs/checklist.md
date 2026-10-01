@@ -282,6 +282,17 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [ ] Build any optional full-screen TUI only after a separate dependency, license, build and runtime review.
 - [ ] Add signed provenance or authenticated team approvals; manifest integrity is currently unauthenticated.
 
+## R5 product-project and web acceptance foundation
+
+- [x] Keep the vanilla static profile dependency-free and derive assignments from the provider proposal rather than a game-specific graph or finished solution.
+- [x] Bound acceptance text and required quality stages; count every planning recovery attempt before reserving implementation, verification and review.
+- [x] Serve only a private exact-revision tracked-file snapshot and remove it when the foreground preview owner stops; exclude Git metadata and untracked content.
+- [x] Bind browser reports to the candidate, stopped preview receipt, random session and snapshot digest; require bounded action/assertion observations, browser version, explicit visual pass/fail and verifier independence metadata.
+- [x] Export product mechanics, review, browser and approval evidence through the non-executing P11 portable-package verifier.
+- [x] Pass 44 focused product/browser/package/distribution/documentation tests (43 passed, 1 loopback skip), the 287-test Python suite (284 passed, 3 unchanged host-bound skips), 8 Node terminal tests, structural checks, compilation and diff hygiene without inference.
+- [ ] Run one separately authorized supported-host workflow with real provider planning/implementation/review, effective macOS verifier isolation, loopback preview and real browser interaction.
+- [ ] Add planning-stage authentication continuation; a planning authentication failure currently remains a clear blocked fresh submission.
+
 ## Later phases (historical plan, not implemented)
 
 - [ ] Phase 5: hardware domain validation and optional GPU worker.
