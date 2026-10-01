@@ -311,6 +311,18 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [ ] Address the R2 review findings; branch reconciliation does not close them.
 - [ ] Review/correct `fix/process-group-liveness` separately; its code is not included in this reconciliation.
 
+## R2 corrective gate
+
+- [x] Revalidate the actual managed repository, branch, HEAD and clean worktree after review and before packaging; a reviewer-time candidate commit now blocks without an approval package.
+- [x] Enforce `cross-provider` repository profile requirements before creating a task; implementation and review cannot use the same provider or adapter identity.
+- [x] Route `LiveImplementer` and `LiveReviewer` through their real request contracts, owned-code boundary/model-only review profile, configured model/effort and explicit `LivePolicy`; tests stub only external transport.
+- [x] Create revision-bound authentication checkpoints for implementation and review failures; preserve passed verification as a reviewer-checkpoint evidence reference.
+- [ ] Add a durable repository-workflow resume entry point that continues only the interrupted stage after verified login. The controller checkpoint can resume state, but the R2 workflow driver cannot yet continue it after process restart.
+- [x] Place native verification candidates under a controller-created `/private/tmp` root so denying the real home directory does not deny the candidate itself.
+- [x] Inspect standard-library extension modules with the selected prepared interpreter; `math` remains ready while undeclared `requests` remains `environment_required`.
+- [x] Run the complete 222-test suite (3 managed-environment skips), then 42 focused repository/Phase 3 regressions after final temporary-root hardening (2 nested-Seatbelt skips); structural checks, Python 3.9 compilation and diff hygiene passed.
+- [ ] Perform a separately authorized live repository-provider run only after the durable resume entry point and remaining corrective checks pass.
+
 ## README presentation restoration
 
 - [x] Restore the public README structure from `afad0a7`, keeping AgentKit branding and incorporating later implementation, resource policies, reuse/intake work and unresolved review findings (D113).
