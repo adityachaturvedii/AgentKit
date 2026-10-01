@@ -1,6 +1,6 @@
 # R0 OpenHarness reuse validation
 
-Date: 2026-10-01. Planning base: `e5d870b8be6fe1d6eae1d9a41e2cf318acfc109a`. Branch: `implementation/r0-openharness-reuse`. This milestone contains no provider inference, login, credential access, dependency installation, execution-profile expansion or publication.
+Date: 2026-10-01. Planning base: `e5d870b8be6fe1d6eae1d9a41e2cf318acfc109a`. Tested executable revision: `c27f0a28bc7120b0166bdd695fc0fcb402692c87`. Branch: `implementation/r0-openharness-reuse`. This milestone contains no provider inference, login, credential access, dependency installation, execution-profile expansion or publication.
 
 ## Result
 
