@@ -5,8 +5,9 @@ import math
 from pathlib import Path
 import re
 
+from .paths import resource_root
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = resource_root()
 MAX_BYTES = 1_048_576
 MAX_DEPTH = 32
 

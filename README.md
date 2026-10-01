@@ -44,6 +44,7 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | Repository delivery (R2) | Deterministic integration slice; corrective boundaries and durable stage-specific authentication resume are fixture-tested; live repository-provider validation remains open |
 | Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; signing and distribution remain open |
 | Terminal workflow (R3 P12) | Plain, JSON, protocol-event and one-shot terminal views over existing Phase 4 disposable workflows; no full-screen interactive TUI |
+| [Distribution and compatibility (R3 P13)](docs/r3-distribution-validation-report.md) | Offline source-checkout and isolated-wheel onboarding plus data-flow boundaries; public release remains blocked on an outbound license |
 | Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
 
@@ -58,6 +59,8 @@ The archived `af80791` demonstration predates the corrected Phase 4 run. Later C
 - Optional: subscription-authenticated Codex and/or Claude Code CLI for explicitly authorized live disposable runs
 
 Runtime code has no third-party Python dependencies. The toolkit does not install CLIs, plugins or credentials and does not modify global CLI configuration.
+
+AgentKit runs from a complete source checkout or an isolated `agentkit-controller` wheel. It has no npm release or supported system-wide installation. Follow the [offline distribution guide](docs/r3-distribution.md), check the [compatibility matrix](docs/r3-compatibility.md), and review the [provider/local data flow](docs/r3-data-flow.md) before moving code or artifacts to another machine. Those documents include exact removal steps. Public distribution remains blocked because the original AgentKit code has no outbound `LICENSE`.
 
 ## Quick start
 
@@ -340,7 +343,8 @@ The [reuse-first engineering plan](docs/planning/README.md) prioritizes existing
 
 - **Implemented:** audited skills, adapters, disposable delivery, authentication checkpoints, concurrent scenario workflows, resource policies, R0 component reuse and R1 read-only intake.
 - **Corrective gate:** resolve R2 review findings and validate the real adapter, authentication and verifier paths before extending repository execution.
-- **Next planned milestones:** R3 portable package, terminal workflow and distribution; R4 measured pilot evaluation; R5 new-product acceptance through shared delivery contracts.
+- **Implemented R3 documentation:** portable review export, the one-shot terminal workflow, and source-checkout compatibility/data-flow guidance.
+- **Next release gate:** choose an outbound license before calling P13 public distribution complete; signing/publication remain separate, and R4 measured pilot evaluation and R5 new-product acceptance remain later work.
 - **Deferred:** optional Linux/GPU workers, broader isolation, GitHub publication and deployment.
 
 The [implementation checklist](docs/checklist.md), [decision log](docs/decisions.md) and [original specification](docs/implementation-spec.md) distinguish implemented, simulated, live-tested and planned behavior.
@@ -363,4 +367,4 @@ Please open an issue before proposing a new execution platform, authentication m
 
 Adapted procedures and selected OpenHarness components preserve source attribution and applicable MIT notices. See the [source audit](docs/source-audit.md), [pinned source lock](audit/sources.lock.json), [third-party notices](THIRD_PARTY_NOTICES.md) and [OpenHarness reuse audit](docs/r0-dependency-license-audit.md).
 
-The original AgentKit code does not yet have an outbound `LICENSE` file. Until the maintainer selects and adds one, the repository is available for review but is **not formally offered under an open-source license**. Third-party notice files cover only their respective upstream material.
+The original AgentKit code does not yet have an outbound `LICENSE` file. Until the maintainer selects and adds one, the repository is available for review but is **not formally offered under an open-source license**. Third-party notice files cover only their respective upstream material. The P13 documentation does not resolve this blocker or authorize redistribution.

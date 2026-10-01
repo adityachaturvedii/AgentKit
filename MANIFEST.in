@@ -1,0 +1,20 @@
+include catalog.json
+include THIRD_PARTY_NOTICES.md
+recursive-include agentkit *.py *.json
+include audit/sources.lock.json
+recursive-include contracts *
+include docs/authentication-recovery.md
+include docs/r3-compatibility.md
+include docs/r3-data-flow.md
+include docs/r3-distribution.md
+include docs/r3-license-review.md
+include docs/r3-portable-package.md
+include docs/r3-provenance-manifest.md
+include docs/r3-terminal-workflow.md
+include docs/skill-contract.md
+recursive-include domains *
+recursive-include notices *
+recursive-include skills *
+recursive-include third_party *
+include frontend/agentkit-terminal/package.json
+recursive-include frontend/agentkit-terminal/src *.mjs

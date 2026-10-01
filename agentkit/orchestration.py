@@ -22,6 +22,7 @@ from .git_broker import GitBroker, GitBrokerError
 from .phase4_contracts import (ExecutionPlan, GraphEdge, GraphNode, ModelRegistry,
                                ROLE_CONTRACTS, RouteDecision, TaskContract)
 from .phase4_fixtures import FIXTURES, fixture_catalog, get_fixture
+from .paths import resource_root
 from .phase4_state import Phase4State
 from .planning import propose, validate_proposal
 from .process import run_process
@@ -372,7 +373,7 @@ class Phase4Workflow:
         self.managed_root = self.root / 'managed'
         self.evidence_root = self.root / 'evidence'
         self.approval_root = self.root / 'approval'
-        self.toolkit_root = Path(__file__).resolve().parents[1]
+        self.toolkit_root = resource_root()
         if not self.root.is_dir():
             raise ControllerError('Phase 4 workflow root does not exist')
         for path in (self.evidence_root, self.approval_root):
@@ -418,7 +419,7 @@ class Phase4Workflow:
                                   review_timeout_seconds=review_timeout_seconds,
                                   verification_timeout_seconds=verification_timeout_seconds,
                                   proposal=proposal)
-        plan = build_plan(contract, fixture, registry, Path(__file__).resolve().parents[1], proposal)
+        plan = build_plan(contract, fixture, registry, resource_root(), proposal)
         implementation = next(route for route in plan.routes if route.role == 'implementer')
         review = next(route for route in plan.routes if route.role == 'reviewer')
         self.store.create_task(
