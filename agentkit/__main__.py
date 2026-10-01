@@ -68,6 +68,27 @@ def main(argv=None):
     auth_reconcile.add_argument("--basis", required=True,
                                 choices=("process_exit_confirmed", "process_termination_unconfirmed"),
                                 help="sanitized process evidence; free-form terminal output is not accepted")
+    project = commands.add_parser(
+        "project", help="R1 read-only repository inspection, enrollment and planning")
+    project_commands = project.add_subparsers(dest="project_command", required=True)
+    project_inspect = project_commands.add_parser(
+        "inspect", help="inspect bounded Git metadata and tracked content without running project code")
+    project_inspect.add_argument("path")
+    project_commands.add_parser(
+        "profile-example", help="print the supported R1 Python-library profile example")
+    project_enroll = project_commands.add_parser(
+        "enroll", help="hash-enroll a clean supported repository for read-only planning")
+    project_enroll.add_argument("path")
+    project_enroll.add_argument("--profile", required=True)
+    project_enroll.add_argument("--state-root", required=True)
+    project_show = project_commands.add_parser("show", help="show a hash-verified enrollment")
+    project_show.add_argument("--state-root", required=True)
+    project_show.add_argument("--project-id", required=True)
+    project_plan = project_commands.add_parser(
+        "plan", help="produce a non-executing plan bound to the current enrolled revision")
+    project_plan.add_argument("--state-root", required=True)
+    project_plan.add_argument("--project-id", required=True)
+    project_plan.add_argument("--request", required=True)
     task = commands.add_parser("task", help="Phase 4 disposable task intake and orchestration")
     task_commands = task.add_subparsers(dest="task_command", required=True)
     task_commands.add_parser("fixtures", help="list supported controller-created disposable targets")
@@ -296,6 +317,22 @@ def main(argv=None):
                 authority=store.authority)
             print(json.dumps({'task_id': args.task_id, 'session_id': checkpoint['login_session_id'],
                               'status': status}, indent=2))
+            return 0
+        elif args.command == "project":
+            from .projects import (ProjectRegistry, example_python_profile, inspect_project,
+                                   validate_project_profile)
+            if args.project_command == "inspect":
+                print(json.dumps(inspect_project(args.path), indent=2))
+            elif args.project_command == "profile-example":
+                print(json.dumps(example_python_profile(), indent=2))
+            elif args.project_command == "enroll":
+                profile = validate_project_profile(read_json(args.profile))
+                print(json.dumps(ProjectRegistry(args.state_root).enroll(args.path, profile), indent=2))
+            elif args.project_command == "show":
+                print(json.dumps(ProjectRegistry(args.state_root).load(args.project_id), indent=2))
+            else:
+                print(json.dumps(ProjectRegistry(args.state_root).plan(
+                    args.project_id, args.request), indent=2))
             return 0
         elif args.command == "task":
             from .orchestration import Phase4Workflow, phase4_fixture_catalog

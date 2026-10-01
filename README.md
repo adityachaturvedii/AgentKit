@@ -1,6 +1,6 @@
 # AgentKit — skills, bounded CLI adapters and durable local delivery
 
-A standalone toolkit with ten curated procedures, seven domain references, versioned contracts, source attribution and disposable validation fixtures. Phase 2 adds CLI diagnosis and a narrow trusted disposable-workspace execution mode on the tested macOS host. Phase 3 adds transactional local delivery and authentication recovery. Phase 4 adds request-driven task planning, selective role graphs, bounded concurrent scheduling, explicit provider routing, separate quality reserves and a task-oriented terminal interface for controller-created disposable projects.
+A standalone toolkit with ten curated procedures, seven domain references, versioned contracts, source attribution and disposable validation fixtures. Phase 2 adds CLI diagnosis and a narrow trusted disposable-workspace execution mode on the tested macOS host. Phase 3 adds transactional local delivery and authentication recovery. Phase 4 adds request-driven task planning, selective role graphs, bounded concurrent scheduling, explicit provider routing, separate quality reserves and a task-oriented terminal interface for controller-created disposable projects. R1 adds read-only, hash-bound intake and planning for explicitly selected clean Python-library repositories; repository execution remains an R2 gate.
 
 ## Use from a checkout
 
@@ -27,6 +27,8 @@ python3 -m agentkit task start --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task status --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task package --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit reuse-demo --output /tmp/agentkit-r0-demo
+python3 -m agentkit project inspect /absolute/path/to/project
+python3 -m agentkit project profile-example
 python3 -m agentkit product --help
 ```
 
@@ -51,6 +53,7 @@ Run these commands from this directory. To move machines, copy the entire direct
 | Provider-planned static web products | Implemented and fixture-tested for fresh dependency-free controller repositories; the corrected integration remains blocked on expired Claude OAuth before the next game trial |
 | Browser acceptance gate | Implemented as exact-revision evidence and owned preview lifecycle; browser interaction is externally driven and host validation is pending |
 | OpenHarness R0 reuse slice | Implemented and offline-tested: attributed public profiles, root-bounded context, strict UI events and dependency-free terminal rendering over the existing deterministic controller |
+| R1 existing-repository intake | Implemented and fixture-tested: bounded read-only inspection, hash-bound Python-library enrollment and revision-bound non-executing plans; import and execution remain unsupported |
 | General browser automation, CUDA/GPU worker, GitHub publication, installer/update | Not implemented; separate later gates |
 
 The procedures describe desired engineering behavior. They are not enforcement of authenticated roles, monetary ceilings or publication permissions. Git worktrees are not sandboxes. Unattended untrusted execution is unsupported. Managed Linux/WSL2/Windows execution has not been validated; the current guard is macOS-specific.
@@ -68,6 +71,12 @@ The explicit `smoke` command runs only a fixed synthetic integer-sum task. `exec
 `boundary-check` and `lifecycle-check` are offline fake-canary checks for the exact owned-code filesystem profile and local process-group timeout/cancellation. The owned-code mode is limited to trusted controller-created disposable workspaces. It does not isolate tool traffic from provider traffic or prove access denial for every real credential path.
 
 See [adapter contracts](docs/runtime-contracts.md), [original Phase 2 report](docs/phase2-validation-report.md), [execution follow-up](docs/phase2-execution-followup.md) and [sandbox matrix](docs/sandbox-matrix.md). Phase 3 may begin for the tested trusted disposable-workspace mode only.
+
+## Read-only project intake
+
+`project inspect` performs bounded metadata and raw tracked-content checks against one explicitly named standalone Git repository. It does not execute hooks, filters, project commands, dependency installers or inference. `project enroll` validates an operator-supplied Python-library profile and writes a private, hash-bound record to a separate state directory. `project plan` revalidates the root, branch, revision and manifest before producing a request-sensitive plan with execution explicitly disabled. See the [R1 intake guide](docs/r1-project-intake.md), [profile example](docs/examples/python-library-profile.json) and [validation report](docs/r1-validation-report.md).
+
+R1 rejects dirty baselines, linked/shared Git metadata, alternates, config includes, submodules, LFS, symlinks, transforms and unsupported object formats. Secret-like and binary paths require explicit profile exclusion. Repository import, check execution, provider context transmission and worker execution remain unavailable until the R2 boundary is implemented and independently validated.
 
 `controller-demo` runs the complete Phase 3 path with deterministic implementer/reviewer adapters by default. It creates a disposable repository, task branch/worktree and worker copy; commits one allowed source change; runs controller-owned tests in a separate read-only/no-network verification copy; performs independent review; then writes a local approval package and stops at `awaiting_pr_approval`. The package records no approval and performs no publication. Read the [controller contracts](docs/controller-contracts.md), [Phase 3 validation report](docs/phase3-validation-report.md) and [corrective review](docs/phase3-review-findings.md). Live mode requires the explicit subscription-smoke flag and remains limited to the previously tested macOS profile.
 
@@ -101,6 +110,7 @@ The first bounded Breakout trial against executable `70070e2` stopped after its 
 - [Phase 2 validation](docs/phase2-validation-report.md), [execution follow-up](docs/phase2-execution-followup.md), [sandbox matrix](docs/sandbox-matrix.md), [CLI source/compatibility review](docs/cli-source-review.md), [CLI resource policy](docs/cli-resource-policy.md)
 - [Phase 3 controller contracts](docs/controller-contracts.md), [Phase 3 validation](docs/phase3-validation-report.md), [archived evidence](evidence/phase3/manifest.json)
 - [Guided authentication recovery](docs/authentication-recovery.md), [live completion evidence](evidence/phase3-auth-recovery/manifest.json)
+- [R1 project intake](docs/r1-project-intake.md), [Python-library profile](docs/examples/python-library-profile.json), [R1 validation](docs/r1-validation-report.md)
 - [Phase 4 CLI guide](docs/phase4-cli-guide.md), [role contracts](docs/phase4-role-contracts.md), [graph and routing](docs/phase4-graph-routing.md), [Phase 4 validation](docs/phase4-validation-report.md), [single-assignment live evidence](evidence/phase4-corrected-live/manifest.json), [concurrent live-attempt evidence](evidence/phase4-concurrent-live/manifest.json), [CLI integration checkpoint](evidence/phase4-cli-integration/manifest.json)
 - [Original implementation specification](docs/implementation-spec.md)
 
