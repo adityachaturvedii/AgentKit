@@ -1,6 +1,6 @@
 # AgentKit reuse-first product plan
 
-Planning review: 2026-10-01. Status: R0 reuse spike and R1 read-only intake implemented; R2 and later capabilities remain proposed and are not authorization for new execution profiles, paid inference or publication.
+Planning review: 2026-10-01. Status: R0 reuse spike, R1 read-only intake and the R2 disposable-fixture delivery slice are implemented; R3 and later capabilities remain proposed and are not authorization for paid inference or publication.
 
 The user has selected **both existing-repository engineering and new-product creation, with existing repositories first**, for **small engineering teams and some public open-source users**. Substantial reuse of OpenHarness is an explicit engineering preference. We will compare and adapt working code before writing replacements.
 
@@ -41,4 +41,8 @@ The executable terminal is deliberately a dependency-free one-shot renderer. The
 
 R1 implements P05 for controller-created disposable repository fixtures: bounded read-only inspection, strict Python-library profile validation, private hash-bound enrollment and revision-bound non-executing plans. The inspector runs no project code, hooks, filters, dependency installation, provider calls or network operations. It fails closed on repository shapes that could escape or transform the observed content. No personal or third-party repository was accessed, so applicability beyond the tested shapes remains unverified.
 
-R1 does not authorize implementation against an enrolled repository. R2 independent import, prepared-environment and generalized verification work remains the next gate. See the [R1 intake guide](../r1-project-intake.md) and [validation report](../r1-validation-report.md).
+R1 does not authorize implementation against an enrolled repository.
+
+## R2 outcome
+
+R2 implements P06–P10 as an offline, deterministic integration slice for clean disposable Python-library repositories. It reconstructs current enrolled content without shared Git storage, validates a prepared environment without installation, generalizes protected verification, grounds narrow requests in enrolled content, reuses the durable controller/broker, and produces an exact-revision unapproved package. Repository execution requires a separate controller authorization; live providers and personal repositories were not used. See the [delivery contract](../r2-repository-delivery.md) and [validation report](../r2-validation-report.md).

@@ -2,7 +2,7 @@
 
 import hashlib
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import shutil
 import subprocess
@@ -35,8 +35,12 @@ class GitBroker:
         return path
 
     def _git(self, repository, *args, cwd=None):
+        return self._git_bytes(repository, *args, cwd=cwd).decode('utf-8', 'strict').strip()
+
+    def _git_bytes(self, repository, *args, cwd=None):
         repository = self._inside(repository, self.repositories)
         argv = ['git', '-c', 'core.hooksPath=/dev/null', '-c', 'commit.gpgSign=false',
+                '-c', 'core.quotePath=false',
                 '-C', str(repository), *args]
         env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'LANG', 'LC_ALL')}
         env.update(GIT_CONFIG_GLOBAL='/dev/null', GIT_CONFIG_NOSYSTEM='1',
@@ -46,27 +50,51 @@ class GitBroker:
                              stderr=subprocess.PIPE, timeout=20, check=False)
         if run.returncode:
             raise GitBrokerError(run.stderr.decode('utf-8', 'replace'))
-        return run.stdout.decode('utf-8', 'strict').strip()
+        return run.stdout
 
     def create_repository(self, name, files):
+        records = {path: {'content': content.encode('utf-8'), 'mode': '100644'}
+                   for path, content in files.items()}
+        return self.create_repository_snapshot(name, records,
+                                               message='Seed disposable fixture')
+
+    def create_repository_snapshot(self, name, files, *, message):
+        """Create an independent repository from validated bytes and regular-file modes."""
         if not SAFE.fullmatch(name) or '/' in name:
             raise GitBrokerError('invalid repository name')
+        if not isinstance(files, dict) or not files:
+            raise GitBrokerError('repository snapshot must contain files')
         repository = self.repositories / name
         if repository.exists() or repository.is_symlink():
             raise GitBrokerError('repository already exists')
         repository.mkdir(mode=0o700)
-        subprocess.run(['git', 'init', '-b', 'main', str(repository)], stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE, check=True, timeout=20)
-        for relative, content in files.items():
+        environment = {key: value for key, value in os.environ.items()
+                       if key in ('PATH', 'LANG', 'LC_ALL')}
+        environment.update(GIT_CONFIG_GLOBAL='/dev/null', GIT_CONFIG_NOSYSTEM='1')
+        subprocess.run(['git', '-c', 'init.templateDir=', 'init', '-b', 'main', str(repository)],
+                       env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       check=True, timeout=20)
+        for relative, record in files.items():
+            if (not isinstance(record, dict) or set(record) != {'content', 'mode'} or
+                    not isinstance(record['content'], bytes) or
+                    record['mode'] not in ('100644', '100755')):
+                raise GitBrokerError('invalid repository snapshot entry')
             target = self._safe_relative(repository, relative)
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content)
+            target.write_bytes(record['content'])
+            target.chmod(0o755 if record['mode'] == '100755' else 0o644)
         self._git(repository, 'add', '--', *sorted(files))
-        self._git(repository, 'commit', '-m', 'Seed disposable fixture')
+        self._git(repository, 'commit', '-m', message)
         return repository, self.revision(repository, 'HEAD')
 
     def _safe_relative(self, root, relative):
-        if not isinstance(relative, str) or not relative or relative.startswith('/') or not SAFE.fullmatch(relative):
+        if (not isinstance(relative, str) or not relative or len(relative.encode('utf-8')) > 4096 or
+                '\x00' in relative or any(ord(character) < 32 for character in relative)):
+            raise GitBrokerError('invalid relative path')
+        parts = PurePosixPath(relative).parts
+        if (PurePosixPath(relative).is_absolute() or not parts or
+                any(part in ('', '.', '..', '.git') for part in parts) or
+                str(PurePosixPath(relative)) != relative):
             raise GitBrokerError('invalid relative path')
         target = (Path(root) / relative).resolve()
         root = Path(root).resolve()
@@ -105,14 +133,14 @@ class GitBroker:
         destination.mkdir(parents=True, mode=0o700)
         for relative in self._tracked(repository, revision):
             mode_type = self._git(repository, 'ls-tree', revision, '--', relative).split()[0]
-            if mode_type == '120000':
-                raise GitBrokerError('symlink entries are unsupported')
+            if mode_type not in ('100644', '100755'):
+                raise GitBrokerError('unsupported snapshot entry mode: ' + mode_type)
             target = self._safe_relative(destination, relative)
             target.parent.mkdir(parents=True, exist_ok=True)
-            content = subprocess.run(['git', '-C', str(repository), 'show', revision + ':' + relative],
-                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=20).stdout
+            content = self._git_bytes(repository, 'show', revision + ':' + relative)
             with target.open('wb') as stream:
                 stream.write(content)
+            target.chmod(0o755 if mode_type == '100755' else 0o644)
         return destination
 
     def manifest(self, root, *, exclude_git=False):
@@ -126,6 +154,23 @@ class GitBroker:
                 if exclude_git and (relative == '.git' or relative.startswith('.git/')):
                     continue
                 result[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+        return result
+
+    def manifest_with_modes(self, root, *, exclude_git=False):
+        """Hash regular-file content and executable semantics for boundary checks."""
+        root = Path(root).resolve()
+        result = {}
+        for path in sorted(root.rglob('*')):
+            if path.is_symlink():
+                raise GitBrokerError('symlink in controlled workspace')
+            if path.is_file():
+                relative = str(path.relative_to(root))
+                if exclude_git and (relative == '.git' or relative.startswith('.git/')):
+                    continue
+                result[relative] = {
+                    'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                    'mode': '100755' if path.stat().st_mode & 0o100 else '100644',
+                }
         return result
 
     def worktree_identity(self, repository, worktree):
@@ -153,6 +198,10 @@ class GitBroker:
         for relative in sorted(tracked):
             destination = self._safe_relative(worktree, relative)
             source = self._safe_relative(worker_copy, relative)
+            expected_mode = self._git(repository, 'ls-tree', 'HEAD', '--', relative).split()[0]
+            observed_mode = '100755' if source.stat().st_mode & 0o100 else '100644'
+            if observed_mode != expected_mode:
+                raise GitBrokerError('worker changed an unsupported file mode: ' + relative)
             if hashlib.sha256(destination.read_bytes()).hexdigest() != worker_manifest[relative]:
                 changed.append(relative)
                 if relative not in allowed:

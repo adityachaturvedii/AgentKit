@@ -1,6 +1,6 @@
 # Repository-first engineering plan
 
-Status: R0 and R1 implemented; R2 and later work remains proposed. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
+Status: R0, R1 and the R2 disposable-fixture delivery slice are implemented; R3 and later work remains proposed. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
 
 ## Architecture and ownership
 
@@ -131,7 +131,7 @@ Estimates are rough engineering effort for one focused engineer, excluding unkno
 |---|---|---|---|
 | R0: working reuse slice | Port OH-01..06 subsets with notices, thin backend, profile resolution and bounded context discovery | A deterministic AgentKit run rendered through actual reused components; upstream/adaptation tests; dependency closure; architecture decision with measured extraction effort | 3–5 days |
 | R1: read-only repository intake | **Implemented:** project identity, inventory, profile enrollment, readiness/plan CLI | Disposable unsupported/dirty/sensitive-feature fixtures; zero script/hook/filter/inference execution; request-sensitive plans on `src` and flat Python shapes | Complete |
-| R2: safe supported repository delivery | Independent managed import, prepared Python environment, generalized verifier, same scheduler/auth/evidence contracts | No original changes; source/controller/credential canaries; real tests with protected acceptance; task-to-package across disposable copies of realistic repositories | 8–12 days |
+| R2: safe supported repository delivery | **Implemented on disposable fixtures:** independent managed import, prepared Python environment, generalized verifier, same scheduler/evidence contracts | Original unchanged; source/controller/fake-secret canaries; real tests with protected acceptance; deterministic task-to-package. Live provider/auth recovery on this path remains unverified | Complete |
 | R3: small-team preview | Package exporter/verifier, complete terminal workflow, install artifacts, docs and provenance | Another operator installs without global edits and a second reviewer understands/checks a package; offline and supported-host regressions; explicit license and compatibility matrix | 5–8 days |
 | R4: measured pilot | Explicitly enrolled pilot repositories, matched direct-CLI comparison, failure analysis | Predeclared tasks and metrics; all failures included; feedback shows whether evidence saves total human work | 1–2 weeks observation, partly overlapping |
 | R5: new-product path | Reuse same contracts for fresh project briefs; JS/TS or dependency-free web profile chosen from demand | Derived plan, real build/mechanics/browser checks, independent review, revision-bound package; Breakout remains one candidate acceptance brief | 5–10 days after stack/boundary decision |
