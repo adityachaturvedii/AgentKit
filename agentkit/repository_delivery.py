@@ -445,8 +445,37 @@ class RepositoryDeliveryWorkflow:
         self.controller_root = self.root / 'controller'
         self.evidence_root = self.root / 'evidence'
         self.approval_root = self.root / 'approval'
-        for path in (self.evidence_root, self.approval_root):
+        self.store = ControllerStore(self.controller_root)
+        self.inputs_root = self.controller_root / 'repository-inputs'
+        for path in (self.evidence_root, self.approval_root, self.inputs_root):
             path.mkdir(mode=0o700)
+        self.broker = GitBroker(self.root / 'managed')
+        self.registry = registry
+        self.project_id = project_id
+        self.implementer = implementer
+        self.reviewer = reviewer
+        self.verifier = verifier
+        self.live_policy = live_policy or LivePolicy()
+        self.execution_authorized = True
+
+    @classmethod
+    def open(cls, root, registry, project_id, implementer, reviewer, verifier, *,
+             execution_authorized=False, live_policy=None):
+        if execution_authorized is not True:
+            raise RepositoryDeliveryError(
+                'R2 repository execution requires explicit controller-side authorization')
+        self = cls.__new__(cls)
+        self.root = Path(root).resolve()
+        if not self.root.is_dir() or self.root.is_symlink():
+            raise RepositoryDeliveryError('existing workflow root is unavailable')
+        self.controller_root = self.root / 'controller'
+        self.evidence_root = self.root / 'evidence'
+        self.approval_root = self.root / 'approval'
+        self.inputs_root = self.controller_root / 'repository-inputs'
+        if any(not path.is_dir() or path.is_symlink()
+               for path in (self.controller_root, self.evidence_root,
+                             self.approval_root, self.inputs_root)):
+            raise RepositoryDeliveryError('existing workflow layout is invalid')
         self.store = ControllerStore(self.controller_root)
         self.broker = GitBroker(self.root / 'managed')
         self.registry = registry
@@ -456,6 +485,38 @@ class RepositoryDeliveryWorkflow:
         self.verifier = verifier
         self.live_policy = live_policy or LivePolicy()
         self.execution_authorized = True
+        return self
+
+    def _input_path(self, task_id):
+        if not re.fullmatch(r'[A-Za-z0-9._-]{1,128}', task_id):
+            raise RepositoryDeliveryError('invalid task identifier')
+        return self.inputs_root / (task_id + '.json')
+
+    def _persist_inputs(self, task_id, request, protected_test, imported):
+        path = self._input_path(task_id)
+        if path.exists() or path.is_symlink():
+            raise RepositoryDeliveryError('repository workflow inputs already exist')
+        temporary = path.with_suffix('.tmp-' + str(uuid.uuid4()))
+        payload = {'schema_version': 1, 'task_id': task_id, 'request': request,
+                   'protected_test': protected_test, 'import': imported,
+                   'protected_test_sha256': _sha256(protected_test)}
+        with temporary.open('x', encoding='utf-8') as stream:
+            json.dump(payload, stream, sort_keys=True)
+            stream.write('\n')
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.chmod(0o600)
+        os.replace(str(temporary), str(path))
+
+    def _load_inputs(self, task_id):
+        path = self._input_path(task_id)
+        if path.is_symlink() or not path.is_file() or path.stat().st_mode & 0o077:
+            raise RepositoryDeliveryError('repository workflow inputs are unavailable or not private')
+        value = json.loads(path.read_text())
+        if (value.get('schema_version') != 1 or value.get('task_id') != task_id or
+                _sha256(value.get('protected_test', '')) != value.get('protected_test_sha256')):
+            raise RepositoryDeliveryError('repository workflow inputs failed integrity validation')
+        return value
 
     def _transition(self, task, old, new, label, action):
         return self.store.transition(task, old, new, task + '-' + label,
@@ -560,12 +621,13 @@ class RepositoryDeliveryWorkflow:
                     'profile_sha256': record['profile_sha256']}
         self.store.create_task(task_id, request, implementer=(self.implementer.engine, self.implementer.model),
                                reviewer=(self.reviewer.engine, self.reviewer.model), max_repairs=0,
-                               max_calls=4, max_elapsed_seconds=300, max_concurrency=1,
+                               max_calls=5, max_elapsed_seconds=300, max_concurrency=1,
                                max_timeout_seconds=180, verification_reserve=2)
         self.store.set_contract(task_id, contract, authority=self.store.authority)
         self._transition(task_id, 'received', 'contracted', 'contracted', 'import enrolled source')
         imported = IndependentRepositoryImporter(self.registry, self.broker).import_project(
             self.project_id, task_id)
+        self._persist_inputs(task_id, request, protected_test, imported)
         repository = Path(imported['managed_repository'])
         branch, worktree, base = self.broker.create_task_worktree(
             repository, task_id, imported['managed_base_revision'])
@@ -666,7 +728,7 @@ class RepositoryDeliveryWorkflow:
                    'requirements': contract['acceptance'],
                    'resources': {'budget': controller_snapshot['budget'],
                                  'executions': executions,
-                                 'billing': 'unknown; no live provider used in this workflow'},
+                                 'billing': 'unknown; provider billing is not reported by this workflow'},
                    'import': imported,
                    'limitations': ['Trusted enrolled Python repositories on the tested macOS profile only.',
                                    'Original repository application and publication are not implemented.',
@@ -684,6 +746,163 @@ class RepositoryDeliveryWorkflow:
         self._transition(task_id, 'packaging', 'awaiting_pr_approval', 'awaiting-pr-approval',
                          'await explicit user approval for this exact head')
         return self.result(task_id, imported)
+
+    def resume_after_authentication(self, task_id):
+        """Reopen a durable R2 workflow and continue only its authenticated stage."""
+        inputs = self._load_inputs(task_id)
+        task = self.store.task(task_id)
+        repository = (self.broker.repositories / task_id).resolve()
+        worktree = Path(task['worktree']).resolve()
+        identity = self._candidate_identity(task_id, repository, worktree)
+        resumed = self.store.resume_after_authentication(
+            task_id, candidate_identity=identity, authority=self.store.authority)
+        record = self.registry.load(self.project_id)
+        plan = self.registry.plan(self.project_id, inputs['request'])
+        resolved = resolve_repository_task(record, inputs['request'])
+        if (plan['status'] != 'planned_read_only' or resolved['status'] != 'ready' or
+                record['project']['base_revision'] !=
+                inputs['import']['source_base_revision']):
+            raise RepositoryDeliveryError('repository workflow inputs or enrollment became stale')
+        if resumed['state'] == 'implementing':
+            base = resumed['base_revision']
+            worker = self.broker.export_snapshot(
+                repository, base,
+                self.broker.worker_copies / (task_id + '-resume-' + str(uuid.uuid4())))
+            original = self.broker.manifest(worker)
+            handoff = {'schema_version': 1, 'task_id': task_id, 'role': 'implementer',
+                       'objective': inputs['request'],
+                       'allowed_paths': list(resolved['allowed_paths']),
+                       'starting_revision': base,
+                       'source_base_revision': record['project']['base_revision'],
+                       'checks': [dict(item) for item in record['profile']['checks']],
+                       'acceptance': plan['acceptance'], 'dependencies': [],
+                       'relevant_paths': resolved['relevant_paths'],
+                       'authority': {'publication': False, 'network': False, 'install': False}}
+            outcome, execution_id = self._execute(
+                task_id, 'implementer', self.implementer.engine, self.implementer.model, 60,
+                lambda: self._invoke_implementer(task_id, worker, handoff, repository, worktree))
+            if outcome.details.get('error_class') == 'authentication':
+                self._checkpoint_authentication(task_id, execution_id, outcome, repository, worktree)
+                return self.result(task_id, inputs['import'])
+            if outcome.status != 'succeeded':
+                self._transition(task_id, 'implementing', 'blocked', 'resume-implementation-blocked',
+                                 'inspect resumed implementation result')
+                return self.result(task_id, inputs['import'])
+            if original == self.broker.manifest(worker):
+                raise RepositoryDeliveryError('resumed worker produced no change')
+            head, _ = self.broker.apply_worker_changes(
+                repository, worktree, worker, tuple(resolved['allowed_paths']),
+                'Implement enrolled repository task after authentication')
+            self.store.set_head(task_id, head, authority=self.store.authority)
+            self._transition(task_id, 'implementing', 'implemented', 'resumed-implemented',
+                             'verify exact candidate')
+        return self._continue_after_authentication(task_id, inputs, record, plan, repository, worktree)
+
+    def _continue_after_authentication(self, task_id, inputs, record, plan, repository, worktree):
+        task = self.store.task(task_id)
+        head = task['head_revision']
+        base = task['base_revision']
+        changed = self.broker.changed_paths(repository, base, head)
+        if task['state'] == 'implemented':
+            prepared = validate_prepared_environment(record['profile'], worktree)
+            self._transition(task_id, 'implemented', 'verifying', 'resumed-verifying',
+                             'run protected checks')
+            verification, _ = self._execute(
+                task_id, 'verification', self.verifier.engine, self.verifier.model, 180,
+                lambda: self.verifier.run(
+                    repository, worktree, head, prepared, inputs['protected_test'],
+                    denied_paths=(record['project']['root'], self.registry.root,
+                                  self.approval_root)))
+            artifact = self.store.put_artifact(json.dumps(verification.details, sort_keys=True))
+            self.store.add_evidence(
+                task_id, 'verification-0', head, 'independent-check',
+                'passed' if verification.status == 'succeeded' else 'failed', artifact,
+                verification.details, authority=self.store.authority)
+            if verification.status != 'succeeded':
+                self._transition(task_id, 'verifying', 'blocked', 'resumed-verification-blocked',
+                                 'inspect protected verification failure')
+                return self.result(task_id, inputs['import'])
+            self._transition(task_id, 'verifying', 'verified', 'resumed-verified',
+                             'run independent review')
+            self._transition(task_id, 'verified', 'reviewing', 'resumed-reviewing',
+                             'evaluate review result')
+        if self.store.task(task_id)['state'] == 'reviewing':
+            snapshot = self.broker.export_snapshot(
+                repository, head,
+                self.broker.review_copies / (task_id + '-resume-' + str(uuid.uuid4())),
+                review=True)
+            manifest = self.broker.manifest_with_modes(snapshot)
+            context = {'objective': inputs['request'], 'acceptance': plan['acceptance'],
+                       'candidate_revision': head, 'changed_paths': changed,
+                       'verification_evidence_id': 'verification-0'}
+            review, execution_id = self._execute(
+                task_id, 'reviewer', self.reviewer.engine, self.reviewer.model, 60,
+                lambda: self._invoke_reviewer(snapshot, head, context))
+            if review.details.get('error_class') == 'authentication':
+                self._checkpoint_authentication(
+                    task_id, execution_id, review, repository, worktree,
+                    evidence_refs=('verification-0',))
+                return self.result(task_id, inputs['import'])
+            if self.broker.manifest_with_modes(snapshot) != manifest:
+                raise RepositoryDeliveryError('reviewer changed its read-only candidate snapshot')
+            payload = {'status': review.status, 'findings': list(review.findings),
+                       'revision': head, 'details': review.details}
+            artifact = self.store.put_artifact(json.dumps(payload, sort_keys=True))
+            passed = review.status == 'succeeded' and not review.findings
+            self.store.add_evidence(task_id, 'review-0', head, 'independent-review',
+                                    'passed' if passed else 'failed', artifact, payload,
+                                    authority=self.store.authority)
+            if not passed:
+                self._transition(task_id, 'reviewing', 'blocked', 'resumed-review-blocked',
+                                 'inspect concrete review findings')
+                return self.result(task_id, inputs['import'])
+            self._require_current_candidate(task_id, repository, worktree, head)
+            self._transition(task_id, 'reviewing', 'review_complete', 'resumed-reviewed',
+                             'package local change')
+        if self.store.task(task_id)['state'] != 'review_complete':
+            raise RepositoryDeliveryError('authentication resume reached an unsupported state')
+        self._transition(task_id, 'review_complete', 'packaging', 'resumed-packaging',
+                         'bind local package')
+        controller_snapshot = self.store.snapshot(task_id)
+        package = {'schema_version': 1, 'task_id': task_id,
+                   'status': 'awaiting_pr_approval', 'summary': inputs['request'],
+                   'project_id': self.project_id,
+                   'source_base_revision': record['project']['base_revision'],
+                   'managed_base_revision': base, 'head_revision': head,
+                   'branch': self.store.task(task_id)['branch'], 'changed_paths': changed,
+                   'diff': self.broker.diff(repository, base, head),
+                   'verification_evidence': ['verification-0'], 'review_evidence': 'review-0',
+                   'requirements': plan['acceptance'],
+                   'resources': {'budget': controller_snapshot['budget'],
+                                 'executions': [{
+                                     'execution_id': item['execution_id'], 'role': item['role'],
+                                     'engine': item['engine'], 'model': item['model'],
+                                     'status': item['status'],
+                                     'elapsed_seconds': item['elapsed_seconds'],
+                                     'usage': json.loads(item['usage_json'])
+                                     if item['usage_json'] else None,
+                                 } for item in controller_snapshot['executions']],
+                                 'billing': 'unknown; provider billing is not reported by this workflow'},
+                   'import': inputs['import'],
+                   'limitations': ['Trusted enrolled Python repositories on the tested macOS profile only.',
+                                   'Original repository application and publication are not implemented.',
+                                   'Provider usage and billing remain unknown when not reported.'],
+                   'proposed_pr': {'title': 'Implement enrolled repository task',
+                                   'body': inputs['request'] +
+                                   '\n\nVerified against enrolled checks and controller-owned acceptance.'},
+                   'approval': {'recorded': False,
+                                'required': 'explicit revision-bound user action'}}
+        artifact = self.store.put_artifact(json.dumps(package, sort_keys=True))
+        self.store.add_evidence(task_id, 'approval-package', head, 'approval-package', 'passed',
+                                artifact, {'head_revision': head},
+                                authority=self.store.authority)
+        package['artifact_sha256'] = artifact
+        (self.approval_root / 'approval-package.json').write_text(
+            json.dumps(package, indent=2, sort_keys=True) + '\n')
+        self._transition(task_id, 'packaging', 'awaiting_pr_approval',
+                         'resumed-awaiting-pr-approval',
+                         'await explicit user approval for this exact head')
+        return self.result(task_id, inputs['import'])
 
     def result(self, task_id, imported):
         package = self.approval_root / 'approval-package.json'
