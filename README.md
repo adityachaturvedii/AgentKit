@@ -1,120 +1,339 @@
-# AgentKit — skills, bounded CLI adapters and durable local delivery
+# AgentKit
 
-A standalone toolkit with ten curated procedures, seven domain references, versioned contracts, source attribution and disposable validation fixtures. Phase 2 adds CLI diagnosis and a narrow trusted disposable-workspace execution mode on the tested macOS host. Phase 3 adds transactional local delivery and authentication recovery. Phase 4 adds request-driven task planning, selective role graphs, bounded concurrent scheduling, explicit provider routing, separate quality reserves and a task-oriented terminal interface for controller-created disposable projects. R1 adds read-only, hash-bound intake for explicitly selected clean Python-library repositories. R2 adds an offline-tested independent import and revision-bound delivery slice for disposable enrolled repositories; its provider path and end-user terminal workflow remain later gates.
+**A portable, provider-neutral harness for bounded AI-assisted software delivery.**
 
-## Use from a checkout
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Dependencies](https://img.shields.io/badge/runtime_dependencies-none-2ea44f)](#requirements)
+[![Execution scope](https://img.shields.io/badge/execution-trusted_disposable_macOS-orange)](#support-matrix)
+[![Project status](https://img.shields.io/badge/status-experimental-blueviolet)](#project-status)
 
-Python 3.9 or newer; standard library only. No installation or configuration changes:
+AgentKit turns an engineering request into a validated task contract, a bounded execution graph, isolated implementation work, independent verification and review, and a revision-bound local approval package. It integrates with installed Codex and Claude Code CLIs while keeping task state, budgets, permissions and approvals under deterministic controller control.
+
+The repository also includes ten audited engineering skills, seven domain procedures, strict handoff schemas, disposable fixtures and a regression suite. It uses only the Python standard library at runtime and works directly from a checkout.
+
+> [!IMPORTANT]
+> The validated live execution profile remains trusted, controller-created disposable workspaces on macOS. Read-only repository intake and an experimental Python-library delivery slice are now available, but general repository execution is not release-ready. Linux/Windows workers, GPU hosts and unattended untrusted code remain outside the validated boundary.
+
+## Why AgentKit?
+
+Most agent demos stop when a model says the task is complete. AgentKit treats model output as an untrusted proposal and requires controller-observed evidence before work can advance.
+
+- **Provider-neutral execution.** Codex or Claude Code can implement or review through separate adapters and a shared result contract.
+- **Durable control.** SQLite-backed state transitions, event history, budgets, checkpoints and evidence survive controller restarts.
+- **Bounded workflows.** Call, timeout, concurrency, repair and graph limits are reserved and enforced by controller code.
+- **Independent checks.** Verification runs against the candidate revision in a separate constrained copy with controller-owned acceptance tests.
+- **Isolated assignments.** Up to two independent workers run concurrently in separate worktrees. Dependent assignments receive validated predecessor contributions before controller-owned integration.
+- **Safe authentication recovery.** Missing or expired subscription login pauses the exact stage and resumes only after lifecycle, candidate and evidence revalidation.
+- **Audited context.** Workers receive only role-relevant skill content, rehashed against the version recorded in the plan.
+- **Approval separation.** A worker cannot approve publication. The workflow stops at a local package bound to the exact candidate revision.
+
+## Project status
+
+AgentKit is experimental. The original Phase 4 workflow has been extended with an OpenHarness reuse slice (R0), read-only repository intake (R1) and a deterministic repository-delivery slice (R2). R2 still has unresolved review findings; its presence is not a claim that arbitrary repositories are ready for execution.
+
+| Area | Status |
+|---|---|
+| Audited skills and strict handoffs | Implemented and tested offline; validated documents grant no authority |
+| Codex / Claude Code adapters and durable controller | Implemented; disposable coding and delivery have revision-specific live evidence |
+| Authentication recovery | Fixture-tested, including repeated checkpoints and ownership reconciliation; interactive browser/device recovery is not live-validated |
+| Request-driven scenario planning and concurrent scheduler | Fixture-tested; up to two isolated workers, dependency snapshots, atomic claims and quality-stage reserves |
+| Corrected single-assignment live delivery | Passed at executable `342423e`; historical evidence, not blanket validation of later revisions |
+| Concurrent live execution | Worker overlap observed at `b22020c`; that attempt blocked before integration |
+| OpenHarness reuse (R0) | Offline-tested profile, context, protocol and terminal adaptations around the existing controller |
+| Read-only repository intake (R1) | Fixture-tested bounded inspection, hash-bound enrollment and non-executing plans for clean standalone Python libraries |
+| Repository delivery (R2) | Deterministic integration slice; candidate integrity, review independence, live adapter/authentication integration and verifier/environment findings remain open |
+| Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
+| GitHub publication, merge and deployment | Not implemented in the toolkit |
+
+The archived `af80791` demonstration predates the corrected Phase 4 run. Later CLI integration evidence records successful Codex planning and Claude authentication failures; it does not establish current account status. Consult the [Phase 4 validation report](docs/phase4-validation-report.md) and [implementation checklist](docs/checklist.md) for the boundaries of each milestone.
+
+## Requirements
+
+- Python 3.9 or newer
+- Git for workflows that create branches and worktrees
+- Node.js 18+ for the optional reused terminal demo; web-product checks also require Node
+- macOS for the currently validated execution sandbox
+- Optional: subscription-authenticated Codex and/or Claude Code CLI for explicitly authorized live disposable runs
+
+Runtime code has no third-party Python dependencies. The toolkit does not install CLIs, plugins or credentials and does not modify global CLI configuration.
+
+## Quick start
+
+Clone the repository and run the offline checks:
+
+```sh
+git clone https://github.com/adityachaturvedii/AgentKit.git
+cd AgentKit
+
+python3 -m agentkit check
+python3 -m unittest discover -s tests -v
+```
+
+Explore the audited skill pack:
 
 ```sh
 python3 -m agentkit list
 python3 -m agentkit select diagnose
 python3 -m agentkit show fault-diagnosis --domain backend-database
 python3 -m agentkit validate contracts/examples/fault-diagnosis.json
-python3 -m agentkit check
-python3 -m unittest discover -s tests -v
-python3 -m agentkit controller-demo --output /tmp/agentkit-phase3-demo
-python3 -m agentkit auth-status claude
-python3 -m agentkit task fixtures
-python3 -m agentkit task propose --project text-metrics \
-  --request "Repair word and line metrics"
-python3 -m agentkit task submit --root /tmp/agentkit-task --task-id demo \
-  --project text-metrics --request "Repair word and line metrics" \
-  --max-calls 4 --max-provider-calls 3 --max-concurrency 2 \
-  --max-repairs 0 --max-escalations 0
-python3 -m agentkit task plan --root /tmp/agentkit-task --task-id demo
-python3 -m agentkit task start --root /tmp/agentkit-task --task-id demo
-python3 -m agentkit task status --root /tmp/agentkit-task --task-id demo
-python3 -m agentkit task package --root /tmp/agentkit-task --task-id demo
-python3 -m agentkit reuse-demo --output /tmp/agentkit-r0-demo
-python3 -m agentkit project inspect /absolute/path/to/project
-python3 -m agentkit project profile-example
-python3 -m agentkit product --help
 ```
 
-Run these commands from this directory. To move machines, copy the entire directory, preserving relative paths. For a clean source copy, use `git archive HEAD` after committing. Skills link to shared contracts and notices, so copying a single SKILL.md is insufficient. Relocation is tested; installation, CLI skill auto-discovery and rollback are later work.
+`select` uses an explicit intent from `list`; it is not free-form model routing. `validate` checks structure and consistency only. It never executes commands or follows paths supplied by a handoff.
 
-`select` takes an explicit intent from `list`; it is not natural-language routing. `show` emits the chosen skill, shared rules, format guide and optional domain procedure for an authorized host to consume. Read the linked schema when producing JSON. `validate` accepts one file, returns exit 0 on structural/consistency success and exit 2 on invalid input. A valid document grants **no authority** and does not prove its claims. Helpers never run command strings or follow evidence paths in a handoff.
+## Run a complete offline task
 
-## What exists
+The default task workflow uses deterministic fake providers and a controller-created fixture, so it consumes no model quota:
 
-| Capability | Status |
-|---|---|
-| Pinned source inventory, adaptations, MIT notices, dependency exclusions | Implemented; hashes checked against downloaded snapshots |
-| Ten core skills, seven initial domain procedures | Implemented; all ten exercised across synthetic task, review and optimisation cases |
-| Offline discovery, rendering, strict JSON handoff validation | Implemented and tested on macOS / Python 3.9.6 |
-| CPU defect fixtures and native-baseline comparison | Tested development cases; no general quality improvement established |
-| Claude/Codex adapters, read-only doctor, bounded POSIX transport and cancellation | Implemented; both CLIs passed live disposable coding checks and independent acceptance |
-| Sandbox boundaries / credential isolation | Explicit macOS workspace/protected-path canaries passed; comprehensive credential and tool-network isolation unsupported |
-| Durable controller, protected approval records, budgets and controller-owned Git broker | Implemented and tested with deterministic adapters |
-| Guided subscription-auth recovery | Implemented with uncaptured official CLI terminal handoff, durable stage checkpoint, bounded retries and revision/evidence revalidation |
-| Cross-provider disposable delivery workflow | Corrected single-assignment path live-tested at executable `342423e`; the concurrent `b22020c` attempt proved two live workers overlap but blocked before integration because of a narrow shell-runtime guard incompatibility |
-| Phase 4 task CLI, request-driven graph, concurrent scheduler, routing and quality reserves | Implemented and fixture-tested for controller-created disposable projects; maximum two supervised provider workers |
-| Provider-planned static web products | Implemented and fixture-tested for fresh dependency-free controller repositories; the corrected integration remains blocked on expired Claude OAuth before the next game trial |
-| Browser acceptance gate | Implemented as exact-revision evidence and owned preview lifecycle; browser interaction is externally driven and host validation is pending |
-| OpenHarness R0 reuse slice | Implemented and offline-tested: attributed public profiles, root-bounded context, strict UI events and dependency-free terminal rendering over the existing deterministic controller |
-| R1 existing-repository intake | Implemented and fixture-tested: bounded read-only inspection, hash-bound Python-library enrollment and revision-bound non-executing plans; import and execution remain unsupported |
-| General browser automation, CUDA/GPU worker, GitHub publication, installer/update | Not implemented; separate later gates |
+```sh
+python3 -m agentkit task fixtures
 
-The procedures describe desired engineering behavior. They are not enforcement of authenticated roles, monetary ceilings or publication permissions. Git worktrees are not sandboxes. Unattended untrusted execution is unsupported. Managed Linux/WSL2/Windows execution has not been validated; the current guard is macOS-specific.
+python3 -m agentkit task submit \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo \
+  --project calculator \
+  --request "Repair the calculator fixture"
 
-## CLI integration scope
+python3 -m agentkit task plan \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo
 
-`reuse-demo` runs one deterministic calculator workflow through the adapted OpenHarness profile/context/protocol/terminal seam. It makes no provider call and stops at an unapproved local package. The R0 renderer is a dependency-free executable slice, not the full React/Ink TUI; see the [R0 validation report](docs/r0-validation-report.md) and [dependency/license audit](docs/r0-dependency-license-audit.md).
+python3 -m agentkit task start \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo
 
-`python3 -m agentkit doctor` reports installed versions, advertised flags, CLI-reported authentication and sandbox initialization without inference or global setting changes. Unknown capability/billing data stays unknown. The diagnostic guard may be unavailable inside another sandbox; no automatic fallback occurs.
+python3 -m agentkit task status \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo
 
-`python3 -m agentkit.sandbox_probe` uses disposable fake credentials and loopback canaries, without inference. Native probing needs a context that permits sandbox initialization. Read the [sandbox matrix](docs/sandbox-matrix.md) for effective limits.
+python3 -m agentkit task package \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo
+```
 
-The explicit `smoke` command runs only a fixed synthetic integer-sum task. `execution-check` creates a broken disposable source fixture, lets one CLI edit it and run its test, then applies an independent controller oracle. Without `--authorize-subscription-smoke`, either live command records a blocked result. The authorization switch is for a trusted operator and is not an authenticated approval system. Do not include live tests in ordinary CI. The parent of every fresh result directory must exist.
+The workflow stops at `awaiting_pr_approval`. It does not push, open a pull request, merge or deploy.
 
-`boundary-check` and `lifecycle-check` are offline fake-canary checks for the exact owned-code filesystem profile and local process-group timeout/cancellation. The owned-code mode is limited to trusted controller-created disposable workspaces. It does not isolate tool traffic from provider traffic or prove access denial for every real credential path.
+Use a fresh `--root` for each demo. The built-in projects are intentionally narrow: `calculator` exercises a single assignment; text metrics and inventory provide independent work; the text pipeline exercises dependencies; case-policy conflicts require clarification. Deterministic planning uses request terms and bounded project inventory. Unmatched or contradictory requests do not silently become calculator repairs.
 
-See [adapter contracts](docs/runtime-contracts.md), [original Phase 2 report](docs/phase2-validation-report.md), [execution follow-up](docs/phase2-execution-followup.md) and [sandbox matrix](docs/sandbox-matrix.md). Phase 3 may begin for the tested trusted disposable-workspace mode only.
+Inspect a two-assignment proposal without execution:
 
-## Read-only project intake
+```sh
+python3 -m agentkit task propose --project text-metrics \
+  --request "Repair word and line metrics"
+```
 
-`project inspect` performs bounded metadata and raw tracked-content checks against one explicitly named standalone Git repository. It does not execute hooks, filters, project commands, dependency installers or inference. `project enroll` validates an operator-supplied Python-library profile and writes a private, hash-bound record to a separate state directory. `project plan` revalidates the root, branch, revision and manifest before producing a request-sensitive plan with execution explicitly disabled. See the [R1 intake guide](docs/r1-project-intake.md), [profile example](docs/examples/python-library-profile.json) and [validation report](docs/r1-validation-report.md).
+This scenario planner is not a general repository planner. The separate product path uses a provider-generated proposal subject to controller validation.
 
-R1 rejects dirty baselines, linked/shared Git metadata, alternates, config includes, submodules, LFS, symlinks, transforms and unsupported object formats. Secret-like and binary paths require explicit profile exclusion.
+## How it works
 
-R2 reconstructs a current enrollment in an independent controller-owned repository without clone, remotes, alternates, inherited templates or hard links. It preserves supported names and executable modes, blocks missing prepared dependencies, grounds narrow requests in enrolled content, runs project checks plus controller-owned acceptance on the exact candidate, performs independent review and stops at an unapproved local package. The complete slice is deterministic and fixture-tested; the native macOS verifier has a separate host-only boundary check. The new path has not used live providers or personal repositories, and additions/deletions/renames, dependency installation and applying changes back to the original remain unsupported. See the [R2 delivery contract](docs/r2-repository-delivery.md) and [validation report](docs/r2-validation-report.md).
+```mermaid
+flowchart LR
+    A[Task request] --> B[Validated contract]
+    B --> C[Bounded execution graph]
+    C --> D[Isolated worker copy]
+    D --> E[Codex or Claude Code]
+    E --> F[Controller-owned Git broker]
+    F --> G[Constrained independent verification]
+    G --> H[Independent review]
+    H -->|material finding| I[Bounded repair]
+    I --> G
+    H -->|accepted| J[Revision-bound local package]
+    J --> K[Awaiting user approval]
+```
 
-`controller-demo` runs the complete Phase 3 path with deterministic implementer/reviewer adapters by default. It creates a disposable repository, task branch/worktree and worker copy; commits one allowed source change; runs controller-owned tests in a separate read-only/no-network verification copy; performs independent review; then writes a local approval package and stops at `awaiting_pr_approval`. The package records no approval and performs no publication. Read the [controller contracts](docs/controller-contracts.md), [Phase 3 validation report](docs/phase3-validation-report.md) and [corrective review](docs/phase3-review-findings.md). Live mode requires the explicit subscription-smoke flag and remains limited to the previously tested macOS profile.
+The controller owns task state, transitions, budgets, Git mutations, evidence and approval records. Provider output can propose a change or finding, but cannot expand filesystem or network authority, alter budgets, mark evidence as passing or grant approval.
 
-When live execution reports missing or expired subscription login, the workflow stops at `authentication_required` after finalizing the failed call. Use `auth-login` in a real local terminal, then rerun `controller-demo` with the same output, live authorization and `--resume`. Login output is attached directly to the terminal and is never captured in evidence. If the controller ended while login was in progress, `auth-reconcile` requires explicit process evidence before another attempt. See [guided authentication recovery](docs/authentication-recovery.md) for Codex browser/device commands, Claude's manual code handoff, historical checkpoints, candidate validation and limitations.
+For decomposed tasks, each specialist writes to its own worker copy and assigned worktree. The controller validates allowed paths, commits accepted changes, integrates disjoint contributions and then verifies the combined candidate. Ready independent assignments may overlap, with a ceiling of two supervised provider workers. Dependent assignments start from deterministic snapshots of their declared predecessors, and integration applies only each worker’s own contribution. Conflicts block visibly. Chief-of-staff and manager responsibilities use deterministic controller logic; autonomous management reasoning is not implemented.
 
-## Phase 4 task interface
+## OpenHarness reuse and repository intake
 
-`task propose` derives an inspectable plan from a natural-language request and a bounded inventory of a named controller-created project. `task submit` records the original request separately from controller assumptions, validates scope, acceptance, interfaces, dependencies, fan-out and resource feasibility, selects audited skills by content hash and stops before execution. Planner output is untrusted: unsafe paths, changed acceptance, cycles, excessive fan-out and infeasible budgets fail before a worker starts. Materially conflicting requirements return a clarification requirement. `task plan` shows the contract and graph. `task start` executes with deterministic fixture providers by default; add both `--live` and `--authorize-subscription-smoke` only for an explicitly bounded subscription demonstration. `task status` separates ready, active, waiting and completed assignments and reports route reasons, reserves, observed usage, blockers and next action. `task cancel` reaches supervised active workers and prevents new launches. `task resume` resumes only a verified authentication checkpoint. `task package` reads the final local package and never publishes it.
+AgentKit adapts selected [OpenHarness](https://github.com/HKUDS/OpenHarness) code rather than replacing its existing delivery controller. The reused components cover public provider profiles, root-bounded context discovery, strict frontend events, private atomic writes and terminal presentation. Source pins, licenses and adaptations are recorded in the [R0 audit](docs/r0-dependency-license-audit.md) and [adaptation map](agentkit/integrations/openharness/adaptation-map.json).
 
-The project catalog includes a one-assignment calculator, request-selectable text metrics, parallel inventory calculations, an ordered text pipeline and a case-policy scenario that demonstrates clarification. Planning uses request terms, project inventory, declared interfaces and dependencies; expected source patches stay out of proposals and worker prompts. Independent ready assignments run concurrently in separate worktrees with a controller ceiling of two. Ordered assignments wait for persisted dependencies. The controller integrates contributions conservatively and blocks on overlap or conflict without deleting either branch. Chief-of-staff, tech-lead and manager responsibilities remain deterministic controller functions. A tech-lead model is not called for routine bounded scenarios; ambiguous authority or contradictory requirements stop for user input.
+Run the deterministic workflow through the reused components with a fresh output path:
 
-Provider defaults are configurable with `--implementer-provider` and `--reviewer-provider`. `--routing-config` accepts a validated JSON registry containing exact or account-default model profiles, eligible roles, capabilities, availability evidence, optional relative evidence and routing policies keyed by role, difficulty, risk and optional node. Exact model profiles loaded from JSON require dated availability evidence; unverified profiles are ineligible. Requested model/effort is passed to the real adapter and recorded separately from provider-reported metadata. Claude effort supports only the installed, tested CLI levels; Codex effort remains unsupported. A material workflow reserves independent review against every provider that may contribute implementation or repair. If two implementation providers leave no independent provider, planning fails instead of weakening review.
+```sh
+python3 -m agentkit reuse-demo --output /tmp/agentkit-r0-demo
+```
 
-Use the portable account-default example with `--routing-config docs/examples/phase4-routing.json`. Replace an account default with an exact model only after recording current CLI/account availability evidence; configuration is not a discovery mechanism.
+This requires Node 18+, installs no packages and makes no provider calls. The terminal is a one-shot dependency-free renderer; the full React/Ink TUI has not been adopted.
 
-The execution graph is bounded to two implementation assignments, two repair cycles and twelve nodes. The controller atomically enforces total calls, provider calls, planning calls, two-worker concurrency, resolved process deadlines, total allocated execution time and captured bytes. Verification and independent review retain call capacity under concurrent pressure. Productive provider output, turn and retry settings are unset unless the installed CLI has a verified control and the task explicitly selects it; provider defaults are not described as unlimited. The historical 512-token Claude setting is confined to the tiny smoke profile, and 8,192 is no longer a universal planner ceiling. Use `python3 -m agentkit resource-policy` to inspect allocation provenance, capability profiles and enforcement classes. Token categories, internal provider-request counts, estimates and billed cost remain unknown when unreported. See [CLI resource policy](docs/cli-resource-policy.md), [role contracts](docs/phase4-role-contracts.md), [graph, routing and budget semantics](docs/phase4-graph-routing.md) and the [Phase 4 validation report](docs/phase4-validation-report.md).
+Read-only intake is available for an explicitly selected clean standalone Python-library repository:
 
-## Static web product trial
+```sh
+python3 -m agentkit project profile-example
+python3 -m agentkit project inspect /absolute/path/to/selected-project
+python3 -m agentkit project --help
+```
 
-`product submit` is a separate, tightly bounded provider-planning path for a fresh dependency-free static web project. It accounts one planner call, validates the proposal against the brief, protected acceptance, inventory, authority and budget, then reuses the existing scheduler and adapters. Controller verification runs the documented Node syntax build and a protected mechanics test in a separate candidate copy. Exact-revision browser evidence is required after review and before packaging. See the [bounded product workflow](docs/product-workflow.md) for complete commands and limitations.
+Inspection runs no project code, hooks, filters, installers or inference. Enrollment records a profile and content hashes; planning revalidates the repository and remains non-executing. Unsupported Git layouts, dirty baselines, symlinks and transforms fail closed. See the [R1 guide](docs/r1-project-intake.md).
 
-The first bounded Breakout trial against executable `70070e2` stopped after its sole Claude planning call inherited the smoke profile's 512 generated-output-token allocation. No plan, repository, game, verification, review, preview or approval package was produced. That failure motivated the provider-control audit above: replacing 512 with 8,192 was also incorrect, so productive planning now leaves the unsupported setting unset. A later direct-versus-adapter checkpoint proved both Codex planning paths, then stopped when both Claude implementation paths reported expired OAuth. The updated product plan prioritizes existing-repository delivery and retains Breakout as a later new-product acceptance case; provider integration remains a prerequisite for that trial.
+R2 adds independent reconstruction into controller-owned Git storage, prepared-environment checks, protected acceptance and a local package using deterministic providers. It has no complete end-user execution CLI or verified live repository-provider path. Review found gaps in candidate revalidation, cross-provider enforcement, adapter/authentication integration, home-path verification and dependency detection; these must be corrected before broader use. File additions/deletions/renames, dependency installation and applying changes to the original checkout remain unsupported. The [R2 report](docs/r2-validation-report.md) records the earlier fixture results; those results do not close the later findings.
 
-## Inspect the work
+## Live CLI integration
 
-- [Next-release product and engineering plan](docs/planning/README.md): repository-first scope for small teams, substantial OpenHarness reuse, adoption gates and a reviewable implementation backlog. Proposed capabilities are separated from the current executable behavior above.
-- [Implementation checklist](docs/checklist.md), [decision log](docs/decisions.md), [phase requirements](docs/requirements.md), [threat model](docs/threat-model.md)
-- [Source audit](docs/source-audit.md), [exact pins](audit/sources.lock.json), [attribution and notices](THIRD_PARTY_NOTICES.md)
-- [Shared skill contract](docs/skill-contract.md), [handoff formats](contracts/README.md), [domain procedures](domains/README.md)
-- [Validation report](docs/validation-report.md), [local PR proposal](docs/pr-proposal.md)
-- [Phase 2 validation](docs/phase2-validation-report.md), [execution follow-up](docs/phase2-execution-followup.md), [sandbox matrix](docs/sandbox-matrix.md), [CLI source/compatibility review](docs/cli-source-review.md), [CLI resource policy](docs/cli-resource-policy.md)
-- [Phase 3 controller contracts](docs/controller-contracts.md), [Phase 3 validation](docs/phase3-validation-report.md), [archived evidence](evidence/phase3/manifest.json)
-- [Guided authentication recovery](docs/authentication-recovery.md), [live completion evidence](evidence/phase3-auth-recovery/manifest.json)
-- [R1 project intake](docs/r1-project-intake.md), [Python-library profile](docs/examples/python-library-profile.json), [R1 validation](docs/r1-validation-report.md)
-- [R2 repository delivery](docs/r2-repository-delivery.md), [R2 validation](docs/r2-validation-report.md)
-- [Phase 4 CLI guide](docs/phase4-cli-guide.md), [role contracts](docs/phase4-role-contracts.md), [graph and routing](docs/phase4-graph-routing.md), [Phase 4 validation](docs/phase4-validation-report.md), [single-assignment live evidence](evidence/phase4-corrected-live/manifest.json), [concurrent live-attempt evidence](evidence/phase4-concurrent-live/manifest.json), [CLI integration checkpoint](evidence/phase4-cli-integration/manifest.json)
-- [Original implementation specification](docs/implementation-spec.md)
+Start with the read-only diagnostic:
 
-The product name is **AgentKit**. The lowercase `agentkit` command and Python module remain stable compatibility identifiers. The repository is [adityachaturvedii/AgentKit](https://github.com/adityachaturvedii/AgentKit); see the [brand migration notes](docs/brand-migration.md). Publication and merge authorization are task-specific. Upstream MIT notices cover adapted material; an outbound license for original toolkit code will be chosen before broader distribution.
+```sh
+python3 -m agentkit doctor
+python3 -m agentkit auth-status codex
+python3 -m agentkit auth-status claude
+```
+
+`doctor` reports installed versions, advertised features, sanitized authentication observations and sandbox availability. It does not run inference or modify settings. Unknown billing, model, usage or capability information remains unknown.
+
+A live disposable task requires both `--live` and explicit subscription-smoke authorization:
+
+```sh
+python3 -m agentkit task start \
+  --root /tmp/agentkit-task \
+  --task-id calculator-demo \
+  --live \
+  --authorize-subscription-smoke
+```
+
+Live execution uses the installed CLI's existing subscription authentication. AgentKit does not introduce API keys, enable paid fallback, purchase credits or change authentication methods. If authentication is missing or expired, the task pauses at `authentication_required`. The official interactive login flow runs in an attached terminal and keeps passwords, MFA, tokens, codes and raw login output out of controller evidence and model context. See [guided authentication recovery](docs/authentication-recovery.md).
+
+Declare call, time and concurrency budgets when submitting a live task; inspect `task submit --help` and the [CLI guide](docs/phase4-cli-guide.md) before running it. Do not include live commands in ordinary CI.
+
+### Routing and resource policy
+
+Routing profiles record provider, exact or account-default model, eligible roles, availability evidence and a selection reason. Requested model and supported effort settings remain separate from provider-reported metadata. Missing comparative evidence means the configured default is **not** claimed to be cost-optimal. See the [routing example](docs/examples/phase4-routing.json).
+
+Provider controls resolve in this order: explicit task override → configured role policy → provider default. Productive output, turn and retry settings are unset unless an override uses a verified CLI control; the historical 512-token setting belongs only to the tiny smoke profile. Provider defaults are not unlimited.
+
+The controller reserves calls and allocated execution time, enforces process deadlines and captured-output bounds, and retains capacity for verification and review. A CLI launch may contain multiple internal requests: launch counts are not token or monetary caps. Missing usage, internal request counts and billed cost stay unknown; estimates remain separate.
+
+```sh
+python3 -m agentkit resource-policy
+```
+
+See [resource policy and role capabilities](docs/cli-resource-policy.md) for enforced, best-effort and observable-only controls.
+
+### Static web product work
+
+The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments; the controller validates scope, dependencies, acceptance and budget before execution. Protected mechanics checks and exact-revision browser evidence are required for acceptance. Browser interaction is externally driven, not a general built-in browser agent.
+
+The first Breakout attempt failed during planning; the later integration checkpoint stopped on Claude authentication failures. No playable game or completed product acceptance is claimed. See the [product workflow](docs/product-workflow.md) for commands, prerequisites and retained evidence.
+
+## CLI overview
+
+| Command | Purpose | Inference |
+|---|---|---|
+| `python3 -m agentkit list`, `select`, `show` | Discover and render audited skills and domain procedures | No |
+| `python3 -m agentkit validate` | Validate an untrusted structured handoff | No |
+| `python3 -m agentkit check` | Check sources, references, notices and blocked examples | No |
+| `python3 -m agentkit doctor` | Inspect local CLI and sandbox capabilities read-only | No |
+| `python3 -m agentkit boundary-check` | Run disposable filesystem boundary canaries | No |
+| `python3 -m agentkit lifecycle-check` | Exercise timeout, cancellation and child cleanup fixtures | No |
+| `python3 -m agentkit smoke` | Run a bounded model-only provider check | Explicit authorization required |
+| `python3 -m agentkit execution-check` | Run a bounded disposable coding check | Explicit authorization required |
+| `python3 -m agentkit controller-demo` | Exercise the Phase 3 delivery controller | Fake by default; live is opt-in |
+| `python3 -m agentkit auth-status`, `auth-login`, `auth-reconcile` | Inspect or recover official subscription login | Login is interactive and uncaptured |
+| `python3 -m agentkit task ...` | Propose, submit, run, inspect, cancel, resume and package disposable tasks | Fake by default; live is opt-in |
+| `python3 -m agentkit resource-policy` | Explain resolved controls and capability profiles | No |
+| `python3 -m agentkit reuse-demo` | Exercise adapted OpenHarness components with the existing controller | No |
+| `python3 -m agentkit project ...` | Inspect, enroll and plan a selected supported repository read-only | No |
+| `python3 -m agentkit product ...` | Plan and execute a bounded disposable static web product | Provider stages require explicit authorization |
+
+Run `python3 -m agentkit --help` or a subcommand's `--help` for the exact options.
+
+## Trust and safety model
+
+AgentKit is built around explicit boundaries:
+
+1. **The controller is authoritative.** Model responses cannot change permissions, budgets, evidence state or approval state.
+2. **Git worktrees are not sandboxes.** Workers receive tracked-file copies without controller state or shared Git metadata. The controller alone applies validated changes.
+3. **Verification is separate.** Acceptance tests run in a fresh candidate copy under the tested read-only/no-network macOS profile.
+4. **Uncertainty blocks replacement.** After a controller interruption, executions with uncertain process ownership must be reconciled before relaunch.
+5. **Usage stays honest.** Missing token and cost data remains `unknown`; an estimated cost is never presented as billed cost.
+6. **Publication is a separate authority.** A local approval package is evidence for a decision, not the decision itself.
+
+Read the [threat model](docs/threat-model.md), [controller contracts](docs/controller-contracts.md), [runtime contracts](docs/runtime-contracts.md) and [sandbox matrix](docs/sandbox-matrix.md) before extending an execution profile.
+
+## Support matrix
+
+| Capability | macOS | Linux / WSL2 / Windows | Notes |
+|---|---:|---:|---|
+| Offline skill discovery and validation | Tested | Unverified | Python standard library only |
+| Deterministic fixture workflow | Tested | Unverified | No provider calls |
+| Read-only CLI diagnosis | Tested | Unverified | Can report unavailable inside a parent sandbox |
+| Trusted disposable owned-code execution | Tested | Unsupported | Requires the validated macOS guard |
+| Independent constrained verification | Tested | Unsupported | Fails closed if Seatbelt cannot initialize |
+| Selected Python-library repository intake | Fixture-tested | Unverified | Read-only; no broad compatibility claim |
+| General repository execution | Unsupported | Unsupported | R2 remains an experimental deterministic slice with open review findings |
+| Detached-process containment | Unsupported | Unsupported | Local process-group cleanup is narrower |
+| Comprehensive credential isolation | Unsupported | Unsupported | No claim over every host credential path |
+| Remote or GPU workers | Unsupported | Unsupported | Planned for a later phase |
+
+The sandbox does not prove isolation for every provider tool, network route or credential service. Unsupported isolation fails visibly; managed runs do not silently retry without the guard.
+
+## Repository layout
+
+```text
+agentkit/     controller, adapters, sandbox, CLI and OpenHarness adaptations
+frontend/     dependency-free terminal renderer
+third_party/ retained OpenHarness license
+skills/       curated engineering procedures
+domains/      backend, frontend, ML, training, CUDA and inference guidance
+contracts/    versioned handoff schemas and examples
+audit/        pinned upstream source inventory
+notices/      retained upstream license texts
+tests/        deterministic and disposable integration fixtures
+evidence/     hash-bound historical validation artifacts
+docs/         contracts, decisions, threat model and phase reports
+```
+
+Skills reference shared contracts and notices, so copy or archive the complete repository rather than a single `SKILL.md`. Relocation is tested; package installation, auto-discovery and rollback remain future work.
+
+## Validation
+
+The branch reconciliation ran 215 tests: **212 passed and 3 skipped** in the managed tool environment (two Seatbelt checks and one loopback preview). Structural checks passed for ten skills, seven domain procedures, ten examples and three pinned foundation sources. This is regression evidence, not proof that the open R2 findings are resolved. Host-only results in earlier reports apply to their tested paths and revisions.
+
+```sh
+python3 -m unittest discover -s tests -v
+python3 -m agentkit check
+```
+
+Validation evidence is intentionally separated:
+
+- [Foundation validation](docs/validation-report.md)
+- [Phase 2 CLI and sandbox validation](docs/phase2-validation-report.md)
+- [Phase 2 execution follow-up](docs/phase2-execution-followup.md)
+- [Phase 3 controller validation](docs/phase3-validation-report.md)
+- [Phase 3 review findings](docs/phase3-review-findings.md)
+- [Phase 4 validation](docs/phase4-validation-report.md)
+- [R0 reuse validation](docs/r0-validation-report.md)
+- [R1 intake validation](docs/r1-validation-report.md)
+- [R2 delivery validation](docs/r2-validation-report.md)
+
+Historical evidence is hash-bound to the revision it tested. A successful archived run is not silently promoted to evidence for later code.
+
+## Roadmap
+
+The [reuse-first engineering plan](docs/planning/README.md) prioritizes existing-repository engineering for small teams, followed by new-product creation.
+
+- **Implemented:** audited skills, adapters, disposable delivery, authentication checkpoints, concurrent scenario workflows, resource policies, R0 component reuse and R1 read-only intake.
+- **Corrective gate:** resolve R2 review findings and validate the real adapter, authentication and verifier paths before extending repository execution.
+- **Next planned milestones:** R3 portable package, terminal workflow and distribution; R4 measured pilot evaluation; R5 new-product acceptance through shared delivery contracts.
+- **Deferred:** optional Linux/GPU workers, broader isolation, GitHub publication and deployment.
+
+The [implementation checklist](docs/checklist.md), [decision log](docs/decisions.md) and [original specification](docs/implementation-spec.md) distinguish implemented, simulated, live-tested and planned behavior.
+
+## Contributing
+
+Contributions should preserve the toolkit's evidence and authority boundaries.
+
+1. Create a dedicated branch and worktree from the verified `implementation/phase-2` tip. Target feature PRs there; promote integration through a separate release PR into `main`. Push, PR and merge authorization remain separate.
+2. Keep runtime dependencies at zero unless a reviewed requirement justifies one.
+3. Use disposable fixtures; never point tests at personal repositories or real secrets.
+4. Keep live provider calls out of the default suite.
+5. Add behavioral tests for controller, adapter or boundary changes.
+6. Update `docs/checklist.md` and `docs/decisions.md` when behavior or scope changes.
+7. Run the full test suite and offline pack check before proposing a change.
+
+Please open an issue before proposing a new execution platform, authentication method, paid provider path or authority-expanding integration. Do not include credentials, authorization codes or raw authentication transcripts in issues, commits or test fixtures.
+
+## Attribution and license status
+
+Adapted procedures and selected OpenHarness components preserve source attribution and applicable MIT notices. See the [source audit](docs/source-audit.md), [pinned source lock](audit/sources.lock.json), [third-party notices](THIRD_PARTY_NOTICES.md) and [OpenHarness reuse audit](docs/r0-dependency-license-audit.md).
+
+The original AgentKit code does not yet have an outbound `LICENSE` file. Until the maintainer selects and adds one, the repository is available for review but is **not formally offered under an open-source license**. Third-party notice files cover only their respective upstream material.
