@@ -12,6 +12,7 @@ from .adapters import execute_owned_code
 from .doctor import clean_environment, owned_code_profile
 from .process import run_process
 from .runtime_contracts import ExecutionBoundary, ExecutionRequest, LivePolicy
+from .resource_policy import resolve_role_resources
 
 
 SOURCE_BROKEN = '''def add(left, right):
@@ -175,8 +176,11 @@ def run_execution_check(engine, directory, authorized=False):
             '`python3 -B -m unittest -v`. Do not access any other path or use network access. '
             'Finish with a short JSON object describing the edited file and test result.'
         )
-        request = ExecutionRequest(engine, 'phase2-owned-code-followup', prompt, str(workspace),
-                                   timeout_seconds=90, max_output_bytes=1048576, mode='owned-code')
+        resources = resolve_role_resources('implementation', task_timeout_seconds=90)
+        request = ExecutionRequest(
+            engine, 'phase2-owned-code-followup', prompt, str(workspace),
+            timeout_seconds=90, max_output_bytes=1048576, mode='owned-code',
+            capability_profile='code-implementation', resource_resolution=resources)
         result = execute_owned_code(request, output, boundary, policy=LivePolicy(
             authorized, 'Operator authorized one small existing-subscription coding smoke; stop on limits/payment; no auth or billing changes.'))
         # A separate process, outside the model session, decides task success.

@@ -1,6 +1,7 @@
 """Bounded POSIX process transport. A process group is not a sandbox."""
 
 from dataclasses import dataclass
+import math
 import os
 import selectors
 import signal
@@ -38,7 +39,8 @@ def run_process(argv, *, cwd, env, stdin=b"", timeout=30.0,
                               "unsupported_platform", CancellationStatus())
     if not argv or not all(isinstance(x, str) and "\0" not in x for x in argv):
         raise ValueError("argv must be explicit strings")
-    if not 0.05 <= timeout <= 300 or not 1024 <= max_bytes <= 4194304 or len(stdin) > 32768:
+    if (type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0 or
+            not 1024 <= max_bytes <= 4194304 or len(stdin) > 32768):
         raise ValueError("invalid transport limits")
     cancellation = CancellationStatus()
     started = time.monotonic()

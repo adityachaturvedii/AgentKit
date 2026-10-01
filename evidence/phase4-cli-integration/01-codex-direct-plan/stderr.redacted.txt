@@ -1,0 +1,4 @@
+WARNING: proceeding, even though we could not create PATH aliases: Operation not permitted (os error 1)
+2026-09-19T13:36:24.691534Z ERROR codex_models_manager::manager: failed to write models cache: Operation not permitted (os error 1)
+2026-09-19T13:36:24.948034Z ERROR codex_models_manager::manager: failed to write models cache: Operation not permitted (os error 1)
+2026-09-19T13:36:25.055823Z ERROR codex_models_manager::manager: failed to write models cache: Operation not permitted (os error 1)

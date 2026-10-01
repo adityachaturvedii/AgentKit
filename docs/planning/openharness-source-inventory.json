@@ -1,0 +1,955 @@
+{
+  "schema_version": 1,
+  "purpose": "Planning source inventory; not an approved dependency or runtime validation",
+  "review_date": "2026-10-01",
+  "repository": "https://github.com/HKUDS/OpenHarness",
+  "revision": "9b2efd795c6aa09f88b0c257d269a9e518da6ae7",
+  "agentkit_baseline": "ddf6145002efd0bd59b85d54996263f6edb7f675",
+  "product_vision_input": {
+    "filename": "Portable Agentkit — Product Vision.md",
+    "sha256": "2790de762cc709fa3724015d1e122d226caacccdd3d09b4c5c87f0bf94cc05a0"
+  },
+  "execution": {
+    "upstream_code_executed": false,
+    "dependencies_installed": false,
+    "provider_inference": false
+  },
+  "license": {
+    "declared": "MIT",
+    "file": "LICENSE",
+    "scope": "Top-level declaration only; dependency and copied-material audits still required before adoption"
+  },
+  "files": [
+    {
+      "path": "LICENSE",
+      "sha256": "dcb4464b75fbeec7fe5e9b13eeadf37a1e813ded33392c6303f091c37da6fa20",
+      "bytes": 1081,
+      "lines": 21,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/LICENSE"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "96bee106c9a4a1a091bcef4d38f44958b77082658cd30810d7e9948c189db737",
+      "bytes": 1810,
+      "lines": 85,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/pyproject.toml"
+    },
+    {
+      "path": "src/openharness/cli.py",
+      "sha256": "c728e2de958af42535d8b184a445580d402829542fdf5b2ba130eed05d054256",
+      "bytes": 93929,
+      "lines": 2551,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/cli.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "contextlib",
+        "io",
+        "json",
+        "logging",
+        "openharness.api.copilot_auth",
+        "openharness.api.provider",
+        "openharness.auth.external",
+        "openharness.auth.flows",
+        "openharness.auth.manager",
+        "openharness.auth.storage",
+        "openharness.autopilot",
+        "openharness.commands",
+        "openharness.commands.registry",
+        "openharness.config",
+        "openharness.config.paths",
+        "openharness.config.settings",
+        "openharness.mcp.config",
+        "openharness.plugins",
+        "openharness.plugins.installer",
+        "openharness.prompts.context",
+        "openharness.services.cron",
+        "openharness.services.cron_scheduler",
+        "openharness.services.session_storage",
+        "openharness.skills",
+        "openharness.tools",
+        "openharness.ui.app",
+        "openharness.ui.runtime",
+        "os",
+        "pathlib",
+        "questionary",
+        "re",
+        "shutil",
+        "sys",
+        "typer",
+        "typing",
+        "urllib.parse"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/config/settings.py",
+      "sha256": "4c9095e1fa7364686949214ba61c874fbe1d2aca5abba14d93b44e909a466faa",
+      "bytes": 42998,
+      "lines": 1104,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/config/settings.py",
+      "direct_imports": [
+        "__future__",
+        "dataclasses",
+        "json",
+        "openharness.auth.external",
+        "openharness.auth.storage",
+        "openharness.config.paths",
+        "openharness.hooks.schemas",
+        "openharness.mcp.types",
+        "openharness.permissions.modes",
+        "openharness.utils.file_lock",
+        "openharness.utils.fs",
+        "os",
+        "pathlib",
+        "pydantic",
+        "re",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/config/schema.py",
+      "sha256": "89bc124ba6db5c9c5d356ead8b0d265ad887ad761b34d521d7534481ff8b0f6d",
+      "bytes": 3458,
+      "lines": 119,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/config/schema.py",
+      "direct_imports": [
+        "__future__",
+        "pydantic"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/api/provider.py",
+      "sha256": "747ead072af04152d73ff816fa6e9b88bb3584f3a91e413be3b44025e358e44d",
+      "bytes": 6639,
+      "lines": 186,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/api/provider.py",
+      "direct_imports": [
+        "__future__",
+        "dataclasses",
+        "openharness.api.copilot_auth",
+        "openharness.api.registry",
+        "openharness.auth.external",
+        "openharness.auth.storage",
+        "openharness.config.settings",
+        "re"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/api/registry.py",
+      "sha256": "d23adf41a133b2c11f8b8d578e0eacf5d3523a9f375dbeacde9ac4dd8572c22f",
+      "bytes": 13783,
+      "lines": 437,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/api/registry.py",
+      "direct_imports": [
+        "__future__",
+        "dataclasses"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/api/client.py",
+      "sha256": "c46e69705d5ad717afb150a5113ce1987dbf75976ffef0d623dcfaabf1212062",
+      "bytes": 9540,
+      "lines": 271,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/api/client.py",
+      "direct_imports": [
+        "__future__",
+        "anthropic",
+        "asyncio",
+        "dataclasses",
+        "json",
+        "logging",
+        "openharness.api.errors",
+        "openharness.api.usage",
+        "openharness.auth.external",
+        "openharness.engine.messages",
+        "random",
+        "typing",
+        "uuid"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/api/openai_client.py",
+      "sha256": "1133ee17d845fbfbfd846a4615a7aaaf0c9288e161cf831a16f9adbe1ce9f748",
+      "bytes": 18521,
+      "lines": 484,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/api/openai_client.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "json",
+        "logging",
+        "openai",
+        "openharness.api.client",
+        "openharness.api.errors",
+        "openharness.api.usage",
+        "openharness.engine.messages",
+        "os",
+        "re",
+        "typing",
+        "urllib.parse"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/api/usage.py",
+      "sha256": "895968e070be7d25fc4a41724e323032d53c0f647a12d5f660a9bacd2888b1e1",
+      "bytes": 402,
+      "lines": 17,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/api/usage.py",
+      "direct_imports": [
+        "__future__",
+        "pydantic"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/auth/external.py",
+      "sha256": "63bf2609e350d878e10c622dee4059aab252a277e6d222b2df67fe9191b97a17",
+      "bytes": 21219,
+      "lines": 610,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/auth/external.py",
+      "direct_imports": [
+        "__future__",
+        "base64",
+        "dataclasses",
+        "json",
+        "openharness.auth.storage",
+        "openharness.utils.fs",
+        "os",
+        "pathlib",
+        "platform",
+        "re",
+        "subprocess",
+        "time",
+        "typing",
+        "urllib.error",
+        "urllib.request",
+        "uuid"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/engine/query_engine.py",
+      "sha256": "3c51f2104b8d73770ee360197b4021721007ee293a2e04dd08755f3fbedfd40a",
+      "bytes": 12552,
+      "lines": 306,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/engine/query_engine.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.api.client",
+        "openharness.config.settings",
+        "openharness.coordinator.coordinator_mode",
+        "openharness.engine.cost_tracker",
+        "openharness.engine.messages",
+        "openharness.engine.query",
+        "openharness.engine.stream_events",
+        "openharness.hooks",
+        "openharness.permissions.checker",
+        "openharness.services.autodream.service",
+        "openharness.services.memory_extract",
+        "openharness.services.session_memory",
+        "openharness.tools.base",
+        "pathlib",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/engine/cost_tracker.py",
+      "sha256": "c163670eacf9b7f35120114ec1986527ecafedd3b1d605c28da281915bee699a",
+      "bytes": 692,
+      "lines": 24,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/engine/cost_tracker.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.api.usage"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/ui/protocol.py",
+      "sha256": "5eb25d836f99231b9143f7e17ec72c32265e2bdd783d5ca88d6b1d3a2eb0dd53",
+      "bytes": 7413,
+      "lines": 247,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/ui/protocol.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.bridge.manager",
+        "openharness.mcp.types",
+        "openharness.state.app_state",
+        "openharness.tasks.types",
+        "pydantic",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/ui/runtime.py",
+      "sha256": "b2eab81785c5590a65a78d902eeb680249b47edda494b28ba1af22d2831022bb",
+      "bytes": 31661,
+      "lines": 799,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/ui/runtime.py",
+      "direct_imports": [
+        "__future__",
+        "dataclasses",
+        "json",
+        "openharness.api.client",
+        "openharness.api.codex_client",
+        "openharness.api.copilot_client",
+        "openharness.api.openai_client",
+        "openharness.api.provider",
+        "openharness.api.usage",
+        "openharness.bridge",
+        "openharness.commands",
+        "openharness.config",
+        "openharness.config.settings",
+        "openharness.engine",
+        "openharness.engine.messages",
+        "openharness.engine.query",
+        "openharness.engine.stream_events",
+        "openharness.hooks",
+        "openharness.hooks.hot_reload",
+        "openharness.keybindings",
+        "openharness.mcp.client",
+        "openharness.mcp.config",
+        "openharness.permissions",
+        "openharness.personalization.session_hook",
+        "openharness.plugins",
+        "openharness.prompts",
+        "openharness.sandbox.session",
+        "openharness.services.session_backend",
+        "openharness.state",
+        "openharness.tools",
+        "pathlib",
+        "sys",
+        "typing",
+        "uuid"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/ui/backend_host.py",
+      "sha256": "d08a6444f6e73202346744239ed283e037f397dd6ec3aa93343f10825dd6cdb5",
+      "bytes": 38993,
+      "lines": 941,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/ui/backend_host.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "contextlib",
+        "dataclasses",
+        "json",
+        "logging",
+        "openharness.api.client",
+        "openharness.auth.manager",
+        "openharness.bridge",
+        "openharness.commands",
+        "openharness.config.settings",
+        "openharness.coordinator.coordinator_mode",
+        "openharness.engine.messages",
+        "openharness.engine.stream_events",
+        "openharness.output_styles",
+        "openharness.services.session_backend",
+        "openharness.tasks",
+        "openharness.themes",
+        "openharness.ui.coordinator_drain",
+        "openharness.ui.protocol",
+        "openharness.ui.runtime",
+        "os",
+        "pathlib",
+        "sys",
+        "time",
+        "typing",
+        "uuid"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/ui/react_launcher.py",
+      "sha256": "4eda4c9199ef3759c6e8b810741ab0f80744d368496ac381dc4dfd890357efac",
+      "bytes": 5709,
+      "lines": 179,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/ui/react_launcher.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "json",
+        "openharness.config.settings",
+        "os",
+        "pathlib",
+        "shutil",
+        "sys"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/state/store.py",
+      "sha256": "5245fb036d6818c563f5549d3d3b175b2e1124719c21096f37140b6a4cdf59c1",
+      "bytes": 1149,
+      "lines": 40,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/state/store.py",
+      "direct_imports": [
+        "__future__",
+        "collections.abc",
+        "dataclasses",
+        "openharness.state.app_state"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/bridge/session_runner.py",
+      "sha256": "ab7c9008065c4eb63a72dd9530dcb803bffeb6705d93c8c81c6bf952de347254",
+      "bytes": 1202,
+      "lines": 46,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/bridge/session_runner.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "dataclasses",
+        "openharness.utils.shell",
+        "pathlib",
+        "time"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/sandbox/adapter.py",
+      "sha256": "5b4da7012265429e71c0fe4d01833293291aa8bd96f1e24d8960a1e69e7cd4e9",
+      "bytes": 5313,
+      "lines": 148,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/sandbox/adapter.py",
+      "direct_imports": [
+        "__future__",
+        "dataclasses",
+        "json",
+        "openharness.config",
+        "openharness.platforms",
+        "pathlib",
+        "shlex",
+        "shutil",
+        "tempfile",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/sandbox/docker_backend.py",
+      "sha256": "851b480407906b11d6d8140b92072f5a1cd4ff703a325bf3a05fb9811a69e943",
+      "bytes": 7735,
+      "lines": 232,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/sandbox/docker_backend.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "dataclasses",
+        "logging",
+        "openharness.config",
+        "openharness.platforms",
+        "openharness.sandbox.adapter",
+        "openharness.sandbox.docker_image",
+        "pathlib",
+        "shutil",
+        "subprocess"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/sandbox/path_validator.py",
+      "sha256": "f8a9d526cc78cb646c701e357084717c92bc364a5c8fae303fe31767d8af004e",
+      "bytes": 1084,
+      "lines": 37,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/sandbox/path_validator.py",
+      "direct_imports": [
+        "__future__",
+        "pathlib"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/sandbox/session.py",
+      "sha256": "ae9a6b46c1eee0df60a0acc8da84cd30be2107d05495131682fb71280e5eab96",
+      "bytes": 1981,
+      "lines": 63,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/sandbox/session.py",
+      "direct_imports": [
+        "__future__",
+        "atexit",
+        "logging",
+        "openharness.config",
+        "openharness.sandbox.adapter",
+        "openharness.sandbox.docker_backend",
+        "pathlib",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/prompts/claudemd.py",
+      "sha256": "06d9695c9d2e8a4935bf97e9d724f569951d5b9604a10d831cde12ed544f7d5f",
+      "bytes": 1580,
+      "lines": 48,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/prompts/claudemd.py",
+      "direct_imports": [
+        "__future__",
+        "pathlib"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/skills/loader.py",
+      "sha256": "f8981e8f900fdec99dc48af9680190c7a0fc8ac25c1ef6a5b9c2245e1a16ee11",
+      "bytes": 8050,
+      "lines": 229,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/skills/loader.py",
+      "direct_imports": [
+        "__future__",
+        "logging",
+        "openharness.config.paths",
+        "openharness.config.settings",
+        "openharness.plugins.loader",
+        "openharness.skills._frontmatter",
+        "openharness.skills.bundled",
+        "openharness.skills.registry",
+        "openharness.skills.types",
+        "pathlib",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/skills/_frontmatter.py",
+      "sha256": "668a128511d47e172d9cfc785917e2e52d03914a2f982df7f273a4329f4a5920",
+      "bytes": 3266,
+      "lines": 97,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/skills/_frontmatter.py",
+      "direct_imports": [
+        "__future__",
+        "logging",
+        "typing",
+        "yaml"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/tools/base.py",
+      "sha256": "30402d4c8f4530455c621bcdd7b5a243c1f8aaa039f1daf4af9749481e7bb7a7",
+      "bytes": 2195,
+      "lines": 80,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/tools/base.py",
+      "direct_imports": [
+        "__future__",
+        "abc",
+        "dataclasses",
+        "openharness.hooks.executor",
+        "pathlib",
+        "pydantic",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/tools/file_read_tool.py",
+      "sha256": "a30bd4bc1793e2e002be1d66c28d8c3a38348974690555e0362d922471924608",
+      "bytes": 2438,
+      "lines": 72,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/tools/file_read_tool.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.sandbox.path_validator",
+        "openharness.sandbox.session",
+        "openharness.tools.base",
+        "pathlib",
+        "pydantic"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/tools/file_write_tool.py",
+      "sha256": "b065600978b0df9ae46ad442ab8db30f40fe2fd02fe6eff90e6ce8a2764eef66",
+      "bytes": 3159,
+      "lines": 87,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/tools/file_write_tool.py",
+      "direct_imports": [
+        "__future__",
+        "difflib",
+        "openharness.sandbox.path_validator",
+        "openharness.sandbox.session",
+        "openharness.tools.base",
+        "pathlib",
+        "pydantic"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/tools/file_edit_tool.py",
+      "sha256": "72b48afcb9218086071f161ddbe57666fd889b3c749771fd289e3540241681ac",
+      "bytes": 3402,
+      "lines": 95,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/tools/file_edit_tool.py",
+      "direct_imports": [
+        "__future__",
+        "difflib",
+        "openharness.sandbox.path_validator",
+        "openharness.sandbox.session",
+        "openharness.tools.base",
+        "pathlib",
+        "pydantic"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/tools/enter_worktree_tool.py",
+      "sha256": "93f711d3320186f32ec5533e19dccfcbdfa5307e84295c9f528aec29de61a2d5",
+      "bytes": 2756,
+      "lines": 80,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/tools/enter_worktree_tool.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.tools.base",
+        "pathlib",
+        "pydantic",
+        "re",
+        "subprocess"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/utils/fs.py",
+      "sha256": "d1f7ae6dce6b3fe5bf3c6ece641dea4973249c05d6f272ab626a5cef65b1d10e",
+      "bytes": 3546,
+      "lines": 98,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/utils/fs.py",
+      "direct_imports": [
+        "__future__",
+        "contextlib",
+        "os",
+        "pathlib",
+        "stat",
+        "tempfile"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "src/openharness/utils/file_lock.py",
+      "sha256": "bbcdd3892d9537fc202d37be019a3cb55f33909a2e8dabe70046dacced6afeb1",
+      "bytes": 2732,
+      "lines": 86,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/src/openharness/utils/file_lock.py",
+      "direct_imports": [
+        "__future__",
+        "contextlib",
+        "fcntl",
+        "msvcrt",
+        "openharness.platforms",
+        "pathlib",
+        "typing"
+      ],
+      "test_functions": 0
+    },
+    {
+      "path": "frontend/terminal/package.json",
+      "sha256": "0bc20fb9a5aa0021e57bd9ac2891df0bdfb53131342b39b5c35e12398c8cdf79",
+      "bytes": 427,
+      "lines": 21,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/frontend/terminal/package.json"
+    },
+    {
+      "path": "frontend/terminal/package-lock.json",
+      "sha256": "d49813b4a7323bc72284251811b979e4925c85bff486d337d7941a9b8a4b3ce3",
+      "bytes": 39146,
+      "lines": 1198,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/frontend/terminal/package-lock.json"
+    },
+    {
+      "path": "frontend/terminal/src/types.ts",
+      "sha256": "04bdf9ee491c7976f537a7bf181a8fa80fe753cbb79aa2095eb2e46dbbd01787",
+      "bytes": 2211,
+      "lines": 98,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/frontend/terminal/src/types.ts"
+    },
+    {
+      "path": "frontend/terminal/src/hooks/useBackendSession.ts",
+      "sha256": "3de26064b7a54468357bba0cde4f254a819ae91eefb8e57eb697e33d657647dc",
+      "bytes": 14869,
+      "lines": 462,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/frontend/terminal/src/hooks/useBackendSession.ts"
+    },
+    {
+      "path": "frontend/terminal/src/components/StatusBar.tsx",
+      "sha256": "e3a1863a639cac18d960f1ace58469d74a2cfcd1eada61aff0d0d27b4fb801f9",
+      "bytes": 2983,
+      "lines": 119,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/frontend/terminal/src/components/StatusBar.tsx"
+    },
+    {
+      "path": "frontend/terminal/src/components/ModalHost.tsx",
+      "sha256": "f08d3ef2e6f9f30b1ae04cdc74b7bd7e471ca35e10ae10efcda33abbbf62de33",
+      "bytes": 6685,
+      "lines": 253,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/frontend/terminal/src/components/ModalHost.tsx"
+    },
+    {
+      "path": "frontend/terminal/src/components/TranscriptPane.tsx",
+      "sha256": "84891d4c689ac6b9cb69e1e86abdd2e122c7721607537743586c6b142bbcba57",
+      "bytes": 1277,
+      "lines": 57,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/frontend/terminal/src/components/TranscriptPane.tsx"
+    },
+    {
+      "path": "tests/test_config/test_settings.py",
+      "sha256": "e22fcf4e4daf454eda159b8c4f04ae715abe3414957662d19c8235dbb938ab7e",
+      "bytes": 38579,
+      "lines": 914,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_config/test_settings.py",
+      "direct_imports": [
+        "__future__",
+        "json",
+        "openharness.auth.storage",
+        "openharness.config.settings",
+        "pathlib",
+        "pytest"
+      ],
+      "test_functions": 63
+    },
+    {
+      "path": "tests/test_sandbox/test_adapter.py",
+      "sha256": "f2a4f999ca12af4637a3da8475f65de05619fcb2a7abb0b2ee653c755b64d951",
+      "bytes": 5114,
+      "lines": 132,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_sandbox/test_adapter.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "json",
+        "openharness.config.paths",
+        "openharness.config.settings",
+        "openharness.sandbox.adapter",
+        "openharness.utils.shell",
+        "pathlib",
+        "pytest",
+        "shutil",
+        "tempfile"
+      ],
+      "test_functions": 8
+    },
+    {
+      "path": "tests/test_sandbox/test_docker_backend.py",
+      "sha256": "00f79e510d9c329bd934275331b0614549426b8247784ba24d3238fb3a016a9a",
+      "bytes": 9952,
+      "lines": 293,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_sandbox/test_docker_backend.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "openharness.config.settings",
+        "openharness.sandbox.adapter",
+        "openharness.sandbox.docker_backend",
+        "pathlib",
+        "pytest",
+        "subprocess",
+        "unittest.mock"
+      ],
+      "test_functions": 15
+    },
+    {
+      "path": "tests/test_sandbox/test_path_validator.py",
+      "sha256": "f5f4c1ca43690d16bf193d5a689b938e4d65dab5c26ca3aaf0420eaf3647a6bb",
+      "bytes": 2302,
+      "lines": 89,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_sandbox/test_path_validator.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.sandbox.path_validator",
+        "pathlib"
+      ],
+      "test_functions": 7
+    },
+    {
+      "path": "tests/test_ui/test_react_backend.py",
+      "sha256": "bc1af1041abb9dd60487a05ccb7692c641e299400069cbeff0da87c5289e8508",
+      "bytes": 30856,
+      "lines": 891,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_ui/test_react_backend.py",
+      "direct_imports": [
+        "__future__",
+        "asyncio",
+        "io",
+        "json",
+        "openharness.api.client",
+        "openharness.api.usage",
+        "openharness.config.settings",
+        "openharness.engine.messages",
+        "openharness.engine.stream_events",
+        "openharness.ui.backend_host",
+        "openharness.ui.protocol",
+        "openharness.ui.runtime",
+        "pytest",
+        "types"
+      ],
+      "test_functions": 28
+    },
+    {
+      "path": "tests/test_ui/test_project_plugin_security.py",
+      "sha256": "e575aa91f3eb1b5fc6fa18cd3878a0fa92c751e57c6ae012e8dcb7cf684aa66e",
+      "bytes": 1944,
+      "lines": 61,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_ui/test_project_plugin_security.py",
+      "direct_imports": [
+        "__future__",
+        "json",
+        "openharness.config.settings",
+        "openharness.mcp.config",
+        "openharness.plugins.loader",
+        "pathlib"
+      ],
+      "test_functions": 2
+    },
+    {
+      "path": "tests/test_auth/test_external.py",
+      "sha256": "2c62f13d7c6ceb32e2bd601db770af7af5c1b59bbf6df7e505f034f03fdd80d9",
+      "bytes": 22377,
+      "lines": 653,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_auth/test_external.py",
+      "direct_imports": [
+        "__future__",
+        "base64",
+        "json",
+        "openharness.auth.external",
+        "openharness.auth.storage",
+        "openharness.cli",
+        "openharness.config.settings",
+        "pathlib",
+        "pytest",
+        "typer.testing",
+        "urllib.error"
+      ],
+      "test_functions": 18
+    },
+    {
+      "path": "tests/test_tools/test_core_tools.py",
+      "sha256": "e53a943583bce62f8849c8e274f062ddc7113fb0cad9893d355986ff61c8a15b",
+      "bytes": 15605,
+      "lines": 425,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_tools/test_core_tools.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.tools",
+        "openharness.tools.base",
+        "openharness.tools.bash_tool",
+        "openharness.tools.brief_tool",
+        "openharness.tools.config_tool",
+        "openharness.tools.cron_create_tool",
+        "openharness.tools.cron_delete_tool",
+        "openharness.tools.cron_list_tool",
+        "openharness.tools.enter_worktree_tool",
+        "openharness.tools.exit_worktree_tool",
+        "openharness.tools.file_edit_tool",
+        "openharness.tools.file_read_tool",
+        "openharness.tools.file_write_tool",
+        "openharness.tools.glob_tool",
+        "openharness.tools.grep_tool",
+        "openharness.tools.lsp_tool",
+        "openharness.tools.notebook_edit_tool",
+        "openharness.tools.remote_trigger_tool",
+        "openharness.tools.skill_tool",
+        "openharness.tools.todo_write_tool",
+        "openharness.tools.tool_search_tool",
+        "pathlib",
+        "pytest",
+        "subprocess"
+      ],
+      "test_functions": 16
+    },
+    {
+      "path": "tests/test_prompts/test_claudemd.py",
+      "sha256": "ca345fd7b403f91f77d737bc216928a5c3448c33cb2387cc67ae488bc24d2217",
+      "bytes": 6187,
+      "lines": 164,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_prompts/test_claudemd.py",
+      "direct_imports": [
+        "__future__",
+        "openharness.config.paths",
+        "openharness.config.settings",
+        "openharness.engine.messages",
+        "openharness.personalization",
+        "openharness.personalization.session_hook",
+        "openharness.prompts",
+        "pathlib"
+      ],
+      "test_functions": 9
+    },
+    {
+      "path": "tests/test_swarm/test_lockfile.py",
+      "sha256": "ae4e8047a878d69298a7a8ff701a61e4304dd23e8d36bed4d3cd81cfe87115a0",
+      "bytes": 2847,
+      "lines": 83,
+      "inspection": "static source inventory; not executed",
+      "url": "https://github.com/HKUDS/OpenHarness/blob/9b2efd795c6aa09f88b0c257d269a9e518da6ae7/tests/test_swarm/test_lockfile.py",
+      "direct_imports": [
+        "__future__",
+        "builtins",
+        "contextlib",
+        "openharness.swarm",
+        "openharness.utils",
+        "pathlib",
+        "pytest"
+      ],
+      "test_functions": 6
+    }
+  ]
+}

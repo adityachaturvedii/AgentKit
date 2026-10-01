@@ -8,12 +8,13 @@ import threading
 import unittest
 from unittest.mock import patch
 
-from agentkit.adapters import (ADAPTERS, execute, normalize, persist_result,
+from agentkit.adapters import (ADAPTERS, execute, execute_owned_code, normalize, persist_result,
                                stop_on_limit, structured_json_text)
 from agentkit.doctor import auth_summary, clean_environment, detect_engine, owned_code_profile
 from agentkit.process import ProcessOutcome, run_process
 from agentkit.redaction import redact, redacted_stream
-from agentkit.runtime_contracts import Capability, CancellationStatus, ExecutionRequest, LivePolicy, EngineCapabilities
+from agentkit.runtime_contracts import (Capability, CancellationStatus, EngineCapabilities,
+                                        ExecutionBoundary, ExecutionRequest, LivePolicy)
 from agentkit.smoke import acceptance
 from agentkit.execution_check import _provider_test_evidence
 
@@ -171,11 +172,12 @@ class RuntimeTests(unittest.TestCase):
             {'type': 'turn.completed', 'usage': {}}
         ]
         raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
-        self.assertIsNone(stop_on_limit(raw, b'', allow_tools=True))
+        self.assertIsNone(stop_on_limit(raw, b'', ('Read', 'Edit', 'Write', 'Bash')))
         self.assertEqual(normalize(request, ProcessOutcome(raw, b'', 0, .01, None, CancellationStatus())).status, 'succeeded')
         events[0]['item']['type'] = 'mcp_tool_call'
         raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
-        self.assertEqual(stop_on_limit(raw, b'', allow_tools=True), 'unexpected_tools')
+        self.assertEqual(stop_on_limit(raw, b'', ('Read', 'Edit', 'Write', 'Bash')),
+                         'unexpected_tools')
 
     def test_owned_acceptance_requires_successful_provider_test_record(self):
         artifact = self.root / 'stdout.redacted.jsonl'
@@ -203,12 +205,47 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn('(deny file-write*)', profile)
         self.assertIn('(subpath ' + json.dumps(str(workspace)) + ')', profile)
         self.assertIn('(literal ' + json.dumps(str(lock)) + ')', profile)
+        self.assertIn('(allow file-write* (literal "/dev/null"))', profile)
         self.assertIn('(deny file-read*', profile)
         self.assertNotIn('(allow file-write* (subpath ' + json.dumps(str(self.root)) + '))', profile)
 
+    def test_owned_execution_routes_shell_temporary_files_into_runtime(self):
+        from agentkit.doctor import COMPATIBLE, REQUIRED
+        workspace = self.root / 'workspace-owned'
+        output = self.root / 'owned-result'
+        protected = self.root / 'protected-owned'
+        home = self.root / 'home'
+        workspace.mkdir()
+        protected.mkdir()
+        (home / '.codex').mkdir(parents=True)
+        (home / '.codex/installation_id').write_text('fixture-installation-id')
+        request = ExecutionRequest('codex', 'owned-temp', 'fixture task', str(workspace),
+                                   mode='owned-code')
+        boundary = ExecutionBoundary(str(workspace), (str(protected),))
+        cap = EngineCapabilities(
+            'codex', '/fake/codex', COMPATIBLE['codex'], 'fixture-hash',
+            {flag: Capability('verified', 'fixture') for flag in REQUIRED['codex']},
+            Capability('verified', 'fixture subscription'), authentication_mode='subscription')
+
+        def launch(argv, **kwargs):
+            self.assertEqual(argv[0], '/usr/bin/sandbox-exec')
+            self.assertIn('(allow file-write* (literal "/dev/null"))', argv[2])
+            self.assertTrue(kwargs['env']['TMPPREFIX'].startswith(kwargs['env']['TMPDIR'] + '/'))
+            event = b'{"type":"turn.completed","usage":{}}\n'
+            return ProcessOutcome(event, b'', 0, .01, None, CancellationStatus())
+
+        with patch('agentkit.adapters.native_sandbox_capability',
+                   return_value=Capability('verified', 'fixture')), \
+             patch('agentkit.adapters.detect_engine', return_value=cap), \
+             patch('agentkit.adapters.run_process', side_effect=launch), \
+             patch.object(Path, 'home', return_value=home):
+            result = execute_owned_code(request, output, boundary,
+                                        policy=LivePolicy(True, 'fixture only'))
+        self.assertEqual(result.status, 'succeeded')
+
     def test_request_rejects_policy_injection_and_invalid_bounds(self):
         args = dict(engine='codex', task_id='fixture', prompt='test', cwd=str(self.root))
-        for key, value in [('timeout_seconds', float('nan')), ('timeout_seconds', 301),
+        for key, value in [('timeout_seconds', float('nan')), ('timeout_seconds', -1),
                            ('max_output_bytes', True), ('schema_version', 2), ('cwd', 'relative')]:
             with self.assertRaises(ValueError):
                 ExecutionRequest.from_dict(dict(args, **{key: value}))
@@ -230,6 +267,22 @@ class RuntimeTests(unittest.TestCase):
             self.request('codex', effort='high')
         with self.assertRaisesRegex(ValueError, 'unsupported Claude effort'):
             self.request('claude', effort='ultra')
+        self.assertEqual(self.request('claude', max_generated_output_tokens=8192).
+                         max_generated_output_tokens, 8192)
+        self.assertEqual(self.request('claude', max_generated_output_tokens=65536).
+                         max_generated_output_tokens, 65536)
+        for value in (True, 0, -1, float('inf')):
+            with self.assertRaisesRegex(ValueError, 'generated-output token allocation'):
+                self.request('claude', max_generated_output_tokens=value)
+        with self.assertRaisesRegex(ValueError, 'generated-output token allocation'):
+            self.request('codex', max_generated_output_tokens=512)
+
+    def test_generated_output_limit_is_not_misclassified_as_rate_or_usage_limit(self):
+        text = ('rate_limit_event status allowed overageDisabledReason out_of_credits\n'
+                "API Error: response exceeded the 512 output token maximum. "
+                'Set CLAUDE_CODE_MAX_OUTPUT_TOKENS.')
+        from agentkit.adapters import error_class
+        self.assertEqual(error_class(text), 'output_limit')
 
     def test_live_is_default_denied_without_even_doctor(self):
         with patch('agentkit.adapters.native_sandbox_capability', side_effect=AssertionError('must not probe')):
@@ -313,12 +366,14 @@ class RuntimeTests(unittest.TestCase):
                 self.assertEqual(args[args.index('--sandbox') + 1], 'danger-full-access')
                 self.assertNotIn('features.shell_tool=false', args)
             else:
-                self.assertEqual(args[args.index('--tools') + 1], 'Read,Edit,Bash')
+                self.assertEqual(args[args.index('--tools') + 1], 'Read,Edit,Write,Bash')
                 settings = json.loads(args[args.index('--settings') + 1])
                 self.assertFalse(settings['sandbox']['enabled'])
                 self.assertFalse(settings['sandbox']['failIfUnavailable'])
                 self.assertFalse(settings['sandbox']['allowUnsandboxedCommands'])
                 self.assertTrue(settings['permissions']['blockReadsOutsideWorkingDirectories'])
+                self.assertNotIn('Bash', settings['permissions']['allow'])
+                self.assertIn('Bash(python3 -B -m unittest*)', settings['permissions']['allow'])
                 self.assertIn('--session-id', args)
 
     def test_allowed_rate_metadata_and_identifier_digits_are_not_errors(self):
@@ -329,16 +384,42 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(stop_on_limit((json.dumps(event) + '\n').encode(), b''), 'usage_limit')
 
     def test_reported_retries_and_effective_tools_stop_early(self):
-        self.assertEqual(stop_on_limit(b'', b'Reconnecting... 1/5'), 'retry_requested')
+        self.assertIsNone(stop_on_limit(b'', b'Reconnecting... 1/5'))
         raw = b'{"type":"system","subtype":"init","tools":["Bash"]}\n'
         self.assertEqual(stop_on_limit(raw, b''), 'unexpected_tools')
+
+    def test_stopped_authentication_launch_preserves_complete_terminal_usage(self):
+        events = [
+            {'type': 'system', 'subtype': 'api_retry', 'attempt': 1,
+             'error_status': 401},
+            {'type': 'system', 'subtype': 'api_retry', 'attempt': 2,
+             'error_status': 401},
+            {'type': 'result', 'subtype': 'success', 'is_error': True,
+             'result': 'Failed to authenticate. API Error: 401', 'num_turns': 1,
+             'usage': {'input_tokens': 0, 'output_tokens': 0,
+                       'cache_read_input_tokens': 0,
+                       'cache_creation_input_tokens': 0},
+             'total_cost_usd': 0, 'modelUsage': {}}]
+        raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
+        outcome = ProcessOutcome(raw, b'', 1, .1, 'authentication',
+                                 CancellationStatus())
+        result = normalize(self.request('claude'), outcome)
+        self.assertEqual((result.status, result.error_class),
+                         ('failed', 'authentication'))
+        self.assertEqual((result.usage.input_tokens, result.usage.output_tokens), (0, 0))
+        self.assertEqual(result.usage.estimated_cost_usd, 0)
+        self.assertEqual(result.provider_details['observed_retry_events'], 2)
+        self.assertEqual(result.provider_details['reported_turns'], 1)
 
     def test_managed_adapter_pipeline_with_fake_subscription_cli(self):
         from agentkit.doctor import COMPATIBLE, REQUIRED
         for engine in ADAPTERS:
             cwd = self.root / engine
             cwd.mkdir()
-            request = ExecutionRequest(engine, 'managed-fixture', 'synthetic', str(cwd))
+            request = ExecutionRequest(
+                engine, 'managed-fixture', 'synthetic', str(cwd),
+                capability_profile='smoke-model-only',
+                max_generated_output_tokens=512 if engine == 'claude' else None)
             cap = EngineCapabilities(engine, '/fake/cli', COMPATIBLE[engine], 'fixture-hash',
                   {flag: Capability('verified', 'fixture') for flag in REQUIRED[engine]},
                   Capability('verified', 'fixture subscription'), authentication_mode='subscription')
@@ -349,6 +430,8 @@ class RuntimeTests(unittest.TestCase):
                 self.assertNotIn('OPENAI_API_KEY', kw['env'])
                 if engine == 'claude':
                     self.assertEqual(kw['env']['CLAUDE_CODE_MAX_RETRIES'], '0')
+                    self.assertEqual(kw['env']['CLAUDE_CODE_MAX_TURNS'], '1')
+                    self.assertEqual(kw['env']['CLAUDE_CODE_MAX_OUTPUT_TOKENS'], '512')
                 return actual_transport([sys.executable, FIXTURE, engine, 'success'], **kw)
             with patch('agentkit.adapters.native_sandbox_capability', return_value=Capability('verified', 'fixture')), \
                  patch('agentkit.adapters.detect_engine', return_value=cap), \
@@ -356,6 +439,11 @@ class RuntimeTests(unittest.TestCase):
                 result = execute(request, self.root / (engine + '-result'), policy=LivePolicy(True, 'fixture only'))
             self.assertTrue(acceptance(result, [17, 25])['passed'])
             self.assertTrue((self.root / (engine + '-result') / 'stdout.redacted.jsonl').is_file())
+            launch = result.provider_details['launch_configuration']
+            self.assertFalse(launch['environment_values_recorded'])
+            self.assertEqual(launch['provider_limit_environment']
+                             ['CLAUDE_CODE_MAX_OUTPUT_TOKENS'],
+                             'set' if engine == 'claude' else 'unset')
 
 
 if __name__ == '__main__':

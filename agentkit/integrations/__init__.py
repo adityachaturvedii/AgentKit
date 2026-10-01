@@ -1,0 +1,1 @@
+"""Optional, attributed integration components."""

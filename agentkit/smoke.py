@@ -7,6 +7,7 @@ import tempfile
 
 from .adapters import execute
 from .runtime_contracts import ExecutionRequest, LivePolicy
+from .resource_policy import resolve_role_resources
 
 
 def acceptance(result, values):
@@ -22,7 +23,15 @@ def smoke_test(engine, directory, authorized=False):
     values = [17, 25]
     prompt = 'Return only a JSON object with one integer property "sum", the sum of ' + json.dumps(values) + '. No tools or explanation.'
     with tempfile.TemporaryDirectory(prefix='agentkit-smoke-') as tmp:
-        request = ExecutionRequest(engine, 'phase2-subscription-smoke', prompt, str(Path(tmp).resolve()), timeout_seconds=45)
+        output_tokens = 512 if engine == 'claude' else None
+        resources = resolve_role_resources(
+            'smoke', task_timeout_seconds=45,
+            provider_output_tokens=output_tokens)
+        request = ExecutionRequest(
+            engine, 'phase2-subscription-smoke', prompt, str(Path(tmp).resolve()),
+            timeout_seconds=45, capability_profile='smoke-model-only',
+            max_generated_output_tokens=output_tokens,
+            resource_resolution=resources)
         result = execute(request, directory, policy=LivePolicy(authorized,
                          'Operator authorized one existing-subscription smoke; stop on usage/payment limits; no billing/auth changes.'))
         observed = acceptance(result, values)

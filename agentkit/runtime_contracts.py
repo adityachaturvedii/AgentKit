@@ -5,6 +5,8 @@ import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from .resource_policy import capability_profile, validate_resolution
+
 
 SCHEMA_VERSION = 1
 
@@ -45,6 +47,9 @@ class ExecutionRequest:
     model: Optional[str] = None
     effort: Optional[str] = None
     mode: str = "model-only"
+    capability_profile: Optional[str] = None
+    max_generated_output_tokens: Optional[int] = None
+    resource_resolution: Optional[Dict[str, Any]] = None
     schema_version: int = SCHEMA_VERSION
 
     def __post_init__(self):
@@ -56,12 +61,14 @@ class ExecutionRequest:
             raise ValueError("task_id must be a nonempty bounded string")
         if not isinstance(self.prompt, str) or not self.prompt.strip() or len(self.prompt.encode()) > 32768:
             raise ValueError("prompt must contain 1..32768 UTF-8 bytes")
-        if type(self.timeout_seconds) not in (int, float) or not math.isfinite(self.timeout_seconds) or not 0.05 <= self.timeout_seconds <= 300:
-            raise ValueError("timeout must be finite and between 0.05 and 300 seconds")
+        if type(self.timeout_seconds) not in (int, float) or not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
+            raise ValueError("timeout must be a finite positive number")
         if type(self.max_output_bytes) is not int or not 1024 <= self.max_output_bytes <= 4194304:
             raise ValueError("output bound must be 1 KiB..4 MiB")
         if self.mode not in ("model-only", "owned-code", "untrusted"):
             raise ValueError("unsupported execution mode")
+        if self.mode != 'untrusted':
+            capability_profile(self.capability_profile, self.mode)
         if not isinstance(self.cwd, str) or not Path(self.cwd).is_absolute():
             raise ValueError("cwd must be absolute")
         if self.model is not None and (not isinstance(self.model, str) or not self.model or self.model.startswith("-") or len(self.model) > 128):
@@ -71,6 +78,19 @@ class ExecutionRequest:
                 raise ValueError("effort is unsupported by the tested Codex CLI contract")
             if self.effort not in ("low", "medium", "high", "xhigh", "max"):
                 raise ValueError("unsupported Claude effort level")
+        if self.max_generated_output_tokens is not None:
+            if (self.engine != 'claude' or type(self.max_generated_output_tokens) is not int or
+                    self.max_generated_output_tokens <= 0):
+                raise ValueError('generated-output token allocation must be a positive Claude-only override')
+        if self.resource_resolution is not None:
+            validate_resolution(self.resource_resolution)
+            if self.resource_resolution['timeout_seconds']['value'] != float(self.timeout_seconds):
+                raise ValueError('resolved timeout does not match request timeout')
+            if self.resource_resolution['max_capture_bytes']['value'] != self.max_output_bytes:
+                raise ValueError('resolved capture bytes do not match request capture bound')
+            if (self.resource_resolution['generated_output_tokens']['value'] !=
+                    self.max_generated_output_tokens):
+                raise ValueError('resolved provider output control does not match request')
 
     @classmethod
     def from_dict(cls, value):
