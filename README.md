@@ -41,7 +41,7 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | Concurrent live execution | Worker overlap observed at `b22020c`; that attempt blocked before integration |
 | OpenHarness reuse (R0) | Offline-tested profile, context, protocol and terminal adaptations around the existing controller |
 | Read-only repository intake (R1) | Fixture-tested bounded inspection, hash-bound enrollment and non-executing plans for clean standalone Python libraries |
-| Repository delivery (R2) | Deterministic integration slice; candidate integrity, review independence, adapter construction and verifier/environment defects are corrected offline; durable post-login workflow continuation and live validation remain open |
+| Repository delivery (R2) | Deterministic integration slice; corrective boundaries and durable stage-specific authentication resume are fixture-tested; live repository-provider validation remains open |
 | Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
 
@@ -166,7 +166,7 @@ python3 -m agentkit project --help
 
 Inspection runs no project code, hooks, filters, installers or inference. Enrollment records a profile and content hashes; planning revalidates the repository and remains non-executing. Unsupported Git layouts, dirty baselines, symlinks and transforms fail closed. See the [R1 guide](docs/r1-project-intake.md).
 
-R2 adds independent reconstruction into controller-owned Git storage, prepared-environment checks, protected acceptance and a local package using deterministic providers. It has no complete end-user execution CLI or verified live repository-provider path. The corrective branch closes candidate revalidation, cross-provider enforcement, actual adapter construction, verifier placement and interpreter dependency detection offline. Authentication failures now create safe checkpoints, but the repository workflow still lacks durable stage-specific continuation after login. File additions/deletions/renames, dependency installation and applying changes to the original checkout remain unsupported. See the [R2 report](docs/r2-validation-report.md).
+R2 adds independent reconstruction into controller-owned Git storage, prepared-environment checks, protected acceptance and a local package using deterministic providers. It has no complete end-user execution CLI or verified live repository-provider path. The corrective work closes candidate revalidation, cross-provider enforcement, actual adapter construction, verifier placement and interpreter dependency detection offline. Authentication failures create safe checkpoints; a reopened workflow revalidates the candidate and resumes only implementation or review while preserving completed verification. File additions/deletions/renames, dependency installation and applying changes to the original checkout remain unsupported. See the [R2 report](docs/r2-validation-report.md).
 
 ## Live CLI integration
 

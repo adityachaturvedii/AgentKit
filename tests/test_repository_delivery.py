@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from agentkit.controller import ControllerError, UsageRecord
+from agentkit.controller import ControllerError, StaleEvidence, UsageRecord
 from agentkit.delivery import EngineOutcome, LiveImplementer, LiveReviewer
 from agentkit.git_broker import GitBroker
 from agentkit.doctor import native_sandbox_capability
@@ -88,6 +88,16 @@ class RepositoryDeliveryTests(unittest.TestCase):
     def manifest(root):
         return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
                 for path in sorted(Path(root).rglob('*')) if path.is_file() and not path.is_symlink()}
+
+    @staticmethod
+    def complete_login(workflow, task_id, provider):
+        claim = workflow.store.claim_authentication_login(
+            task_id, provider, owner_pid=12345, owner_nonce='fixture-owner',
+            authority=workflow.store.authority)
+        workflow.store.finish_authentication_login(
+            claim['session_id'], 'succeeded', auth_mode='subscription',
+            reason='authenticated', owner_nonce=claim['owner_nonce'],
+            authority=workflow.store.authority)
 
     def test_import_reconstructs_bytes_modes_and_unicode_without_source_changes_or_links(self):
         source = self.repository()
@@ -221,7 +231,7 @@ class RepositoryDeliveryTests(unittest.TestCase):
         self.assertFalse(package['approval']['recorded'])
         self.assertEqual(len(package['resources']['executions']), 3)
         self.assertEqual(package['resources']['billing'],
-                         'unknown; no live provider used in this workflow')
+                         'unknown; provider billing is not reported by this workflow')
         self.assertEqual(self.manifest(source), original)
         self.assertEqual(len(implementer.handoffs), 1)
         handoff = implementer.handoffs[0]
@@ -318,6 +328,198 @@ class RepositoryDeliveryTests(unittest.TestCase):
         evidence = {item['evidence_id']: item for item in result['snapshot']['evidence']}
         self.assertEqual(evidence['verification-0']['status'], 'passed')
         self.assertFalse(evidence['verification-0']['stale'])
+
+    def test_reopen_and_resume_only_authenticated_implementation_stage(self):
+        source = self.repository('resume-implementation')
+        registry, record = self.enrollment(source, 'resume-implementation-state')
+        calls = []
+
+        def transport(request, output, boundary, *, policy, cancel_event=None):
+            calls.append(request.task_id)
+            if len(calls) == 1:
+                return ExecutionResult(
+                    request.engine, request.task_id, 'failed', 'authentication', 1, .01,
+                    usage=UsageObservation(source='unavailable'),
+                    provider_details={'authentication_failure': 'expired'})
+            (Path(request.cwd) / 'src/tool.py').write_text(
+                'def normalize(value):\n    return value.strip()\n')
+            return ExecutionResult(request.engine, request.task_id, 'succeeded', None, 0, .01,
+                                   usage=UsageObservation(source='fixture'))
+
+        implementer = LiveImplementer('codex')
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        root = self.root / 'resume-implementation-run'
+        workflow = RepositoryDeliveryWorkflow(
+            root, registry, record['project_id'], implementer, DeterministicReviewer(),
+            placeholder, execution_authorized=True,
+            live_policy=LivePolicy(True, 'fixture authorization'))
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        protected = ('import unittest\nfrom tool import normalize\nclass A(unittest.TestCase):\n'
+                     ' def test_edges(self): self.assertEqual(normalize(" x "), "x")\n')
+        with mock.patch('agentkit.delivery.execute_owned_code', side_effect=transport):
+            paused = workflow.run(
+                'resume-implementation-task', 'Fix normalize whitespace handling.', protected)
+            self.assertEqual(paused['task']['state'], 'authentication_required')
+            self.complete_login(workflow, 'resume-implementation-task', 'codex')
+            reopened = RepositoryDeliveryWorkflow.open(
+                root, registry, record['project_id'], implementer, DeterministicReviewer(),
+                FixtureRepositoryVerifier(workflow.broker), execution_authorized=True,
+                live_policy=LivePolicy(True, 'fixture authorization'))
+            reopened.verifier = FixtureRepositoryVerifier(reopened.broker)
+            completed = reopened.resume_after_authentication('resume-implementation-task')
+        self.assertEqual(completed['task']['state'], 'awaiting_pr_approval')
+        self.assertEqual(len(calls), 2)
+        roles = [item['role'] for item in completed['snapshot']['executions']]
+        self.assertEqual(roles, ['implementer', 'implementer', 'verification', 'reviewer'])
+
+    def test_reopen_reviewer_resume_preserves_completed_implementation_and_verification(self):
+        source = self.repository('resume-review')
+        registry, record = self.enrollment(source, 'resume-review-state')
+        calls = []
+
+        def transport(request, output, *, policy, cancel_event=None):
+            calls.append(request.task_id)
+            if len(calls) == 1:
+                return ExecutionResult(
+                    request.engine, request.task_id, 'failed', 'authentication', 1, .01,
+                    usage=UsageObservation(source='unavailable'),
+                    provider_details={'authentication_failure': 'expired'})
+            return ExecutionResult(
+                request.engine, request.task_id, 'succeeded', None, 0, .01,
+                structured_output={'verdict': 'no_findings', 'findings': []},
+                usage=UsageObservation(source='fixture'))
+
+        reviewer = LiveReviewer('claude')
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        root = self.root / 'resume-review-run'
+        workflow = RepositoryDeliveryWorkflow(
+            root, registry, record['project_id'], FixNormalizeImplementer(), reviewer,
+            placeholder, execution_authorized=True,
+            live_policy=LivePolicy(True, 'fixture authorization'))
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        protected = ('import unittest\nfrom tool import normalize\nclass A(unittest.TestCase):\n'
+                     ' def test_edges(self): self.assertEqual(normalize(" x "), "x")\n')
+        with mock.patch('agentkit.delivery.execute', side_effect=transport):
+            paused = workflow.run(
+                'resume-review-task', 'Fix normalize whitespace handling.', protected)
+            before = [item['role'] for item in paused['snapshot']['executions']]
+            self.assertEqual(before, ['implementer', 'verification', 'reviewer'])
+            self.complete_login(workflow, 'resume-review-task', 'claude')
+            reopened = RepositoryDeliveryWorkflow.open(
+                root, registry, record['project_id'], FixNormalizeImplementer(), reviewer,
+                FixtureRepositoryVerifier(workflow.broker), execution_authorized=True,
+                live_policy=LivePolicy(True, 'fixture authorization'))
+            reopened.verifier = FixtureRepositoryVerifier(reopened.broker)
+            completed = reopened.resume_after_authentication('resume-review-task')
+        self.assertEqual(completed['task']['state'], 'awaiting_pr_approval')
+        roles = [item['role'] for item in completed['snapshot']['executions']]
+        self.assertEqual(roles, ['implementer', 'verification', 'reviewer', 'reviewer'])
+        self.assertEqual(len(calls), 2)
+        evidence = [item['evidence_id'] for item in completed['snapshot']['evidence']]
+        self.assertEqual(evidence.count('verification-0'), 1)
+
+    def test_reopen_resume_rejects_changed_actual_candidate(self):
+        source = self.repository('resume-stale')
+        registry, record = self.enrollment(source, 'resume-stale-state')
+
+        def authentication_failure(request, output, boundary, *, policy, cancel_event=None):
+            return ExecutionResult(
+                request.engine, request.task_id, 'failed', 'authentication', 1, .01,
+                usage=UsageObservation(source='unavailable'),
+                provider_details={'authentication_failure': 'expired'})
+
+        implementer = LiveImplementer('codex')
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        root = self.root / 'resume-stale-run'
+        workflow = RepositoryDeliveryWorkflow(
+            root, registry, record['project_id'], implementer, DeterministicReviewer(),
+            placeholder, execution_authorized=True,
+            live_policy=LivePolicy(True, 'fixture authorization'))
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        with mock.patch('agentkit.delivery.execute_owned_code', side_effect=authentication_failure):
+            workflow.run('resume-stale-task', 'Fix normalize whitespace handling.',
+                         'import unittest\nclass A(unittest.TestCase):\n def test_ok(self): self.assertTrue(True)\n')
+        self.complete_login(workflow, 'resume-stale-task', 'codex')
+        task = workflow.store.task('resume-stale-task')
+        (Path(task['worktree']) / 'README.md').write_text('changed after login\n')
+        reopened = RepositoryDeliveryWorkflow.open(
+            root, registry, record['project_id'], implementer, DeterministicReviewer(),
+            FixtureRepositoryVerifier(workflow.broker), execution_authorized=True,
+            live_policy=LivePolicy(True, 'fixture authorization'))
+        with self.assertRaisesRegex(StaleEvidence, 'candidate repository identity'):
+            reopened.resume_after_authentication('resume-stale-task')
+        self.assertEqual(reopened.store.task('resume-stale-task')['state'],
+                         'authentication_required')
+
+    def test_sequential_provider_logins_resume_without_repeating_completed_work(self):
+        source = self.repository('sequential-auth')
+        registry, record = self.enrollment(source, 'sequential-auth-state')
+        implementation_calls = []
+        review_calls = []
+
+        def implementation_transport(request, output, boundary, *, policy, cancel_event=None):
+            implementation_calls.append(request.task_id)
+            if len(implementation_calls) == 1:
+                return ExecutionResult(
+                    request.engine, request.task_id, 'failed', 'authentication', 1, .01,
+                    usage=UsageObservation(source='unavailable'),
+                    provider_details={'authentication_failure': 'expired'})
+            (Path(request.cwd) / 'src/tool.py').write_text(
+                'def normalize(value):\n    return value.strip()\n')
+            return ExecutionResult(request.engine, request.task_id, 'succeeded', None, 0, .01,
+                                   usage=UsageObservation(source='fixture'))
+
+        def review_transport(request, output, *, policy, cancel_event=None):
+            review_calls.append(request.task_id)
+            if len(review_calls) == 1:
+                return ExecutionResult(
+                    request.engine, request.task_id, 'failed', 'authentication', 1, .01,
+                    usage=UsageObservation(source='unavailable'),
+                    provider_details={'authentication_failure': 'expired'})
+            return ExecutionResult(
+                request.engine, request.task_id, 'succeeded', None, 0, .01,
+                structured_output={'verdict': 'no_findings', 'findings': []},
+                usage=UsageObservation(source='fixture'))
+
+        implementer = LiveImplementer('codex')
+        reviewer = LiveReviewer('claude')
+        placeholder = type('Placeholder', (), {'engine': 'fixture-local', 'model': 'placeholder'})()
+        root = self.root / 'sequential-auth-run'
+        workflow = RepositoryDeliveryWorkflow(
+            root, registry, record['project_id'], implementer, reviewer, placeholder,
+            execution_authorized=True, live_policy=LivePolicy(True, 'fixture authorization'))
+        workflow.verifier = FixtureRepositoryVerifier(workflow.broker)
+        protected = ('import unittest\nfrom tool import normalize\nclass A(unittest.TestCase):\n'
+                     ' def test_edges(self): self.assertEqual(normalize(" x "), "x")\n')
+        with mock.patch('agentkit.delivery.execute_owned_code', side_effect=implementation_transport), \
+                mock.patch('agentkit.delivery.execute', side_effect=review_transport):
+            first = workflow.run(
+                'sequential-auth-task', 'Fix normalize whitespace handling.', protected)
+            self.assertEqual(first['task']['state'], 'authentication_required')
+            self.complete_login(workflow, 'sequential-auth-task', 'codex')
+            reopened = RepositoryDeliveryWorkflow.open(
+                root, registry, record['project_id'], implementer, reviewer,
+                FixtureRepositoryVerifier(workflow.broker), execution_authorized=True,
+                live_policy=LivePolicy(True, 'fixture authorization'))
+            reopened.verifier = FixtureRepositoryVerifier(reopened.broker)
+            second = reopened.resume_after_authentication('sequential-auth-task')
+            self.assertEqual(second['task']['state'], 'authentication_required')
+            self.assertEqual(second['snapshot']['evidence'][0]['evidence_id'], 'verification-0')
+            self.complete_login(reopened, 'sequential-auth-task', 'claude')
+            final = RepositoryDeliveryWorkflow.open(
+                root, registry, record['project_id'], implementer, reviewer,
+                FixtureRepositoryVerifier(reopened.broker), execution_authorized=True,
+                live_policy=LivePolicy(True, 'fixture authorization'))
+            final.verifier = FixtureRepositoryVerifier(final.broker)
+            completed = final.resume_after_authentication('sequential-auth-task')
+        self.assertEqual(completed['task']['state'], 'awaiting_pr_approval')
+        self.assertEqual(len(implementation_calls), 2)
+        self.assertEqual(len(review_calls), 2)
+        self.assertEqual(len(final.store.authentication_checkpoint_history(
+            'sequential-auth-task')), 2)
+        roles = [item['role'] for item in completed['snapshot']['executions']]
+        self.assertEqual(roles, ['implementer', 'implementer', 'verification',
+                                 'reviewer', 'reviewer'])
 
     def test_cross_provider_review_policy_rejects_same_provider(self):
         source = self.repository('cross-provider')
