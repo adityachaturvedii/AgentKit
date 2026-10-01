@@ -1,3 +1,3 @@
-"""Offline portable skill foundation. No execution controller is included."""
+"""AgentKit: bounded engineering-agent orchestration and delivery evidence."""
 
 __version__ = "0.1.0"

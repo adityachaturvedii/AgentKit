@@ -172,11 +172,12 @@ class RuntimeTests(unittest.TestCase):
             {'type': 'turn.completed', 'usage': {}}
         ]
         raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
-        self.assertIsNone(stop_on_limit(raw, b'', allow_tools=True))
+        self.assertIsNone(stop_on_limit(raw, b'', ('Read', 'Edit', 'Write', 'Bash')))
         self.assertEqual(normalize(request, ProcessOutcome(raw, b'', 0, .01, None, CancellationStatus())).status, 'succeeded')
         events[0]['item']['type'] = 'mcp_tool_call'
         raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
-        self.assertEqual(stop_on_limit(raw, b'', allow_tools=True), 'unexpected_tools')
+        self.assertEqual(stop_on_limit(raw, b'', ('Read', 'Edit', 'Write', 'Bash')),
+                         'unexpected_tools')
 
     def test_owned_acceptance_requires_successful_provider_test_record(self):
         artifact = self.root / 'stdout.redacted.jsonl'
@@ -244,7 +245,7 @@ class RuntimeTests(unittest.TestCase):
 
     def test_request_rejects_policy_injection_and_invalid_bounds(self):
         args = dict(engine='codex', task_id='fixture', prompt='test', cwd=str(self.root))
-        for key, value in [('timeout_seconds', float('nan')), ('timeout_seconds', 301),
+        for key, value in [('timeout_seconds', float('nan')), ('timeout_seconds', -1),
                            ('max_output_bytes', True), ('schema_version', 2), ('cwd', 'relative')]:
             with self.assertRaises(ValueError):
                 ExecutionRequest.from_dict(dict(args, **{key: value}))
@@ -268,7 +269,9 @@ class RuntimeTests(unittest.TestCase):
             self.request('claude', effort='ultra')
         self.assertEqual(self.request('claude', max_generated_output_tokens=8192).
                          max_generated_output_tokens, 8192)
-        for value in (True, 0, 255, 8193, float('inf')):
+        self.assertEqual(self.request('claude', max_generated_output_tokens=65536).
+                         max_generated_output_tokens, 65536)
+        for value in (True, 0, -1, float('inf')):
             with self.assertRaisesRegex(ValueError, 'generated-output token allocation'):
                 self.request('claude', max_generated_output_tokens=value)
         with self.assertRaisesRegex(ValueError, 'generated-output token allocation'):
@@ -363,12 +366,14 @@ class RuntimeTests(unittest.TestCase):
                 self.assertEqual(args[args.index('--sandbox') + 1], 'danger-full-access')
                 self.assertNotIn('features.shell_tool=false', args)
             else:
-                self.assertEqual(args[args.index('--tools') + 1], 'Read,Edit,Bash')
+                self.assertEqual(args[args.index('--tools') + 1], 'Read,Edit,Write,Bash')
                 settings = json.loads(args[args.index('--settings') + 1])
                 self.assertFalse(settings['sandbox']['enabled'])
                 self.assertFalse(settings['sandbox']['failIfUnavailable'])
                 self.assertFalse(settings['sandbox']['allowUnsandboxedCommands'])
                 self.assertTrue(settings['permissions']['blockReadsOutsideWorkingDirectories'])
+                self.assertNotIn('Bash', settings['permissions']['allow'])
+                self.assertIn('Bash(python3 -B -m unittest*)', settings['permissions']['allow'])
                 self.assertIn('--session-id', args)
 
     def test_allowed_rate_metadata_and_identifier_digits_are_not_errors(self):
@@ -379,9 +384,32 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(stop_on_limit((json.dumps(event) + '\n').encode(), b''), 'usage_limit')
 
     def test_reported_retries_and_effective_tools_stop_early(self):
-        self.assertEqual(stop_on_limit(b'', b'Reconnecting... 1/5'), 'retry_requested')
+        self.assertIsNone(stop_on_limit(b'', b'Reconnecting... 1/5'))
         raw = b'{"type":"system","subtype":"init","tools":["Bash"]}\n'
         self.assertEqual(stop_on_limit(raw, b''), 'unexpected_tools')
+
+    def test_stopped_authentication_launch_preserves_complete_terminal_usage(self):
+        events = [
+            {'type': 'system', 'subtype': 'api_retry', 'attempt': 1,
+             'error_status': 401},
+            {'type': 'system', 'subtype': 'api_retry', 'attempt': 2,
+             'error_status': 401},
+            {'type': 'result', 'subtype': 'success', 'is_error': True,
+             'result': 'Failed to authenticate. API Error: 401', 'num_turns': 1,
+             'usage': {'input_tokens': 0, 'output_tokens': 0,
+                       'cache_read_input_tokens': 0,
+                       'cache_creation_input_tokens': 0},
+             'total_cost_usd': 0, 'modelUsage': {}}]
+        raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
+        outcome = ProcessOutcome(raw, b'', 1, .1, 'authentication',
+                                 CancellationStatus())
+        result = normalize(self.request('claude'), outcome)
+        self.assertEqual((result.status, result.error_class),
+                         ('failed', 'authentication'))
+        self.assertEqual((result.usage.input_tokens, result.usage.output_tokens), (0, 0))
+        self.assertEqual(result.usage.estimated_cost_usd, 0)
+        self.assertEqual(result.provider_details['observed_retry_events'], 2)
+        self.assertEqual(result.provider_details['reported_turns'], 1)
 
     def test_managed_adapter_pipeline_with_fake_subscription_cli(self):
         from agentkit.doctor import COMPATIBLE, REQUIRED
@@ -390,7 +418,8 @@ class RuntimeTests(unittest.TestCase):
             cwd.mkdir()
             request = ExecutionRequest(
                 engine, 'managed-fixture', 'synthetic', str(cwd),
-                max_generated_output_tokens=8192 if engine == 'claude' else None)
+                capability_profile='smoke-model-only',
+                max_generated_output_tokens=512 if engine == 'claude' else None)
             cap = EngineCapabilities(engine, '/fake/cli', COMPATIBLE[engine], 'fixture-hash',
                   {flag: Capability('verified', 'fixture') for flag in REQUIRED[engine]},
                   Capability('verified', 'fixture subscription'), authentication_mode='subscription')
@@ -401,7 +430,8 @@ class RuntimeTests(unittest.TestCase):
                 self.assertNotIn('OPENAI_API_KEY', kw['env'])
                 if engine == 'claude':
                     self.assertEqual(kw['env']['CLAUDE_CODE_MAX_RETRIES'], '0')
-                    self.assertEqual(kw['env']['CLAUDE_CODE_MAX_OUTPUT_TOKENS'], '8192')
+                    self.assertEqual(kw['env']['CLAUDE_CODE_MAX_TURNS'], '1')
+                    self.assertEqual(kw['env']['CLAUDE_CODE_MAX_OUTPUT_TOKENS'], '512')
                 return actual_transport([sys.executable, FIXTURE, engine, 'success'], **kw)
             with patch('agentkit.adapters.native_sandbox_capability', return_value=Capability('verified', 'fixture')), \
                  patch('agentkit.adapters.detect_engine', return_value=cap), \
@@ -409,6 +439,11 @@ class RuntimeTests(unittest.TestCase):
                 result = execute(request, self.root / (engine + '-result'), policy=LivePolicy(True, 'fixture only'))
             self.assertTrue(acceptance(result, [17, 25])['passed'])
             self.assertTrue((self.root / (engine + '-result') / 'stdout.redacted.jsonl').is_file())
+            launch = result.provider_details['launch_configuration']
+            self.assertFalse(launch['environment_values_recorded'])
+            self.assertEqual(launch['provider_limit_environment']
+                             ['CLAUDE_CODE_MAX_OUTPUT_TOKENS'],
+                             'set' if engine == 'claude' else 'unset')
 
 
 if __name__ == '__main__':

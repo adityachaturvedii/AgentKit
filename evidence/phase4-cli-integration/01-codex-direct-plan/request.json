@@ -1,0 +1,35 @@
+{
+  "engine": "codex",
+  "task_id": "checkpoint-direct-plan",
+  "cwd": "/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/codex-direct-plan",
+  "timeout_seconds": 180.0,
+  "max_output_bytes": 1048576,
+  "model": null,
+  "effort": null,
+  "mode": "model-only",
+  "capability_profile": "structured-planning",
+  "max_generated_output_tokens": null,
+  "resource_resolution": {
+    "timeout_seconds": {
+      "value": 180.0,
+      "source": "task-override",
+      "classification": "enforced",
+      "rationale": "Controller wall-clock process deadline."
+    },
+    "max_capture_bytes": {
+      "value": 1048576,
+      "source": "role-policy",
+      "classification": "enforced",
+      "rationale": "Controller transport capture bound; not a generated-token limit."
+    },
+    "generated_output_tokens": {
+      "value": null,
+      "source": "provider-default",
+      "classification": "observable-only",
+      "rationale": "Unset: provider behavior and effective ceiling are unknown."
+    }
+  },
+  "schema_version": 1,
+  "prompt_sha256": "33f7a49da5dd7c3ccb046d5006ea4942bd93307522696c8b642dc3e75cdf2dee",
+  "prompt_bytes": 716
+}

@@ -12,6 +12,7 @@ from .doctor import (COMPATIBLE, REQUIRED, clean_environment, detect_engine,
                      native_sandbox_capability, owned_code_profile, readonly_profile)
 from .process import run_process
 from .redaction import redact, redacted_stream
+from .resource_policy import capability_profile, provider_control_support
 from .runtime_contracts import ExecutionBoundary, ExecutionResult, LivePolicy, UsageObservation
 from .validation import _pairs, _depth
 
@@ -106,7 +107,8 @@ class CodexAdapter:
         argv.append('-')
         return argv
 
-    def parse(self, events, result, allow_tools=False):
+    def parse(self, events, result, allowed_tools=()):
+        allow_tools = bool(allowed_tools)
         finals = []
         for event in events:
             kind = event.get('type')
@@ -142,6 +144,7 @@ class ClaudeAdapter:
 
     def argv(self, executable, request, runtime, boundary=None, session_id=None):
         owned = request.mode == 'owned-code'
+        profile = capability_profile(request.capability_profile, request.mode)
         filesystem = {'disabled': False}
         if owned:
             filesystem['denyRead'] = list(boundary.denied_read_paths)
@@ -152,8 +155,9 @@ class ClaudeAdapter:
                                 'excludedCommands': [], 'filesystem': filesystem,
                                 'network': {'allowedDomains': [], 'allowLocalBinding': False}},
                     'permissions': ({'defaultMode': 'dontAsk', 'blockReadsOutsideWorkingDirectories': True,
-                                     'allow': ['Read', 'Edit', 'Bash(python3 -B -m unittest -v)'],
-                                     'deny': ['Write', 'WebFetch', 'WebSearch', 'Agent']}
+                                     'allow': [tool for tool in profile.tools if tool != 'Bash'] +
+                                              list(profile.bash_rules),
+                                     'deny': ['WebFetch', 'WebSearch', 'Agent']}
                                     if owned else
                                     {'defaultMode': 'dontAsk', 'deny': ['Bash', 'Read', 'Write', 'Edit', 'WebFetch', 'WebSearch', 'Agent']})}
         argv = [executable, '--print', '--output-format', 'stream-json', '--verbose', '--safe-mode',
@@ -161,7 +165,7 @@ class ClaudeAdapter:
                 '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--disable-slash-commands',
                 '--no-session-persistence', '--no-chrome', '--permission-mode', 'dontAsk']
         if owned:
-            argv[argv.index('--tools') + 1] = 'Read,Edit,Bash'
+            argv[argv.index('--tools') + 1] = ','.join(profile.tools)
             argv.extend(['--session-id', session_id])
         if request.model:
             argv.extend(['--model', request.model])
@@ -169,14 +173,17 @@ class ClaudeAdapter:
             argv.extend(['--effort', request.effort])
         return argv
 
-    def parse(self, events, result, allow_tools=False):
+    def parse(self, events, result, allowed_tools=()):
+        allowed_tools = set(allowed_tools)
+        allow_tools = bool(allowed_tools)
         finals = []
+        retry_events = 0
         for event in events:
             if event.get('type') == 'assistant':
                 message = event.get('message', {})
                 if isinstance(message, dict) and isinstance(message.get('content'), list):
                     tool_names = [part.get('name') for part in message['content'] if isinstance(part, dict) and part.get('type') in ('tool_use', 'server_tool_use')]
-                    if tool_names and (not allow_tools or any(name not in ('Read', 'Edit', 'Bash') for name in tool_names)):
+                    if tool_names and (not allow_tools or any(name not in allowed_tools for name in tool_names)):
                         result.status, result.error_class = 'failed', 'unexpected_tools'
             if event.get('type') == 'system' and event.get('subtype') == 'init':
                 result.session_id = event.get('session_id')
@@ -184,9 +191,11 @@ class ClaudeAdapter:
                 # Record actual advertised runtime surfaces, not just requested flags.
                 result.provider_details['tools'] = event.get('tools')
                 result.provider_details['mcp_servers'] = event.get('mcp_servers')
-                allowed_advertised = set(event.get('tools') or ()) <= {'Read', 'Edit', 'Bash'}
+                allowed_advertised = set(event.get('tools') or ()) <= allowed_tools
                 if event.get('mcp_servers') or (event.get('tools') and (not allow_tools or not allowed_advertised)):
                     result.status, result.error_class = 'failed', 'unexpected_tools'
+            if event.get('type') == 'system' and event.get('subtype') == 'api_retry':
+                retry_events += 1
             if event.get('type') == 'result':
                 finals.append(event)
         if not finals:
@@ -209,6 +218,8 @@ class ClaudeAdapter:
             result.usage.final = True
         result.usage.provider_details['model_usage'] = redact(final.get('modelUsage'))
         result.provider_details['terminal_type'] = final.get('subtype')
+        result.provider_details['observed_retry_events'] = retry_events
+        result.provider_details['reported_turns'] = _count(final.get('num_turns'))
 
 
 ADAPTERS = {'codex': CodexAdapter(), 'claude': ClaudeAdapter()}
@@ -234,8 +245,8 @@ def normalize(request, outcome):
             if not isinstance(value, dict) or not isinstance(value.get('type'), str):
                 raise ValueError('event must be typed object')
             events.append(value)
-        if not outcome.stop_reason:
-            ADAPTERS[request.engine].parse(events, result, allow_tools=request.mode == 'owned-code')
+        profile = capability_profile(request.capability_profile, request.mode)
+        ADAPTERS[request.engine].parse(events, result, allowed_tools=profile.tools)
     except IncompleteStream:
         if not outcome.stop_reason:
             result.status, result.error_class = 'failed', 'truncated_output'
@@ -273,14 +284,14 @@ def normalize(request, outcome):
     return result
 
 
-def stop_on_limit(stdout, stderr, allow_tools=False):
+def stop_on_limit(stdout, stderr, allowed_tools=()):
     """Stop explicit failure events, not benign rate-limit metadata or IDs."""
+    allowed_tools = set(allowed_tools)
+    allow_tools = bool(allowed_tools)
     diagnostic = stderr.decode('utf-8', 'replace')
     category = error_class(diagnostic)
     if category in ('usage_limit', 'rate_limit', 'authentication'):
         return category
-    if 'reconnecting' in diagnostic.lower() or 'retrying' in diagnostic.lower():
-        return 'retry_requested'
     # Only complete JSONL records; a chunk may end midway through a string.
     for line in stdout.split(b'\n')[:-1]:
         try:
@@ -296,7 +307,7 @@ def stop_on_limit(stdout, stderr, allow_tools=False):
                 return 'usage_limit'
             continue
         if kind == 'system' and event.get('subtype') == 'init' and (event.get('mcp_servers') or
-                (event.get('tools') and (not allow_tools or not set(event.get('tools', ())) <= {'Read', 'Edit', 'Bash'}))):
+                (event.get('tools') and (not allow_tools or not set(event.get('tools', ())) <= allowed_tools))):
             return 'unexpected_tools'
         if kind in ('item.started', 'item.completed') and isinstance(event.get('item'), dict):
             allowed = ('agent_message', 'reasoning', 'error', 'command_execution', 'file_change') if allow_tools else ('agent_message', 'reasoning', 'error')
@@ -305,16 +316,48 @@ def stop_on_limit(stdout, stderr, allow_tools=False):
         if kind == 'assistant' and isinstance(event.get('message'), dict):
             content = event['message'].get('content')
             names = [part.get('name') for part in content or () if isinstance(part, dict) and part.get('type') in ('tool_use', 'server_tool_use')]
-            if names and (not allow_tools or any(name not in ('Read', 'Edit', 'Bash') for name in names)):
+            if names and (not allow_tools or any(name not in allowed_tools for name in names)):
                 return 'unexpected_tools'
         if kind in ('error', 'turn.failed') or (kind == 'result' and event.get('is_error')):
             description = json.dumps(event)
             category = error_class(description)
             if category in ('usage_limit', 'rate_limit', 'authentication'):
                 return category
-            if 'reconnecting' in description.lower() or 'retrying' in description.lower():
-                return 'retry_requested'
     return None
+
+
+def _provider_control_problem(request):
+    if request.max_generated_output_tokens is None:
+        return None
+    profile = capability_profile(request.capability_profile, request.mode)
+    support = provider_control_support(request.engine, 'generated_output_tokens')
+    if profile.profile_id == 'smoke-model-only' and request.engine == 'claude':
+        return None
+    return ('The requested generated-output control is ' + support['classification'] +
+            ' for this installed CLI and is not permitted for productive execution: ' +
+            support['evidence'])
+
+
+def _apply_fixture_smoke_environment(request, env):
+    profile = capability_profile(request.capability_profile, request.mode)
+    if profile.profile_id == 'smoke-model-only' and request.engine == 'claude':
+        # These are deliberately confined to the tiny Phase 2 diagnostic. They
+        # are absent from installed help and are not productive provider policy.
+        env.update(CLAUDE_CODE_MAX_RETRIES='0', CLAUDE_CODE_MAX_TURNS='1',
+                   CLAUDE_CODE_MAX_OUTPUT_TOKENS=str(
+                       request.max_generated_output_tokens or 512))
+
+
+def _launch_metadata(argv, env):
+    provider_keys = ('CLAUDE_CODE_MAX_OUTPUT_TOKENS', 'CLAUDE_CODE_MAX_TURNS',
+                     'CLAUDE_CODE_MAX_RETRIES')
+    return {
+        'argv': redact(list(argv)),
+        'environment_keys': sorted(env),
+        'provider_limit_environment': {
+            name: 'set' if name in env else 'unset' for name in provider_keys},
+        'environment_values_recorded': False,
+    }
 
 
 def persist_result(directory, request, result, outcome=None):
@@ -356,6 +399,9 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
         return blocked('billing_policy', 'No trusted authorization for an existing-subscription smoke. No process launched.')
     if request.mode != 'model-only':
         return blocked('unsupported_isolation', 'Owned-code and untrusted tool execution remain unsupported until effective credential/tool boundaries are proven.')
+    control_problem = _provider_control_problem(request)
+    if control_problem:
+        return blocked('unsupported_provider_control', control_problem)
     sandbox = native_sandbox_capability()
     if sandbox.state != 'verified':
         return blocked('sandbox_unavailable', sandbox.evidence)
@@ -376,10 +422,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
         argv = ADAPTERS[request.engine].argv(cap.executable, request, runtime)
         env = clean_environment()
         env['TMPDIR'] = tmp
-        if request.engine == 'claude':
-            env.update(CLAUDE_CODE_MAX_RETRIES='0', CLAUDE_CODE_MAX_TURNS='1',
-                       CLAUDE_CODE_MAX_OUTPUT_TOKENS=str(
-                           request.max_generated_output_tokens or 512))
+        _apply_fixture_smoke_environment(request, env)
         # Whole CLI: deny global writes. Native tools disabled; this does NOT isolate
         # the authenticated process from credentials it must read for its own login.
         startup_write = ()
@@ -394,11 +437,22 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
                                                                   literal_write_paths=startup_write)]
         outcome = run_process(prefix + argv, cwd=str(cwd), env=env, stdin=request.prompt.encode(),
                               timeout=request.timeout_seconds, max_bytes=request.max_output_bytes,
-                              cancel_event=cancel_event, stop_predicate=stop_on_limit)
+                              cancel_event=cancel_event,
+                              stop_predicate=lambda stdout, stderr: stop_on_limit(
+                                  stdout, stderr,
+                                  capability_profile(request.capability_profile,
+                                                     request.mode).tools))
         result = normalize(request, outcome)
         result.provider_details.update(version=cap.version, executable_sha256=cap.executable_sha256,
                                        authentication='subscription-reported', paid_overflow='unknown',
-                                       authorization=policy.evidence, managed_mode='model-only')
+                                       authorization=policy.evidence, managed_mode='model-only',
+                                       capability_profile=capability_profile(
+                                           request.capability_profile, request.mode).profile_id,
+                                       resource_resolution=request.resource_resolution,
+                                       launch_configuration=_launch_metadata(argv, env),
+                                       execution_counts={'cli_launches': 1,
+                                                         'provider_requests': None,
+                                                         'turns': None})
         if startup_write:
             installation_after = _file_fingerprint(startup_write[0])
             result.provider_details['installation_id_integrity'] = {
@@ -436,6 +490,9 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
         return blocked('billing_policy', 'No trusted authorization for an existing-subscription smoke. No process launched.')
     if request.mode != 'owned-code':
         return blocked('unsupported_isolation', 'This entry point only supports disposable owned-code mode.')
+    control_problem = _provider_control_problem(request)
+    if control_problem:
+        return blocked('unsupported_provider_control', control_problem)
     requested_workspace = Path(request.cwd)
     workspace = requested_workspace.resolve()
     if (workspace != Path(boundary.workspace).resolve() or not workspace.is_dir() or
@@ -485,12 +542,11 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
         if request.engine == 'codex':
             env['CODEX_INSTALL_DIR'] = str(runtime / 'install')
         else:
-            env.update(CLAUDE_CODE_TMPDIR=str(runtime), CLAUDE_TMPDIR=str(runtime),
-                       CLAUDE_CODE_MAX_RETRIES='0', CLAUDE_CODE_MAX_TURNS='8',
-                       CLAUDE_CODE_MAX_OUTPUT_TOKENS=str(
-                           request.max_generated_output_tokens or 2048))
+            env.update(CLAUDE_CODE_TMPDIR=str(runtime), CLAUDE_TMPDIR=str(runtime))
         profile = owned_code_profile(runtime, workspace, denied, write_exceptions, network=True)
-        predicate = lambda stdout, stderr: stop_on_limit(stdout, stderr, allow_tools=True)
+        selected_profile = capability_profile(request.capability_profile, request.mode)
+        predicate = lambda stdout, stderr: stop_on_limit(
+            stdout, stderr, selected_profile.tools)
         outcome = run_process(['/usr/bin/sandbox-exec', '-p', profile] + argv,
                               cwd=str(workspace), env=env, stdin=request.prompt.encode(),
                               timeout=request.timeout_seconds, max_bytes=request.max_output_bytes,
@@ -499,7 +555,13 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
         result.provider_details.update(version=cap.version, executable_sha256=cap.executable_sha256,
                                        authentication='subscription-reported', paid_overflow='unknown',
                                        authorization=policy.evidence, managed_mode='external-seatbelt-owned-code',
-                                       denied_read_paths=[str(p) for p in denied])
+                                       denied_read_paths=[str(p) for p in denied],
+                                       capability_profile=selected_profile.profile_id,
+                                       resource_resolution=request.resource_resolution,
+                                       launch_configuration=_launch_metadata(argv, env),
+                                       execution_counts={'cli_launches': 1,
+                                                         'provider_requests': None,
+                                                         'turns': None})
         if request.engine == 'codex':
             installation_after = _file_fingerprint(write_exceptions[0])
             result.provider_details['installation_id_integrity'] = {

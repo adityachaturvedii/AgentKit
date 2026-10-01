@@ -1,4 +1,4 @@
-# Portable Agentkit — skills, bounded CLI adapters and durable local delivery
+# AgentKit — skills, bounded CLI adapters and durable local delivery
 
 A standalone toolkit with ten curated procedures, seven domain references, versioned contracts, source attribution and disposable validation fixtures. Phase 2 adds CLI diagnosis and a narrow trusted disposable-workspace execution mode on the tested macOS host. Phase 3 adds transactional local delivery and authentication recovery. Phase 4 adds request-driven task planning, selective role graphs, bounded concurrent scheduling, explicit provider routing, separate quality reserves and a task-oriented terminal interface for controller-created disposable projects.
 
@@ -26,6 +26,7 @@ python3 -m agentkit task plan --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task start --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task status --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task package --root /tmp/agentkit-task --task-id demo
+python3 -m agentkit reuse-demo --output /tmp/agentkit-r0-demo
 python3 -m agentkit product --help
 ```
 
@@ -47,13 +48,16 @@ Run these commands from this directory. To move machines, copy the entire direct
 | Guided subscription-auth recovery | Implemented with uncaptured official CLI terminal handoff, durable stage checkpoint, bounded retries and revision/evidence revalidation |
 | Cross-provider disposable delivery workflow | Corrected single-assignment path live-tested at executable `342423e`; the concurrent `b22020c` attempt proved two live workers overlap but blocked before integration because of a narrow shell-runtime guard incompatibility |
 | Phase 4 task CLI, request-driven graph, concurrent scheduler, routing and quality reserves | Implemented and fixture-tested for controller-created disposable projects; maximum two supervised provider workers |
-| Provider-planned static web products | Implemented and fixture-tested for fresh dependency-free controller repositories; the first live game trial stopped at the planner output limit |
+| Provider-planned static web products | Implemented and fixture-tested for fresh dependency-free controller repositories; the corrected integration remains blocked on expired Claude OAuth before the next game trial |
 | Browser acceptance gate | Implemented as exact-revision evidence and owned preview lifecycle; browser interaction is externally driven and host validation is pending |
+| OpenHarness R0 reuse slice | Implemented and offline-tested: attributed public profiles, root-bounded context, strict UI events and dependency-free terminal rendering over the existing deterministic controller |
 | General browser automation, CUDA/GPU worker, GitHub publication, installer/update | Not implemented; separate later gates |
 
 The procedures describe desired engineering behavior. They are not enforcement of authenticated roles, monetary ceilings or publication permissions. Git worktrees are not sandboxes. Unattended untrusted execution is unsupported. Managed Linux/WSL2/Windows execution has not been validated; the current guard is macOS-specific.
 
 ## CLI integration scope
+
+`reuse-demo` runs one deterministic calculator workflow through the adapted OpenHarness profile/context/protocol/terminal seam. It makes no provider call and stops at an unapproved local package. The R0 renderer is a dependency-free executable slice, not the full React/Ink TUI; see the [R0 validation report](docs/r0-validation-report.md) and [dependency/license audit](docs/r0-dependency-license-audit.md).
 
 `python3 -m agentkit doctor` reports installed versions, advertised flags, CLI-reported authentication and sandbox initialization without inference or global setting changes. Unknown capability/billing data stays unknown. The diagnostic guard may be unavailable inside another sandbox; no automatic fallback occurs.
 
@@ -79,24 +83,25 @@ Provider defaults are configurable with `--implementer-provider` and `--reviewer
 
 Use the portable account-default example with `--routing-config docs/examples/phase4-routing.json`. Replace an account default with an exact model only after recording current CLI/account availability evidence; configuration is not a discovery mechanism.
 
-The execution graph is bounded to two implementation assignments, two repair cycles and twelve nodes. The controller atomically enforces total calls, provider calls, planning calls, two-worker concurrency, per-stage timeouts, total allocated execution time and captured output. Verification and independent review retain call capacity under concurrent pressure; provider implementation/repair calls also preserve the provider review slot. Output defaults to 1 MiB per request; CLI-managed context remains unknown. Before each provider call, role-relevant skill/domain content is rehashed against the plan and assembled into a bounded context. Token categories, estimates and billed cost remain `null` when unavailable. See [role contracts](docs/phase4-role-contracts.md), [graph, routing and budget semantics](docs/phase4-graph-routing.md) and the [Phase 4 validation report](docs/phase4-validation-report.md).
+The execution graph is bounded to two implementation assignments, two repair cycles and twelve nodes. The controller atomically enforces total calls, provider calls, planning calls, two-worker concurrency, resolved process deadlines, total allocated execution time and captured bytes. Verification and independent review retain call capacity under concurrent pressure. Productive provider output, turn and retry settings are unset unless the installed CLI has a verified control and the task explicitly selects it; provider defaults are not described as unlimited. The historical 512-token Claude setting is confined to the tiny smoke profile, and 8,192 is no longer a universal planner ceiling. Use `python3 -m agentkit resource-policy` to inspect allocation provenance, capability profiles and enforcement classes. Token categories, internal provider-request counts, estimates and billed cost remain unknown when unreported. See [CLI resource policy](docs/cli-resource-policy.md), [role contracts](docs/phase4-role-contracts.md), [graph, routing and budget semantics](docs/phase4-graph-routing.md) and the [Phase 4 validation report](docs/phase4-validation-report.md).
 
 ## Static web product trial
 
 `product submit` is a separate, tightly bounded provider-planning path for a fresh dependency-free static web project. It accounts one planner call, validates the proposal against the brief, protected acceptance, inventory, authority and budget, then reuses the existing scheduler and adapters. Controller verification runs the documented Node syntax build and a protected mechanics test in a separate candidate copy. Exact-revision browser evidence is required after review and before packaging. See the [bounded product workflow](docs/product-workflow.md) for complete commands and limitations.
 
-The first bounded Breakout trial against executable `70070e2` stopped after its sole Claude planning call exceeded the adapter's 512 generated-output-token allocation. No plan, repository, game, verification, review, preview or approval package was produced, and no retry or provider substitution occurred. The retained archive distinguishes that output-allocation defect from subscription quota and billing observations.
+The first bounded Breakout trial against executable `70070e2` stopped after its sole Claude planning call inherited the smoke profile's 512 generated-output-token allocation. No plan, repository, game, verification, review, preview or approval package was produced. That failure motivated the provider-control audit above: replacing 512 with 8,192 was also incorrect, so productive planning now leaves the unsupported setting unset. A later direct-versus-adapter checkpoint proved both Codex planning paths, then stopped when both Claude implementation paths reported expired OAuth. The updated product plan prioritizes existing-repository delivery and retains Breakout as a later new-product acceptance case; provider integration remains a prerequisite for that trial.
 
 ## Inspect the work
 
+- [Next-release product and engineering plan](docs/planning/README.md): repository-first scope for small teams, substantial OpenHarness reuse, adoption gates and a reviewable implementation backlog. Proposed capabilities are separated from the current executable behavior above.
 - [Implementation checklist](docs/checklist.md), [decision log](docs/decisions.md), [phase requirements](docs/requirements.md), [threat model](docs/threat-model.md)
 - [Source audit](docs/source-audit.md), [exact pins](audit/sources.lock.json), [attribution and notices](THIRD_PARTY_NOTICES.md)
 - [Shared skill contract](docs/skill-contract.md), [handoff formats](contracts/README.md), [domain procedures](domains/README.md)
 - [Validation report](docs/validation-report.md), [local PR proposal](docs/pr-proposal.md)
-- [Phase 2 validation](docs/phase2-validation-report.md), [execution follow-up](docs/phase2-execution-followup.md), [sandbox matrix](docs/sandbox-matrix.md), [CLI source/compatibility review](docs/cli-source-review.md)
+- [Phase 2 validation](docs/phase2-validation-report.md), [execution follow-up](docs/phase2-execution-followup.md), [sandbox matrix](docs/sandbox-matrix.md), [CLI source/compatibility review](docs/cli-source-review.md), [CLI resource policy](docs/cli-resource-policy.md)
 - [Phase 3 controller contracts](docs/controller-contracts.md), [Phase 3 validation](docs/phase3-validation-report.md), [archived evidence](evidence/phase3/manifest.json)
 - [Guided authentication recovery](docs/authentication-recovery.md), [live completion evidence](evidence/phase3-auth-recovery/manifest.json)
-- [Phase 4 CLI guide](docs/phase4-cli-guide.md), [role contracts](docs/phase4-role-contracts.md), [graph and routing](docs/phase4-graph-routing.md), [Phase 4 validation](docs/phase4-validation-report.md), [single-assignment live evidence](evidence/phase4-corrected-live/manifest.json), [concurrent live-attempt evidence](evidence/phase4-concurrent-live/manifest.json)
+- [Phase 4 CLI guide](docs/phase4-cli-guide.md), [role contracts](docs/phase4-role-contracts.md), [graph and routing](docs/phase4-graph-routing.md), [Phase 4 validation](docs/phase4-validation-report.md), [single-assignment live evidence](evidence/phase4-corrected-live/manifest.json), [concurrent live-attempt evidence](evidence/phase4-concurrent-live/manifest.json), [CLI integration checkpoint](evidence/phase4-cli-integration/manifest.json)
 - [Original implementation specification](docs/implementation-spec.md)
 
-The user authorized private GitHub publication on 2026-09-19: [adityachaturvedii/portable-agentkit](https://github.com/adityachaturvedii/portable-agentkit). All three phase branches are preserved; `implementation/phase-2` is the default branch for the latest work. No PR or merge is authorized by that publication request. Earlier validation records describe the local-only state at their recorded dates. Upstream MIT notices cover adapted material; an outbound license for original toolkit code will be chosen before broader distribution.
+The product name is **AgentKit**. The lowercase `agentkit` command and Python module remain stable compatibility identifiers. The repository is [adityachaturvedii/AgentKit](https://github.com/adityachaturvedii/AgentKit); see the [brand migration notes](docs/brand-migration.md). Publication and merge authorization are task-specific. Upstream MIT notices cover adapted material; an outbound license for original toolkit code will be chosen before broader distribution.

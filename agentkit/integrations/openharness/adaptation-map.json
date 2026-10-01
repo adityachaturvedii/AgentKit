@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/HKUDS/OpenHarness",
+    "revision": "9b2efd795c6aa09f88b0c257d269a9e518da6ae7",
+    "license": "MIT",
+    "license_sha256": "dcb4464b75fbeec7fe5e9b13eeadf37a1e813ded33392c6303f091c37da6fa20"
+  },
+  "adaptations": [
+    {
+      "local": "agentkit/integrations/openharness/protocol.py",
+      "local_sha256": "5ffd67990df720459e56ca6a9b7d4dad8067f1d7720b9ced6ca43c7a1863eb76",
+      "upstream": "src/openharness/ui/protocol.py",
+      "upstream_sha256": "5eb25d836f99231b9143f7e17ec72c32265e2bdd783d5ca88d6b1d3a2eb0dd53",
+      "decision": "adapt",
+      "changes": ["removed pydantic and runtime imports", "versioned and byte-bounded messages", "allowlisted controller commands", "removed permission, prompt, tool and approval-like commands"]
+    },
+    {
+      "local": "agentkit/integrations/openharness/profiles.py",
+      "local_sha256": "b798f4ff22fd0b428362ce315d2a711f70ba3acecea2ddadac5268d55cb158c2",
+      "upstream": "src/openharness/config/settings.py",
+      "upstream_sha256": "4c9095e1fa7364686949214ba61c874fbe1d2aca5abba14d93b44e909a466faa",
+      "decision": "adapt",
+      "changes": ["public routing fields only", "content hash enrollment", "task-role-profile provenance", "rejected auth, URL, tool, timeout, retry and token authority fields"]
+    },
+    {
+      "local": "agentkit/integrations/openharness/context.py",
+      "local_sha256": "9c9ed18820ea9f5a9dbc1788067f45373d594301ba47b089ac0fc1da7b4f536c",
+      "upstream": "src/openharness/prompts/claudemd.py",
+      "upstream_sha256": "06d9695c9d2e8a4935bf97e9d724f569951d5b9604a10d831cde12ed544f7d5f",
+      "decision": "adapt",
+      "changes": ["explicit project-root stop", "AGENTS.md support", "symlink and UTF-8 rejection", "source count and total bounds", "hash provenance and advisory label"]
+    },
+    {
+      "local": "agentkit/integrations/openharness/fs.py",
+      "local_sha256": "32492c491dc8cd296ac7839316acf7bade95a4604ed6b1133128c63079500b48",
+      "upstream": "src/openharness/utils/fs.py",
+      "upstream_sha256": "d1f7ae6dce6b3fe5bf3c6ece641dea4973249c05d6f272ab626a5cef65b1d10e",
+      "decision": "adapt",
+      "changes": ["private modes required", "symlink target rejection", "chmod failures are fatal", "parent directory fsync"]
+    },
+    {
+      "local": "frontend/agentkit-terminal/src/renderer.mjs",
+      "local_sha256": "04229430aa8b509b63989529be5e39d855ec4dc8427942799fe6ea3fcf2f681a",
+      "upstream": "frontend/terminal/src/components/StatusBar.tsx",
+      "upstream_sha256": "e3a1863a639cac18d960f1ace58469d74a2cfcd1eada61aff0d0d27b4fb801f9",
+      "decision": "adapt",
+      "changes": ["task/evidence status fields", "unknown usage retained", "authentication, cancellation and stale-candidate display", "no React/Ink runtime dependency in R0"]
+    },
+    {
+      "local": "frontend/agentkit-terminal/src/renderer.mjs",
+      "local_sha256": "04229430aa8b509b63989529be5e39d855ec4dc8427942799fe6ea3fcf2f681a",
+      "upstream": "frontend/terminal/src/components/TranscriptPane.tsx",
+      "upstream_sha256": "84891d4c689ac6b9cb69e1e86abdd2e122c7721607537743586c6b142bbcba57",
+      "decision": "adapt",
+      "changes": ["bounded status transcript", "model output stays display data", "candidate and approval-package summary"]
+    },
+    {
+      "local": "frontend/agentkit-terminal/src/render-events.mjs",
+      "local_sha256": "220a47c363b7a125dbd84f44e70eee6ac071996450a43be475a30d36059f5d4d",
+      "upstream": "frontend/terminal/src/hooks/useBackendSession.ts",
+      "upstream_sha256": "3de26064b7a54468357bba0cde4f254a819ae91eefb8e57eb697e33d657647dc",
+      "decision": "adapt",
+      "changes": ["one-shot strict event input", "no inherited environment", "no arbitrary backend spawn", "no unprefixed log forwarding", "no runtime install"]
+    },
+    {
+      "local": "frontend/agentkit-terminal/src/request-demo.mjs",
+      "local_sha256": "5a940881f17b8cf9cf80e6ffc4f4fe98c5c91f234855f1cfad2025df7c11c4f3",
+      "upstream": "frontend/terminal/src/hooks/useBackendSession.ts",
+      "upstream_sha256": "3de26064b7a54468357bba0cde4f254a819ae91eefb8e57eb697e33d657647dc",
+      "decision": "adapt",
+      "changes": ["fixed versioned deterministic command", "no prompt, path, provider, permission or approval payload"]
+    },
+    {
+      "local": "agentkit/integrations/openharness/backend.py",
+      "local_sha256": "d2bb3f12e045037fe02eb342879d2d5335588c76837881946c4efe801ccfd1d3",
+      "upstream": "src/openharness/cli.py",
+      "upstream_sha256": "c728e2de958af42535d8b184a445580d402829542fdf5b2ba130eed05d054256",
+      "decision": "adapt",
+      "changes": ["thin deterministic facade over existing AgentKit controller", "no auth/plugin/tool/provider construction", "safe display projection"]
+    }
+  ],
+  "excluded": [
+    "src/openharness/auth/external.py",
+    "src/openharness/api/",
+    "src/openharness/engine/",
+    "src/openharness/tools/",
+    "src/openharness/sandbox/",
+    "src/openharness/ui/runtime.py",
+    "src/openharness/ui/react_launcher.py"
+  ]
+}

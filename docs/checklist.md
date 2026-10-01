@@ -182,11 +182,60 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 - [x] Commit reusable executable `70070e293c890a5c47bbb448b99a9b7cf34f8237` before inference and declare the eight-call, two-worker, two-repair, 180-second-per-provider and 1,200-second overall ledger.
 - [x] Attempt one bounded Breakout trial. The sole Claude planning invocation ended after 29.313421 seconds because its response exceeded the adapter's 512 generated-output-token allocation; stop without retry or provider substitution.
 - [x] Retain sanitized planning request/result/events, controller state, inputs, versions, usage and failure diagnosis in a hash-manifested archive; no browser/game artifacts exist because planning was not accepted.
-- [x] Correct the planner output allocation and terminal classification offline: persist an explicit Claude-only 8,192-token planner allocation, retain 512 for ordinary smoke, reject unsupported Codex values and classify output-limit text before allowed rate metadata.
+- [x] Apply the original interim planner correction at 8,192 and classify output-limit text before allowed rate metadata; this allocation is superseded by the later CLI resource-policy audit below.
 - [ ] The corrected product planner remains live-unvalidated. Do not use the failed `70070e2` attempt as validation or repeat inference without new authorization.
 - [ ] Dependency installation, general repositories, hostile inputs, arbitrary builds, browser credential/egress isolation and crash-safe preview containment remain unsupported.
 
-## Later phases (planned, not implemented)
+## Phase 4 — CLI integration and resource-policy correction
+
+- [x] Start from merged `main` revision `c894a7e2977d09362fcf425fa9cc46e2144046c0` on dedicated branch `correction/cli-resource-policy` and isolated worktree.
+- [x] Audit installed Codex CLI 0.154.0 and Claude Code 2.1.220 help plus official CLI/configuration documentation.
+- [x] Remove the productive Claude 8,192 output setting and confine the historical 512/one-turn/zero-retry environment to `smoke-model-only`.
+- [x] Remove the universal 300-second request/transport ceiling; keep finite positive controller deadlines bound by each task's authorized overall allocation.
+- [x] Resolve task overrides, role policies and provider defaults with persisted source, enforcement class and rationale.
+- [x] Keep captured bytes distinct from generated tokens and provider token/cost observations.
+- [x] Record one CLI launch separately from unknown internal provider requests and turns.
+- [x] Add bounded output-exhaustion recovery that changes/removes an imposed control, consumes the same call/time ledger and refuses identical/provider-default retries.
+- [x] Add explicit structured-planning, code-implementation, web-product-implementation and independent-review capability profiles.
+- [x] Allow Claude file creation while granting only role-specific Bash patterns; retain external Seatbelt, broker, credential and publication boundaries.
+- [x] Add focused offline tests for policy precedence, request construction, capability selection, parsing and recovery; pass 177 repository tests with two expected managed skips, then pass both checks separately at host level and pass `agentkit check`.
+- [x] Attempt and archive the authorized direct-versus-adapter checkpoint: both Codex planning paths passed; both Claude implementation paths failed with expired OAuth; stop after four of six launches without retry, login, provider substitution, review or game inference.
+- [x] Preserve complete terminal usage/retry/turn observations after monitored failures in offline-tested revision `1c0008c`; do not promote that correction to live-tested status.
+- [x] Bind all 22 retained checkpoint files by SHA-256 and pass the final 182-test suite with two expected managed-environment skips plus `python3 -m agentkit check`.
+- [ ] Complete Claude implementation and independent-review comparison under a future bounded authorization after authentication is restored.
+- [ ] The Breakout product trial remains the next acceptance milestone after provider integration completes; no game inference was spent during this checkpoint.
+
+## Repository-first product planning — 2026-10-01
+
+- [x] Preserve corrective baseline `ddf6145002efd0bd59b85d54996263f6edb7f675` in dedicated `planning/reuse-first-product` worktree.
+- [x] Record the user's priorities: both existing repositories and new products, existing repositories first; small engineering teams and some public open-source users.
+- [x] Review the supplied product vision against current implementation and primary sources; separate supported claims from proposed positioning.
+- [x] Pin OpenHarness to `9b2efd795c6aa09f88b0c257d269a9e518da6ae7`; inventory 50 source/config/test files without importing or executing upstream code.
+- [x] Produce a module-level substantial-reuse map, license/dependency adoption gates, architecture alternatives and a working reuse-spike specification.
+- [x] Draft repository enrollment, policy, verification, evidence, team UX, migration, milestone and ticket contracts in the [engineering plan](planning/engineering-plan.md).
+- [x] Separate user decisions, engineering recommendations and remaining decisions in the [planning register](planning/decisions.md).
+- [x] Implement and evaluate P01–P04 as R0: attributed profile/context/protocol/fs ports, dependency-free terminal renderer and a deterministic existing-controller vertical slice.
+- [x] Preserve the complete OpenHarness MIT text, file hashes, adaptation decisions and selected dependency/license closure without installing upstream packages.
+- [x] Demonstrate complete, cancelled, authentication-wait, candidate-stale and unknown-usage presentation; reject changed profiles and UI authority expansion.
+- [x] Pass 10 focused Python tests, 4 Node tests, the 192-test repository suite (190 passed, two expected nested-environment skips), both skipped checks separately at host level, and `agentkit check`.
+- [ ] Build the optional React/Ink TUI only after reviewing its complete locked license/install closure; R0 ships an executable dependency-free terminal slice.
+- [ ] Validate real-repository onboarding and execution before exposing it; existing disposable macOS limitations remain.
+- [ ] Complete remaining provider integration under a future declared authorization; no live inference belongs to this planning task.
+- [ ] Select the distribution license and pass packaging/dependency gates before public distribution.
+
+The [new product plan](planning/README.md) proposes repository-first sequencing. The older phase list below is retained as historical roadmap context; it is not a requirement to build a GPU worker before repository onboarding. Breakout remains a later new-product acceptance case, following the user's updated priority.
+
+R0 accepts architecture option B: a component port around the durable AgentKit controller. It does not validate real-repository execution. R1 read-only repository intake is the next planned boundary.
+
+## AgentKit brand rename
+
+- [x] Adopt **AgentKit** as the product and display name in active documentation, CLI help and the adapted terminal.
+- [x] Preserve the `agentkit` command, Python module, artifact paths and temporary prefixes as stable lowercase technical identifiers.
+- [x] Preserve historical worktree/repository references and the versioned `urn:portable-agentkit:handoff:1` schema identifier.
+- [x] Rename the separately authorized GitHub repository to `adityachaturvedii/AgentKit`, update `origin`, and verify the former name resolves to the canonical repository.
+- [ ] Select the outbound license before public distribution; the brand rename does not resolve licensing.
+
+## Later phases (historical plan, not implemented)
 
 - [ ] Phase 5: hardware domain validation and optional GPU worker.
 - [ ] Phase 6: GitHub broker, installation/update/rollback and machine handover.

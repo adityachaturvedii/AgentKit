@@ -10,7 +10,7 @@ from .validation import ValidationError, read_json, validate_handoff
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Portable skill foundation and bounded CLI integration")
+    parser = argparse.ArgumentParser(description="AgentKit engineering-agent controller and evidence toolkit")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="list available skills and explicit intents")
     selection = commands.add_parser("select", help="select a skill by explicit intent")
@@ -22,6 +22,10 @@ def main(argv=None):
     validate.add_argument("file")
     commands.add_parser("check", help="check pack references, notices and blocked examples offline")
     commands.add_parser("doctor", help="read-only version, feature, authentication and sandbox observations")
+    commands.add_parser("resource-policy", help="show resource precedence and role capability profiles")
+    reuse_demo = commands.add_parser(
+        "reuse-demo", help="offline deterministic OpenHarness reuse-slice demonstration")
+    reuse_demo.add_argument("--output", required=True, help="fresh R0 demonstration directory")
     smoke = commands.add_parser("smoke", help="one disposable model-only CLI smoke; blocked by default")
     smoke.add_argument("engine", choices=("codex", "claude"))
     smoke.add_argument("--output", required=True, help="fresh result directory")
@@ -120,16 +124,17 @@ def main(argv=None):
     product_submit.add_argument("--acceptance-file", required=True)
     product_submit.add_argument("--mechanics-test", required=True)
     product_submit.add_argument("--routing-config")
-    product_submit.add_argument("--max-calls", type=int, default=8)
-    product_submit.add_argument("--max-provider-calls", type=int, default=8)
-    product_submit.add_argument("--max-concurrency", type=int, choices=(1, 2), default=2)
-    product_submit.add_argument("--max-repairs", type=int, choices=(0, 1, 2), default=2)
-    product_submit.add_argument("--max-escalations", type=int, choices=(0, 1, 2), default=2)
-    product_submit.add_argument("--max-elapsed-seconds", type=float, default=1200)
-    product_submit.add_argument("--planning-timeout", type=float, default=180)
-    product_submit.add_argument("--implementation-timeout", type=float, default=180)
-    product_submit.add_argument("--review-timeout", type=float, default=180)
-    product_submit.add_argument("--verification-timeout", type=float, default=10)
+    product_submit.add_argument("--max-calls", type=int)
+    product_submit.add_argument("--max-provider-calls", type=int)
+    product_submit.add_argument("--max-concurrency", type=int, choices=(1, 2))
+    product_submit.add_argument("--max-repairs", type=int, choices=(0, 1, 2))
+    product_submit.add_argument("--max-retries", type=int, choices=(0, 1, 2))
+    product_submit.add_argument("--max-escalations", type=int, choices=(0, 1, 2))
+    product_submit.add_argument("--max-elapsed-seconds", type=float)
+    product_submit.add_argument("--planning-timeout", type=float)
+    product_submit.add_argument("--implementation-timeout", type=float)
+    product_submit.add_argument("--review-timeout", type=float)
+    product_submit.add_argument("--verification-timeout", type=float)
     product_submit.add_argument("--live", action="store_true")
     product_submit.add_argument("--authorize-subscription-smoke", action="store_true")
     for name, help_text in (
@@ -169,6 +174,9 @@ def main(argv=None):
         elif args.command == "doctor":
             from .doctor import doctor
             print(json.dumps(doctor(), indent=2))
+        elif args.command == "resource-policy":
+            from .resource_policy import policy_document
+            print(json.dumps(policy_document(), indent=2))
         elif args.command == "smoke":
             from .smoke import smoke_test
             result = smoke_test(args.engine, args.output, args.authorize_subscription_smoke)
@@ -271,6 +279,11 @@ def main(argv=None):
                         authority=store.authority)
             print(json.dumps(result.to_dict(), indent=2))
             return 0 if result.status in ('succeeded', 'already_authenticated') else 1
+        elif args.command == "reuse-demo":
+            from .integrations.openharness import run_deterministic_demo
+            result = run_deterministic_demo(args.output)
+            print(json.dumps(result, indent=2))
+            return 0 if result['metadata']['final_state'] == 'awaiting_pr_approval' else 1
         elif args.command == "auth-reconcile":
             from .controller import ControllerStore
             root = Path(args.workflow).resolve()
@@ -355,6 +368,7 @@ def main(argv=None):
                     authorized=True, max_calls=args.max_calls,
                     max_provider_calls=args.max_provider_calls,
                     max_concurrency=args.max_concurrency, max_repairs=args.max_repairs,
+                    max_retries=args.max_retries,
                     max_escalations=args.max_escalations,
                     max_elapsed_seconds=args.max_elapsed_seconds,
                     planning_timeout_seconds=args.planning_timeout,

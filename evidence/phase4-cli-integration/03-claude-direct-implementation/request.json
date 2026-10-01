@@ -1,0 +1,35 @@
+{
+  "engine": "claude",
+  "task_id": "checkpoint-direct-implementation",
+  "cwd": "/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/claude-direct-implementation",
+  "timeout_seconds": 60.0,
+  "max_output_bytes": 1048576,
+  "model": null,
+  "effort": null,
+  "mode": "owned-code",
+  "capability_profile": "code-implementation",
+  "max_generated_output_tokens": null,
+  "resource_resolution": {
+    "timeout_seconds": {
+      "value": 60.0,
+      "source": "task-override",
+      "classification": "enforced",
+      "rationale": "Controller wall-clock process deadline."
+    },
+    "max_capture_bytes": {
+      "value": 1048576,
+      "source": "role-policy",
+      "classification": "enforced",
+      "rationale": "Controller transport capture bound; not a generated-token limit."
+    },
+    "generated_output_tokens": {
+      "value": null,
+      "source": "provider-default",
+      "classification": "observable-only",
+      "rationale": "Unset: provider behavior and effective ceiling are unknown."
+    }
+  },
+  "schema_version": 1,
+  "prompt_sha256": "39827bdd18734731a1974200fbaee9f2a04bb003d75b8e9c764121f937b7a3c4",
+  "prompt_bytes": 359
+}

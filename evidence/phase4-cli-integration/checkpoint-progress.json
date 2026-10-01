@@ -1,0 +1,153 @@
+{
+  "elapsed_seconds": 127.496608583,
+  "executable_revision": "a0f2906b59d7adf0858c1749228a5b2d815ea0c6",
+  "launches": [
+    {
+      "acceptance": {
+        "acceptance": 9,
+        "controller_validated_shape": true,
+        "requirements": 6,
+        "serialized_bytes": 6615
+      },
+      "accepted": true,
+      "elapsed_seconds": 61.215432,
+      "engine": "codex",
+      "error_class": null,
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "direct",
+      "label": "codex-direct-plan",
+      "ordinal": 1,
+      "status": "succeeded",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": 7552,
+        "estimated_cost_usd": null,
+        "final": true,
+        "input_tokens": 16462,
+        "output_tokens": 1577,
+        "provider_details": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 7552,
+          "input_tokens": 16462,
+          "output_tokens": 1577,
+          "reasoning_output_tokens": 0
+        },
+        "reasoning_tokens": 0,
+        "source": "codex.turn.completed"
+      }
+    },
+    {
+      "acceptance": {
+        "acceptance": 10,
+        "controller_validated_shape": true,
+        "requirements": 5,
+        "serialized_bytes": 7002
+      },
+      "accepted": true,
+      "elapsed_seconds": 57.940613,
+      "engine": "codex",
+      "error_class": null,
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "adapter",
+      "label": "codex-adapter-plan",
+      "ordinal": 2,
+      "status": "succeeded",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": 7040,
+        "estimated_cost_usd": null,
+        "final": true,
+        "input_tokens": 8465,
+        "output_tokens": 1649,
+        "provider_details": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 7040,
+          "input_tokens": 8465,
+          "output_tokens": 1649,
+          "reasoning_output_tokens": 0
+        },
+        "reasoning_tokens": 0,
+        "source": "codex.turn.completed"
+      }
+    },
+    {
+      "acceptance": {
+        "changed_files": [],
+        "controller_test_passed": false,
+        "protected_canaries_unchanged": true,
+        "test_exit_code": 1,
+        "test_output": "test_widget (unittest.loader._FailedTest) ... ERROR\n\n======================================================================\nERROR: test_widget (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: test_widget\nTraceback (most recent call last):\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 436, in _find_test_path\n    module = self._get_module_from_name(name)\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/claude-direct-implementation/test_widget.py\", line 2, in <module>\n    from widget import describe\nModuleNotFoundError: No module named 'widget'\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nFAILED (errors=1)\n"
+      },
+      "accepted": false,
+      "elapsed_seconds": 3.586534,
+      "engine": "claude",
+      "error_class": "authentication",
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "direct",
+      "label": "claude-direct-implementation",
+      "ordinal": 3,
+      "status": "failed",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": null,
+        "estimated_cost_usd": null,
+        "final": false,
+        "input_tokens": null,
+        "output_tokens": null,
+        "provider_details": {},
+        "reasoning_tokens": null,
+        "source": "unavailable"
+      }
+    },
+    {
+      "acceptance": {
+        "changed_files": [],
+        "controller_test_passed": false,
+        "protected_canaries_unchanged": true,
+        "test_exit_code": 1,
+        "test_output": "test_widget (unittest.loader._FailedTest) ... ERROR\n\n======================================================================\nERROR: test_widget (unittest.loader._FailedTest)\n----------------------------------------------------------------------\nImportError: Failed to import test module: test_widget\nTraceback (most recent call last):\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 436, in _find_test_path\n    module = self._get_module_from_name(name)\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/loader.py\", line 377, in _get_module_from_name\n    __import__(name)\n  File \"/private/tmp/agentkit-cli-checkpoint-k7a6y8dd/claude-adapter-implementation/test_widget.py\", line 2, in <module>\n    from widget import describe\nModuleNotFoundError: No module named 'widget'\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nFAILED (errors=1)\n"
+      },
+      "accepted": false,
+      "elapsed_seconds": 3.021911,
+      "engine": "claude",
+      "error_class": "authentication",
+      "execution_counts": {
+        "cli_launches": 1,
+        "provider_requests": null,
+        "turns": null
+      },
+      "kind": "adapter",
+      "label": "claude-adapter-implementation",
+      "ordinal": 4,
+      "status": "failed",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": null,
+        "cached_input_tokens": null,
+        "estimated_cost_usd": null,
+        "final": false,
+        "input_tokens": null,
+        "output_tokens": null,
+        "provider_details": {},
+        "reasoning_tokens": null,
+        "source": "unavailable"
+      }
+    }
+  ],
+  "remaining_seconds": 1072.503390958
+}
