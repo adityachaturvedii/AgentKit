@@ -23,6 +23,9 @@ def main(argv=None):
     commands.add_parser("check", help="check pack references, notices and blocked examples offline")
     commands.add_parser("doctor", help="read-only version, feature, authentication and sandbox observations")
     commands.add_parser("resource-policy", help="show resource precedence and role capability profiles")
+    reuse_demo = commands.add_parser(
+        "reuse-demo", help="offline deterministic OpenHarness reuse-slice demonstration")
+    reuse_demo.add_argument("--output", required=True, help="fresh R0 demonstration directory")
     smoke = commands.add_parser("smoke", help="one disposable model-only CLI smoke; blocked by default")
     smoke.add_argument("engine", choices=("codex", "claude"))
     smoke.add_argument("--output", required=True, help="fresh result directory")
@@ -276,6 +279,11 @@ def main(argv=None):
                         authority=store.authority)
             print(json.dumps(result.to_dict(), indent=2))
             return 0 if result.status in ('succeeded', 'already_authenticated') else 1
+        elif args.command == "reuse-demo":
+            from .integrations.openharness import run_deterministic_demo
+            result = run_deterministic_demo(args.output)
+            print(json.dumps(result, indent=2))
+            return 0 if result['metadata']['final_state'] == 'awaiting_pr_approval' else 1
         elif args.command == "auth-reconcile":
             from .controller import ControllerStore
             root = Path(args.workflow).resolve()

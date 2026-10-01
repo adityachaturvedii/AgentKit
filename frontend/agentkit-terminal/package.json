@@ -1,0 +1,11 @@
+{
+  "name": "@portable-agentkit/openharness-terminal-slice",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

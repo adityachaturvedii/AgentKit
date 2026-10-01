@@ -26,6 +26,7 @@ python3 -m agentkit task plan --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task start --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task status --root /tmp/agentkit-task --task-id demo
 python3 -m agentkit task package --root /tmp/agentkit-task --task-id demo
+python3 -m agentkit reuse-demo --output /tmp/agentkit-r0-demo
 python3 -m agentkit product --help
 ```
 
@@ -49,11 +50,14 @@ Run these commands from this directory. To move machines, copy the entire direct
 | Phase 4 task CLI, request-driven graph, concurrent scheduler, routing and quality reserves | Implemented and fixture-tested for controller-created disposable projects; maximum two supervised provider workers |
 | Provider-planned static web products | Implemented and fixture-tested for fresh dependency-free controller repositories; the corrected integration remains blocked on expired Claude OAuth before the next game trial |
 | Browser acceptance gate | Implemented as exact-revision evidence and owned preview lifecycle; browser interaction is externally driven and host validation is pending |
+| OpenHarness R0 reuse slice | Implemented and offline-tested: attributed public profiles, root-bounded context, strict UI events and dependency-free terminal rendering over the existing deterministic controller |
 | General browser automation, CUDA/GPU worker, GitHub publication, installer/update | Not implemented; separate later gates |
 
 The procedures describe desired engineering behavior. They are not enforcement of authenticated roles, monetary ceilings or publication permissions. Git worktrees are not sandboxes. Unattended untrusted execution is unsupported. Managed Linux/WSL2/Windows execution has not been validated; the current guard is macOS-specific.
 
 ## CLI integration scope
+
+`reuse-demo` runs one deterministic calculator workflow through the adapted OpenHarness profile/context/protocol/terminal seam. It makes no provider call and stops at an unapproved local package. The R0 renderer is a dependency-free executable slice, not the full React/Ink TUI; see the [R0 validation report](docs/r0-validation-report.md) and [dependency/license audit](docs/r0-dependency-license-audit.md).
 
 `python3 -m agentkit doctor` reports installed versions, advertised flags, CLI-reported authentication and sandbox initialization without inference or global setting changes. Unknown capability/billing data stays unknown. The diagnostic guard may be unavailable inside another sandbox; no automatic fallback occurs.
 

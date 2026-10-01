@@ -214,12 +214,18 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 - [x] Produce a module-level substantial-reuse map, license/dependency adoption gates, architecture alternatives and a working reuse-spike specification.
 - [x] Draft repository enrollment, policy, verification, evidence, team UX, migration, milestone and ticket contracts in the [engineering plan](planning/engineering-plan.md).
 - [x] Separate user decisions, engineering recommendations and remaining decisions in the [planning register](planning/decisions.md).
-- [ ] Implement and evaluate the OpenHarness UI/config/context reuse slice; no upstream source is adopted by this documentation change.
+- [x] Implement and evaluate P01–P04 as R0: attributed profile/context/protocol/fs ports, dependency-free terminal renderer and a deterministic existing-controller vertical slice.
+- [x] Preserve the complete OpenHarness MIT text, file hashes, adaptation decisions and selected dependency/license closure without installing upstream packages.
+- [x] Demonstrate complete, cancelled, authentication-wait, candidate-stale and unknown-usage presentation; reject changed profiles and UI authority expansion.
+- [x] Pass 10 focused Python tests, 4 Node tests, the 192-test repository suite (190 passed, two expected nested-environment skips), both skipped checks separately at host level, and `agentkit check`.
+- [ ] Build the optional React/Ink TUI only after reviewing its complete locked license/install closure; R0 ships an executable dependency-free terminal slice.
 - [ ] Validate real-repository onboarding and execution before exposing it; existing disposable macOS limitations remain.
 - [ ] Complete remaining provider integration under a future declared authorization; no live inference belongs to this planning task.
 - [ ] Select the distribution license and pass packaging/dependency gates before public distribution.
 
 The [new product plan](planning/README.md) proposes repository-first sequencing. The older phase list below is retained as historical roadmap context; it is not a requirement to build a GPU worker before repository onboarding. Breakout remains a later new-product acceptance case, following the user's updated priority.
+
+R0 accepts architecture option B: a component port around the durable Agentkit controller. It does not validate real-repository execution. R1 read-only repository intake is the next planned boundary.
 
 ## Later phases (historical plan, not implemented)
 

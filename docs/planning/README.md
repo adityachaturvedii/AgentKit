@@ -1,6 +1,6 @@
 # Agentkit reuse-first product plan
 
-Planning review: 2026-10-01. Status: proposed engineering plan, not implementation authorization for new execution profiles, paid inference or publication.
+Planning review: 2026-10-01. Status: R0 reuse spike implemented; R1 and later capabilities remain proposed and are not authorization for new execution profiles, paid inference or publication.
 
 The user has selected **both existing-repository engineering and new-product creation, with existing repositories first**, for **small engineering teams and some public open-source users**. Substantial reuse of OpenHarness is an explicit engineering preference. We will compare and adapt working code before writing replacements.
 
@@ -30,3 +30,9 @@ Proceed with a substantial, attributed OpenHarness component port around the exi
 The first external-use milestone is one real task against an explicitly enrolled repository, executed from an independent managed copy, returning a portable review package. The repository's original checkout stays untouched. New-product work follows through the same delivery contracts, rather than a second orchestrator.
 
 All command examples in the engineering plan are **proposed interface specifications**. Existing executable commands remain documented in the [current CLI guide](../phase4-cli-guide.md).
+
+## R0 outcome
+
+R0 accepted the recommended component-port architecture. Actual profile, context, protocol, atomic-write and terminal presentation behavior was adapted around the unchanged controller, and a deterministic workflow reached an unapproved local package through the new seam. The adopted runtime adds no Python or Node package dependency. See the [R0 validation report](../r0-validation-report.md) and [dependency/license audit](../r0-dependency-license-audit.md).
+
+The executable terminal is deliberately a dependency-free one-shot renderer. The complete React/Ink TUI remains optional pending its 80-entry locked dependency/license/build audit. R0 does not validate real-repository execution; R1 read-only onboarding remains the next gate.

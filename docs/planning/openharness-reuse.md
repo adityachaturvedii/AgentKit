@@ -1,6 +1,6 @@
 # OpenHarness reuse assessment
 
-Status: static source assessment, not a security certification or tested integration. No upstream code or tests ran, no dependencies were installed, no credential store was inspected and no inference was launched.
+Status: the original assessment below informed the completed R0 component port. Selected adapted behavior is now offline-tested; this remains neither a security certification nor validation of the complete upstream runtime. No dependencies were installed, no credential store was inspected and no inference was launched. See the [R0 validation report](../r0-validation-report.md).
 
 ## Reproducible source base
 
