@@ -205,7 +205,23 @@ See [detailed Phase 2 checklist](phase2-plan.md) and [validation report](phase2-
 - [ ] Complete Claude implementation and independent-review comparison under a future bounded authorization after authentication is restored.
 - [ ] The Breakout product trial remains the next acceptance milestone after provider integration completes; no game inference was spent during this checkpoint.
 
-## Later phases (planned, not implemented)
+## Repository-first product planning — 2026-10-01
+
+- [x] Preserve corrective baseline `ddf6145002efd0bd59b85d54996263f6edb7f675` in dedicated `planning/reuse-first-product` worktree.
+- [x] Record the user's priorities: both existing repositories and new products, existing repositories first; small engineering teams and some public open-source users.
+- [x] Review the supplied product vision against current implementation and primary sources; separate supported claims from proposed positioning.
+- [x] Pin OpenHarness to `9b2efd795c6aa09f88b0c257d269a9e518da6ae7`; inventory 50 source/config/test files without importing or executing upstream code.
+- [x] Produce a module-level substantial-reuse map, license/dependency adoption gates, architecture alternatives and a working reuse-spike specification.
+- [x] Draft repository enrollment, policy, verification, evidence, team UX, migration, milestone and ticket contracts in the [engineering plan](planning/engineering-plan.md).
+- [x] Separate user decisions, engineering recommendations and remaining decisions in the [planning register](planning/decisions.md).
+- [ ] Implement and evaluate the OpenHarness UI/config/context reuse slice; no upstream source is adopted by this documentation change.
+- [ ] Validate real-repository onboarding and execution before exposing it; existing disposable macOS limitations remain.
+- [ ] Complete remaining provider integration under a future declared authorization; no live inference belongs to this planning task.
+- [ ] Select the distribution license and pass packaging/dependency gates before public distribution.
+
+The [new product plan](planning/README.md) proposes repository-first sequencing. The older phase list below is retained as historical roadmap context; it is not a requirement to build a GPU worker before repository onboarding. Breakout remains a later new-product acceptance case, following the user's updated priority.
+
+## Later phases (historical plan, not implemented)
 
 - [ ] Phase 5: hardware domain validation and optional GPU worker.
 - [ ] Phase 6: GitHub broker, installation/update/rollback and machine handover.
