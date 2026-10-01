@@ -268,6 +268,10 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [ ] Phase 6: GitHub broker, installation/update/rollback and machine handover.
 - [ ] Phase 7: held-out matched baseline evaluations and calibrated release.
 
+## Project documentation
+
+- [x] Preserve the historical public README redesign from `afad0a7` in branch ancestry; its layout predates the current mainline documentation and is not a claim about the active README format.
+
 ## Exit status
 
 Phase 0 complete. Phase 1 offline foundation complete on the observed macOS/Python environment. All ten procedures were exercised across invoice, independent-review and optimisation development cases. Review found two outcome contradictions; both were fixed and independently rechecked. Required browser/GPU/provider boundaries remain explicitly unverified and are later-phase gates, not Phase 1 passes. The external skill-creator validator was unavailable due to missing PyYAML; local pack checks passed.
@@ -293,3 +297,16 @@ The dependency/claim/request corrective milestone is committed at `dd8da0e`. The
 The first authorized Breakout trial tested exact executable `70070e2` and consumed one Claude planning call. Claude generated partial plan text but terminated with an API error after exceeding the adapter's 512 generated-output-token allocation. The task failed closed in `blocked` before a plan, workspace or candidate existed. No Codex call, local verification, repair, review, preview, browser interaction, package, approval or publication occurred. The adapter recorded the failure as `rate_limit` because an allowed rate metadata event appeared in the same stream; retained terminal evidence establishes an output-allocation failure instead. The provider reported 8 input, 2,048 output, 25,570 cached-input and 9,678 cache-creation tokens, plus a USD 0.160805 estimate. Reasoning tokens and billed cost remain unknown.
 
 Publication follow-up, 2026-09-19: the user subsequently authorized creating a private GitHub repository and pushing all committed toolkit branches. This supersedes the local-only publication restriction without changing the Phase 2 findings or granting PR/merge permission. See D025 in the [decision log](decisions.md).
+
+## Integration branch reconciliation
+
+- [x] Compare every local/remote branch tip and check all AgentKit worktrees for uncommitted work.
+- [x] Prepare a normal merge of `origin/main` (`3ea1416`) into a dedicated branch based on `origin/implementation/phase-2` (`2d0a078`), retaining R0–R2 and the older documentation history.
+- [x] Resolve documentation conflicts without reverting the AgentKit name or later capability documentation; preserve the earlier colliding decision as D111.
+- [x] Record feature PR → `implementation/phase-2` → separate release PR → `main` in AGENTS.md.
+- [x] Independently review the staged reconciliation with GPT-5.6 Sol at medium reasoning; verify all files except AGENTS.md and these checklist/decision records equal `origin/main`.
+- [x] Run offline validation: 215 regression tests, 212 passed and 3 skipped (two Seatbelt initialization checks and one loopback preview check unavailable inside this execution environment); structural `agentkit check` and both branding tests passed. No live inference or new sandbox validation claimed.
+- [ ] Publish the reconciliation PR into `implementation/phase-2` after authorization.
+- [ ] Separately authorize and merge the release PR from `implementation/phase-2` into `main`.
+- [ ] Address the R2 review findings; branch reconciliation does not close them.
+- [ ] Review/correct `fix/process-group-liveness` separately; its code is not included in this reconciliation.
