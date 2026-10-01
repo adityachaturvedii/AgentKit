@@ -45,6 +45,7 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; signing and distribution remain open |
 | Terminal workflow (R3 P12) | Plain, JSON, protocol-event and one-shot terminal views over existing Phase 4 disposable workflows; no full-screen interactive TUI |
 | [Distribution and compatibility (R3 P13)](docs/r3-distribution-validation-report.md) | Offline source-checkout and isolated-wheel onboarding plus data-flow boundaries; public release remains blocked on an outbound license |
+| [Pilot protocol (R4 P14)](docs/r4-pilot-validation-report.md) | Offline frozen schedules, immutable observations and failure-inclusive descriptive reports; real participant/repository collection remains pending |
 | Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
 
@@ -344,7 +345,7 @@ The [reuse-first engineering plan](docs/planning/README.md) prioritizes existing
 - **Implemented:** audited skills, adapters, disposable delivery, authentication checkpoints, concurrent scenario workflows, resource policies, R0 component reuse and R1 read-only intake.
 - **Corrective gate:** resolve R2 review findings and validate the real adapter, authentication and verifier paths before extending repository execution.
 - **Implemented R3 documentation:** portable review export, the one-shot terminal workflow, and source-checkout compatibility/data-flow guidance.
-- **Next release gate:** choose an outbound license before calling P13 public distribution complete; signing/publication remain separate, and R4 measured pilot evaluation and R5 new-product acceptance remain later work.
+- **Next release gates:** choose an outbound license before calling P13 public distribution complete; collect the frozen R4 protocol with consenting pilot users before making outcome claims; R5 new-product acceptance remains later work.
 - **Deferred:** optional Linux/GPU workers, broader isolation, GitHub publication and deployment.
 
 The [implementation checklist](docs/checklist.md), [decision log](docs/decisions.md) and [original specification](docs/implementation-spec.md) distinguish implemented, simulated, live-tested and planned behavior.

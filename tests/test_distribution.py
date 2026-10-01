@@ -64,6 +64,7 @@ class DistributionTests(unittest.TestCase):
             "contracts/handoff.schema.json", "audit/sources.lock.json",
             "THIRD_PARTY_NOTICES.md", "notices/pstack-LICENSE.txt",
             "third_party/openharness/LICENSE", "docs/skill-contract.md",
+            "docs/r4-pilot-protocol.md", "docs/examples/pilot-protocol.json",
             "frontend/agentkit-terminal/src/render-events.mjs",
         )
         with zipfile.ZipFile(self.wheel) as archive:

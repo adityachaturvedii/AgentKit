@@ -45,6 +45,10 @@ P12 adds one allowlisted frontend for existing Phase 4 disposable workflows with
 
 P13 now records exact source-checkout and isolated no-index wheel procedures, removal steps, tested Python/Node/macOS boundaries, provider data flow, authentication separation, retained local data and portable-export limits. It adds no runtime dependency, global configuration change, network installation or inference. The absence of an outbound `LICENSE` keeps public distribution incomplete; npm publication and a full-screen frontend remain excluded. See the [distribution guide](../r3-distribution.md), [compatibility matrix](../r3-compatibility.md) and [data-flow contract](../r3-data-flow.md).
 
+## R4 pilot-protocol outcome
+
+P14 provides offline bookkeeping for a precommitted exploratory comparison between direct provider-CLI work and AgentKit. It freezes matched conditions and deterministic assignments before collection, keeps unsuccessful and missing work in the denominator, preserves unknown effort/usage/cost values, and emits neutral descriptive summaries. It grants no repository, provider, approval or publication authority. Real participant and repository collection remains pending. See the [pilot protocol](../r4-pilot-protocol.md).
+
 ## R1 outcome
 
 R1 implements P05 for controller-created disposable repository fixtures: bounded read-only inspection, strict Python-library profile validation, private hash-bound enrollment and revision-bound non-executing plans. The inspector runs no project code, hooks, filters, dependency installation, provider calls or network operations. It fails closed on repository shapes that could escape or transform the observed content. No personal or third-party repository was accessed, so applicability beyond the tested shapes remains unverified.

@@ -282,6 +282,16 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [ ] Build any optional full-screen TUI only after a separate dependency, license, build and runtime review.
 - [ ] Add signed provenance or authenticated team approvals; manifest integrity is currently unauthenticated.
 
+## R4 measured pilot protocol
+
+- [x] Freeze matched direct-CLI and AgentKit conditions, task/acceptance identities, consent records and deterministic assignments before any observation.
+- [x] Keep every assigned outcome and missing record in the denominator; preserve unknown time, usage and billing observations instead of substituting zero.
+- [x] Record all provider attempts, independent-check identities, first-pass/final acceptance, human effort, interventions, findings, repairs and escaped-defect follow-up.
+- [x] Reject stale/tampered protocol, assignment, observation and feedback identities without executing project or provider code.
+- [x] Produce descriptive-only aggregate reports with visible matching/resource deviations and no significance, causality or superiority claim.
+- [x] Pass 26 focused pilot/CLI/documentation tests, the 292-test Python suite (289 passed, 3 unchanged host-bound skips), installed-wheel resource checks, structural validation, compilation, Node terminal tests and diff hygiene without inference.
+- [ ] Collect an explicitly consented pilot against separately authorized repositories and publish no participant artifact without its separate opt-in.
+
 ## Later phases (historical plan, not implemented)
 
 - [ ] Phase 5: hardware domain validation and optional GPU worker.

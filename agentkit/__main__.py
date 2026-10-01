@@ -278,6 +278,26 @@ def main(argv=None):
             command.add_argument("--live", action="store_true")
             command.add_argument("--authorize-subscription-smoke", action="store_true",
                                  help="authorize bounded live provider execution for this invocation")
+    pilot = commands.add_parser(
+        "pilot", help="manage an offline, frozen and failure-inclusive evaluation ledger")
+    pilot_commands = pilot.add_subparsers(dest="pilot_command", required=True)
+    pilot_init = pilot_commands.add_parser(
+        "init", help="validate and freeze a pilot protocol in a fresh private directory")
+    pilot_init.add_argument("--root", required=True)
+    pilot_init.add_argument("--protocol", required=True)
+    for name, help_text in (
+            ("status", "show protocol identity and observation completeness"),
+            ("report", "derive a neutral descriptive report from every assignment")):
+        command = pilot_commands.add_parser(name, help=help_text)
+        command.add_argument("--root", required=True)
+    pilot_record = pilot_commands.add_parser(
+        "record", help="append one immutable terminal observation")
+    pilot_record.add_argument("--root", required=True)
+    pilot_record.add_argument("--observation", required=True)
+    pilot_feedback = pilot_commands.add_parser(
+        "feedback", help="append structured pseudonymous participant feedback")
+    pilot_feedback.add_argument("--root", required=True)
+    pilot_feedback.add_argument("--feedback", required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "list":
@@ -568,6 +588,21 @@ def main(argv=None):
             backend = TerminalWorkflow(args.root, args.task_id, live=live, authorized=authorized)
             events = backend.handle(FrontendRequest(request_type, args.task_id))
             _emit_workflow(events, args.format)
+            return 0
+        elif args.command == "pilot":
+            from .pilot import (build_report, initialize_pilot, pilot_status,
+                                record_feedback, record_observation)
+            if args.pilot_command == "init":
+                result = initialize_pilot(args.root, read_json(args.protocol))
+            elif args.pilot_command == "status":
+                result = pilot_status(args.root)
+            elif args.pilot_command == "record":
+                result = record_observation(args.root, read_json(args.observation))
+            elif args.pilot_command == "feedback":
+                result = record_feedback(args.root, read_json(args.feedback))
+            else:
+                result = build_report(args.root)
+            print(json.dumps(result, indent=2))
             return 0
         else:
             print(json.dumps(check_pack(), indent=2))
