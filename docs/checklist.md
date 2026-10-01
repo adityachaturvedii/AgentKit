@@ -306,7 +306,14 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Record feature PR → `implementation/phase-2` → separate release PR → `main` in AGENTS.md.
 - [x] Independently review the staged reconciliation with GPT-5.6 Sol at medium reasoning; verify all files except AGENTS.md and these checklist/decision records equal `origin/main`.
 - [x] Run offline validation: 215 regression tests, 212 passed and 3 skipped (two Seatbelt initialization checks and one loopback preview check unavailable inside this execution environment); structural `agentkit check` and both branding tests passed. No live inference or new sandbox validation claimed.
-- [ ] Publish the reconciliation PR into `implementation/phase-2` after authorization.
-- [ ] Separately authorize and merge the release PR from `implementation/phase-2` into `main`.
+- [x] Publish and merge the authorized reconciliation PR #10 into `implementation/phase-2` (`ade1103`).
+- [x] Merge the authorized release PR #11 from `implementation/phase-2` into `main` (`c932f87`); both trees match the tested reconciliation.
 - [ ] Address the R2 review findings; branch reconciliation does not close them.
 - [ ] Review/correct `fix/process-group-liveness` separately; its code is not included in this reconciliation.
+
+## README presentation restoration
+
+- [x] Restore the public README structure from `afad0a7`, keeping AgentKit branding and incorporating later implementation, resource policies, reuse/intake work and unresolved review findings (D113).
+- [x] Verify the documented submit → plan → start → status → package commands using a fresh deterministic calculator fixture; status reached `awaiting_pr_approval`.
+- [x] Verify the text-metrics proposal and OpenHarness reuse demo with disposable output; no provider calls.
+- [x] Resolve all 32 local README links; pass two branding tests, offline structural checks and whitespace hygiene. Runtime code is unchanged; the earlier 215-test reconciliation result remains historical evidence.
