@@ -9,8 +9,9 @@ from pathlib import Path
 from agentkit.product import planning_context
 from agentkit.__main__ import main
 from agentkit.refinement import (AcceptanceCheck, AcceptanceSpec, DesignBrief,
-                                 RecoveryDecision, guided_intake, refinement_decision,
-                                 run_view)
+                                 RecoveryDecision, guided_intake, open_result_view,
+                                 open_workflow_view, refinement_decision, run_view)
+from agentkit.orchestration import Phase4Workflow
 
 
 H = 'a' * 64
@@ -140,6 +141,49 @@ class RefinementContractTests(unittest.TestCase):
             result = json.loads(output.getvalue())
             self.assertEqual(result['workflow_kind'], 'repository')
             self.assertFalse(set(result) & {'approval', 'permissions', 'budget'})
+
+    def test_durable_status_and_result_views_revalidate_actual_candidate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / 'workflow'
+            workflow = Phase4Workflow.submit(
+                root, 'refinement-view', 'Correct total arithmetic.', 'calculator',
+                max_calls=5, max_provider_calls=2, max_concurrency=1,
+                max_repairs=0, max_escalations=0)
+            _, before = open_workflow_view(
+                root, 'refinement-view', workflow_kind='fixture')
+            self.assertEqual(before.stage, 'contracted')
+            workflow.start('refinement-view')
+            result = open_result_view(
+                root, 'refinement-view', workflow_kind='fixture')
+            self.assertEqual(result.status, 'awaiting_pr_approval')
+            self.assertFalse(result.approval_recorded)
+            self.assertTrue(result.verification)
+            task = workflow.store.task('refinement-view')
+            Path(task['worktree'], 'calculator.py').write_text('tampered\n')
+            with self.assertRaisesRegex(ValueError, 'actual candidate'):
+                open_result_view(root, 'refinement-view', workflow_kind='fixture')
+
+    def test_refine_status_and_result_cli_are_read_only_and_escape_controls(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / 'workflow'
+            workflow = Phase4Workflow.submit(
+                root, 'view-cli', 'Correct total arithmetic.', 'calculator',
+                max_calls=5, max_provider_calls=2, max_concurrency=1,
+                max_repairs=0, max_escalations=0)
+            output = io.StringIO()
+            with redirect_stdout(output):
+                code = main(['refine', 'status', '--root', str(root), '--task-id', 'view-cli',
+                             '--kind', 'fixture', '--format', 'plain'])
+            self.assertEqual(code, 0)
+            self.assertIn('stage: contracted', output.getvalue())
+            self.assertEqual(workflow.store.task('view-cli')['state'], 'contracted')
+            workflow.start('view-cli')
+            output = io.StringIO()
+            with redirect_stdout(output):
+                code = main(['refine', 'result', '--root', str(root), '--task-id', 'view-cli',
+                             '--kind', 'fixture', '--format', 'json'])
+            self.assertEqual(code, 0)
+            self.assertFalse(json.loads(output.getvalue())['approval_recorded'])
 
 
 if __name__ == '__main__':

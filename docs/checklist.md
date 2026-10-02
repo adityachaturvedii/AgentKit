@@ -387,3 +387,10 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [ ] Validate an actual controlled browser driver and host boundary; fixture report validation alone does not close REF-08.
 - [ ] Run separately authorized live specialist forward evaluations and a consented pilot; no inference or participant collection occurred in this batch.
 - [ ] General repository execution, full-screen TUI, browser credential/egress isolation, deployment and publication remain unsupported.
+
+## Product refinement workflow views
+
+- [x] Add read-only `refine status` for fixture and static-product controllers using the validated `RunView` projection.
+- [x] Add `refine result` only for an unapproved review-ready package whose actual clean candidate still matches its recorded head.
+- [x] Escape terminal control characters in plain output and keep JSON output machine-readable.
+- [x] Verify reconnecting never starts work and candidate tampering blocks result presentation.

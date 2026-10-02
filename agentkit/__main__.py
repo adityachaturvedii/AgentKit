@@ -80,6 +80,35 @@ def _emit_workflow(events, output_format):
             print(_render_with_adapted_terminal(Path(stream.name)), end='')
 
 
+def _refinement_plain(value):
+    """Render validated records without emitting terminal control characters."""
+    def safe(item):
+        return str(item).encode('unicode_escape').decode('ascii')
+    if 'head_revision' in value:
+        lines = [
+            'task: ' + safe(value['task_id']),
+            'status: ' + safe(value['status']),
+            'summary: ' + safe(value['summary']),
+            'candidate: ' + safe(value['head_revision']),
+            'verification records: ' + str(len(value['verification'])),
+            'browser records: ' + str(len(value['browser_verification'])),
+            'review findings: ' + str(len(value['review_findings'])),
+            'approval recorded: no',
+        ]
+    else:
+        lines = [
+            'task: ' + safe(value['task_id']),
+            'stage: ' + safe(value['stage']),
+            'objective: ' + safe(value['objective']),
+            'active: ' + (', '.join(safe(item) for item in value['active_assignments']) or 'none'),
+            'acceptance: {} passed, {} failed, {} unknown'.format(
+                value['acceptance_coverage']['passed'], value['acceptance_coverage']['failed'],
+                value['acceptance_coverage']['unknown']),
+            'attention required: ' + ('yes' if value['needs_attention'] else 'no'),
+        ]
+    return '\n'.join(lines) + '\n'
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="AgentKit engineering-agent controller and evidence toolkit")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -180,6 +209,13 @@ def main(argv=None):
                                help="JSON object containing the controller-visible paths")
     refine_intake.add_argument("--kind", choices=("fixture", "repository", "static-product"),
                                required=True)
+    for name, help_text in (("status", "read a concise durable workflow view"),
+                            ("result", "read a review-ready exact-candidate result")):
+        command = refine_commands.add_parser(name, help=help_text)
+        command.add_argument("--root", required=True)
+        command.add_argument("--task-id", required=True)
+        command.add_argument("--kind", choices=("fixture", "static-product"), required=True)
+        command.add_argument("--format", choices=("plain", "json"), default="plain")
     task = commands.add_parser("task", help="Phase 4 disposable task intake and orchestration")
     task_commands = task.add_subparsers(dest="task_command", required=True)
     task_commands.add_parser("fixtures", help="list supported controller-created disposable targets")
@@ -471,11 +507,23 @@ def main(argv=None):
                     args.project_id, args.request), indent=2))
             return 0
         elif args.command == "refine":
-            from .refinement import guided_intake
-            request = Path(args.request_file).read_text()
-            inventory = read_json(args.inventory)
-            print(json.dumps(guided_intake(
-                request, inventory, workflow_kind=args.kind).to_dict(), indent=2))
+            from .refinement import guided_intake, open_result_view, open_workflow_view
+            if args.refine_command == 'intake':
+                value = guided_intake(
+                    Path(args.request_file).read_text(), read_json(args.inventory),
+                    workflow_kind=args.kind).to_dict()
+                print(json.dumps(value, indent=2))
+            elif args.refine_command == 'status':
+                _, view = open_workflow_view(
+                    args.root, args.task_id, workflow_kind=args.kind)
+                value = view.to_dict()
+                print(json.dumps(value, indent=2) if args.format == 'json' else
+                      _refinement_plain(value), end='' if args.format == 'plain' else '\n')
+            else:
+                value = open_result_view(
+                    args.root, args.task_id, workflow_kind=args.kind).to_dict()
+                print(json.dumps(value, indent=2) if args.format == 'json' else
+                      _refinement_plain(value), end='' if args.format == 'plain' else '\n')
             return 0
         elif args.command == "task":
             from .orchestration import Phase4Workflow, phase4_fixture_catalog

@@ -101,6 +101,17 @@ python3 -m agentkit refine intake \
 
 This produces an inspectable draft. It does not authorize repository execution, broaden paths, or start a provider.
 
+Reconnect to a durable fixture or static-product workflow through the concise refinement view:
+
+```sh
+python3 -m agentkit refine status \
+  --root /tmp/agentkit-task --task-id calculator-demo --kind fixture
+python3 -m agentkit refine result \
+  --root /tmp/agentkit-task --task-id calculator-demo --kind fixture --format json
+```
+
+`status` is read-only. `result` is available only for a clean exact candidate with an unapproved revision-bound package; a dirty worktree or stale package fails closed.
+
 ## Run a complete offline task
 
 The default task workflow uses deterministic fake providers and a controller-created fixture, so it consumes no model quota:
@@ -275,7 +286,7 @@ The first Breakout attempt failed during planning; the later integration checkpo
 | `python3 -m agentkit controller-demo` | Exercise the Phase 3 delivery controller | Fake by default; live is opt-in |
 | `python3 -m agentkit auth-status`, `auth-login`, `auth-reconcile` | Inspect or recover official subscription login | Login is interactive and uncaptured |
 | `python3 -m agentkit task ...` | Propose, submit, run, inspect, cancel, resume and package disposable tasks | Fake by default; live is opt-in |
-| `python3 -m agentkit refine intake` | Derive an inspectable requirements/assumptions draft from a brief and bounded inventory | No |
+| `python3 -m agentkit refine intake`, `status`, `result` | Prepare intent or read concise durable status and exact-candidate results | No |
 | `python3 -m agentkit workflow ...` | Status, start, resume, cancel and package-summary views for an existing disposable task | Fake by default; live start/resume require explicit authorization |
 | `python3 -m agentkit pilot ...` | Freeze a consented matched protocol and record/report immutable offline observations | No |
 | `python3 -m agentkit resource-policy` | Explain resolved controls and capability profiles | No |
@@ -336,7 +347,7 @@ Skills reference shared contracts and notices, so copy or archive the complete r
 
 ## Validation
 
-The current offline refinement candidate ran 334 tests: **331 passed and 3 skipped** in the managed tool environment (two Seatbelt checks and one loopback preview). Eight dependency-free Node terminal tests also passed. Structural checks passed for fourteen skills, seven domain procedures, fourteen examples and three pinned foundation sources. These results validate the offline contracts and fixtures; they do not close host browser, general-repository or live-provider gates. Host-only results in earlier reports apply only to their tested paths and revisions.
+The current offline refinement candidate ran 336 tests: **333 passed and 3 skipped** in the managed tool environment (two Seatbelt checks and one loopback preview). Eight dependency-free Node terminal tests also passed. Structural checks passed for fourteen skills, seven domain procedures, fourteen examples and three pinned foundation sources. These results validate the offline contracts and fixtures; they do not close host browser, general-repository or live-provider gates. Host-only results in earlier reports apply only to their tested paths and revisions.
 
 ```sh
 python3 -m unittest discover -s tests -v
