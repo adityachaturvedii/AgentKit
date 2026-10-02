@@ -1,5 +1,7 @@
 # Repository-first engineering plan
 
+The next proposed work is sequenced in the [product-refinement increment](refinement-plan.md) and [REF backlog](refinement-backlog.md). It preserves this plan's repository-first priority and existing controller, introduces selective specialist/skill contracts, and makes environment readiness, useful recovery and a coherent terminal journey prerequisites to claiming product maturity. Existing P-ticket completion does not close the new operator acceptance gate.
+
 Status: R0, R1, the R2 disposable-fixture delivery slice and R3 P11 portable-package verifier plus P12 one-shot terminal workflow are implemented. P13 source-checkout/wheel onboarding, compatibility and data-flow documentation is implemented, while public distribution remains blocked on an outbound license. This plan follows the user's choices: existing repositories before new products; small engineering teams and public open-source users; substantial OpenHarness reuse. Runtime authority remains unchanged until the corresponding boundary has been implemented and validated.
 
 ## Architecture and ownership
