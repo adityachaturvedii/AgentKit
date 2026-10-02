@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "revision": "0000000000000000000000000000000000000000",
+  "status": "blocked",
+  "summary": "Example shape only; no verification has run.",
+  "evidence": [],
+  "limitations": [
+    "Template only; no capability or evidence supplied."
+  ],
+  "next_actions": [
+    "Supply task-specific observations and validate."
+  ],
+  "task_id": "example-acceptance-design",
+  "kind": "acceptance-design",
+  "payload": {
+    "requirements": [
+      "REQ-1."
+    ],
+    "checks": [
+      "Protected independent check."
+    ],
+    "positive_controls": [
+      "Known-good fixture."
+    ],
+    "negative_controls": [
+      "Intentional defect fixture."
+    ],
+    "runtime": "Approved local runtime required.",
+    "coverage_gaps": [
+      "Browser behavior unverified."
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "revision": "0000000000000000000000000000000000000000",
+  "status": "blocked",
+  "summary": "Example shape only; no verification has run.",
+  "evidence": [],
+  "limitations": [
+    "Template only; no capability or evidence supplied."
+  ],
+  "next_actions": [
+    "Supply task-specific observations and validate."
+  ],
+  "task_id": "example-interaction-design",
+  "kind": "interaction-design",
+  "payload": {
+    "flows": [
+      "Primary flow."
+    ],
+    "states": [
+      "Start and success states."
+    ],
+    "accessibility": [
+      "Visible keyboard focus."
+    ],
+    "responsive": [
+      "Narrow layout order."
+    ],
+    "acceptance_ids": [
+      "UX-1"
+    ],
+    "gaps": [
+      "Browser evidence unavailable."
+    ]
+  }
+}

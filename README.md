@@ -9,7 +9,7 @@
 
 AgentKit turns an engineering request into a validated task contract, a bounded execution graph, isolated implementation work, independent verification and review, and a revision-bound local approval package. It integrates with installed Codex and Claude Code CLIs while keeping task state, budgets, permissions and approvals under deterministic controller control.
 
-The repository also includes ten audited engineering skills, seven domain procedures, strict handoff schemas, disposable fixtures and a regression suite. It uses only the Python standard library at runtime and works directly from a checkout.
+The repository also includes fourteen audited engineering skills, seven domain procedures, strict handoff schemas, disposable fixtures and a regression suite. It uses only the Python standard library at runtime and works directly from a checkout.
 
 > [!IMPORTANT]
 > The validated live execution profile remains trusted, controller-created disposable workspaces on macOS. Read-only repository intake and an experimental Python-library delivery slice are now available, but general repository execution is not release-ready. Linux/Windows workers, GPU hosts and unattended untrusted code remain outside the validated boundary.
@@ -44,6 +44,9 @@ AgentKit is experimental. The original Phase 4 workflow has been extended with a
 | Repository delivery (R2) | Deterministic integration slice; corrective boundaries and durable stage-specific authentication resume are fixture-tested; live repository-provider validation remains open |
 | Portable review package (R3 P11) | Fixture-tested export and offline consistency verification; signing and distribution remain open |
 | Terminal workflow (R3 P12) | Plain, JSON, protocol-event and one-shot terminal views over existing Phase 4 disposable workflows; no full-screen interactive TUI |
+| Guided refinement contracts | Fixture-tested intent, design, frozen acceptance, recovery and result-view records; these records grant no execution authority |
+| Browser evidence integrity | Fixture-tested private snapshots and strict externally supplied reports; an actual controlled browser driver remains unavailable |
+| Matched pilot ledger | Offline-tested frozen protocol, immutable observations and descriptive reporting; no participant outcomes have been collected |
 | [Distribution and compatibility (R3 P13)](docs/r3-distribution-validation-report.md) | Offline source-checkout and isolated-wheel onboarding plus data-flow boundaries; public release remains blocked on an outbound license |
 | Provider-planned static web products | Fixture-tested; no successful live game delivery or completed browser acceptance trial |
 | GitHub publication, merge and deployment | Not implemented in the toolkit |
@@ -85,6 +88,19 @@ python3 -m agentkit validate contracts/examples/fault-diagnosis.json
 
 `select` uses an explicit intent from `list`; it is not free-form model routing. `validate` checks structure and consistency only. It never executes commands or follows paths supplied by a handoff.
 
+Prepare an authority-free guided intent from a plain brief and a controller-visible inventory:
+
+```sh
+printf '%s\n' 'Improve the result summary for first-time maintainers.' > /tmp/brief.txt
+printf '%s\n' '{"paths":["agentkit/results.py","tests/test_results.py"]}' > /tmp/inventory.json
+python3 -m agentkit refine intake \
+  --request-file /tmp/brief.txt \
+  --inventory /tmp/inventory.json \
+  --kind repository
+```
+
+This produces an inspectable draft. It does not authorize repository execution, broaden paths, or start a provider.
+
 ## Run a complete offline task
 
 The default task workflow uses deterministic fake providers and a controller-created fixture, so it consumes no model quota:
@@ -125,6 +141,8 @@ The `workflow` commands operate that existing controller record through the cons
 python3 -m agentkit workflow status --root /tmp/agentkit-task --task-id calculator-demo --format events
 python3 -m agentkit workflow package --root /tmp/agentkit-task --task-id calculator-demo --format plain
 ```
+
+For an existing static-product workflow, pass `--kind static-product`; reconnecting for status never starts work.
 
 The available output formats are `plain`, `json`, `events` (protocol JSONL) and `terminal`. The terminal form is the dependency-free one-shot Node renderer, not an interactive full-screen TUI. See the [R3 terminal workflow](docs/r3-terminal-workflow.md) and [P12 validation report](docs/r3-terminal-validation-report.md) for actions, authorization, evidence and boundaries.
 
@@ -238,7 +256,7 @@ See [resource policy and role capabilities](docs/cli-resource-policy.md) for enf
 
 ### Static web product work
 
-The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments; the controller validates scope, dependencies, acceptance and budget before execution. Protected mechanics checks and exact-revision browser evidence are required for acceptance. Browser interaction is externally driven, not a general built-in browser agent.
+The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments; the controller validates scope, dependencies, acceptance and budget before execution. Product planning now receives hash-verified product-shaping, interaction-design and visual-design procedures. Protected mechanics checks and exact-revision browser evidence are required for acceptance. The browser-evidence path can create a private plain-file snapshot and validate an independent report against its revision, session, snapshot and screenshots. Browser interaction remains externally driven; the toolkit does not claim a general built-in browser agent or browser-process isolation.
 
 The first Breakout attempt failed during planning; the later integration checkpoint stopped on Claude authentication failures. No playable game or completed product acceptance is claimed. See the [product workflow](docs/product-workflow.md) for commands, prerequisites and retained evidence.
 
@@ -257,7 +275,9 @@ The first Breakout attempt failed during planning; the later integration checkpo
 | `python3 -m agentkit controller-demo` | Exercise the Phase 3 delivery controller | Fake by default; live is opt-in |
 | `python3 -m agentkit auth-status`, `auth-login`, `auth-reconcile` | Inspect or recover official subscription login | Login is interactive and uncaptured |
 | `python3 -m agentkit task ...` | Propose, submit, run, inspect, cancel, resume and package disposable tasks | Fake by default; live is opt-in |
+| `python3 -m agentkit refine intake` | Derive an inspectable requirements/assumptions draft from a brief and bounded inventory | No |
 | `python3 -m agentkit workflow ...` | Status, start, resume, cancel and package-summary views for an existing disposable task | Fake by default; live start/resume require explicit authorization |
+| `python3 -m agentkit pilot ...` | Freeze a consented matched protocol and record/report immutable offline observations | No |
 | `python3 -m agentkit resource-policy` | Explain resolved controls and capability profiles | No |
 | `python3 -m agentkit reuse-demo` | Exercise adapted OpenHarness components with the existing controller | No |
 | `python3 -m agentkit project ...` | Inspect, enroll and plan a selected supported repository read-only | No |
@@ -316,7 +336,7 @@ Skills reference shared contracts and notices, so copy or archive the complete r
 
 ## Validation
 
-The branch reconciliation ran 215 tests: **212 passed and 3 skipped** in the managed tool environment (two Seatbelt checks and one loopback preview). Structural checks passed for ten skills, seven domain procedures, ten examples and three pinned foundation sources. This is regression evidence, not proof that the open R2 findings are resolved. Host-only results in earlier reports apply to their tested paths and revisions.
+The current offline refinement candidate ran 334 tests: **331 passed and 3 skipped** in the managed tool environment (two Seatbelt checks and one loopback preview). Eight dependency-free Node terminal tests also passed. Structural checks passed for fourteen skills, seven domain procedures, fourteen examples and three pinned foundation sources. These results validate the offline contracts and fixtures; they do not close host browser, general-repository or live-provider gates. Host-only results in earlier reports apply only to their tested paths and revisions.
 
 ```sh
 python3 -m unittest discover -s tests -v
@@ -341,10 +361,10 @@ Historical evidence is hash-bound to the revision it tested. A successful archiv
 
 The [reuse-first engineering plan](docs/planning/README.md) prioritizes existing-repository engineering for small teams, followed by new-product creation.
 
-- **Implemented:** audited skills, adapters, disposable delivery, authentication checkpoints, concurrent scenario workflows, resource policies, R0 component reuse and R1 read-only intake.
-- **Corrective gate:** resolve R2 review findings and validate the real adapter, authentication and verifier paths before extending repository execution.
-- **Implemented R3 documentation:** portable review export, the one-shot terminal workflow, and source-checkout compatibility/data-flow guidance.
-- **Next release gate:** choose an outbound license before calling P13 public distribution complete; signing/publication remain separate, and R4 measured pilot evaluation and R5 new-product acceptance remain later work.
+- **Implemented offline:** audited skills, adapters, disposable delivery, authentication checkpoints, concurrent scenario workflows, resource policies, OpenHarness reuse, read-only intake, the deterministic repository-delivery slice, portable packages, the terminal facade and product-refinement contracts.
+- **Implemented evaluation foundation:** the R4 matched-pilot ledger is available without execution authority; participant collection remains pending.
+- **Product gate:** static-product planning, protected mechanics and strict browser-evidence integrity are fixture-tested; an actual controlled browser run and live specialist evaluation remain open.
+- **Distribution gate:** choose an outbound license before calling public distribution complete; signing and publication remain separate.
 - **Deferred:** optional Linux/GPU workers, broader isolation, GitHub publication and deployment.
 
 The [implementation checklist](docs/checklist.md), [decision log](docs/decisions.md) and [original specification](docs/implementation-spec.md) distinguish implemented, simulated, live-tested and planned behavior.

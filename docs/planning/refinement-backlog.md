@@ -1,6 +1,6 @@
 # Product-refinement engineering backlog
 
-Status: proposed, unimplemented tickets. The [plan](refinement-plan.md) defines scope and gates; [specialist contracts](specialist-skills.md) define agent and skill behavior. Ticket IDs are new and do not replace the historical P01–P15 ledger.
+Status: active. REF-00/01/03 and the typed-failure portion of REF-02 were completed in the first refinement batch. This follow-up implements the offline REF-04–10 foundations described below; host browser operation, live specialist evaluation, general repository execution and participant pilot collection remain gated. The [plan](refinement-plan.md) defines scope and gates; [specialist contracts](specialist-skills.md) define agent and skill behavior. Ticket IDs do not replace the historical P01–P15 ledger.
 
 ## Dependencies and independent ownership
 
@@ -70,6 +70,8 @@ One integration owner reviews cross-component changes and runs the full suite. K
 
 ## REF-04 — specialist profiles and evaluated skill registry
 
+**Current state:** versioned specialist/profile and hash-bound context contracts are fixture-tested. `product-shaping`, `interaction-design`, `visual-design` and `acceptance-design` are bundled and structurally/behaviorally tested. Comparative live graduation remains open.
+
 **Outcome:** expertise is an explicit, reproducible configuration instead of a persona label.
 
 **Owners/seams:** role/context owner; extend `phase4_contracts.py`, routing configuration, catalog/pack, existing context assembly. Persist base role + specialization, activation reason, eligible capability/model profiles, output schema and selected skill/reference hashes. Avoid changing durable state roles just to add a specialist label.
@@ -81,6 +83,8 @@ One integration owner reviews cross-component changes and runs the full suite. K
 **Gate:** authored skills pass structural checks and held-out deterministic/independent forward cases with strengths/gaps recorded. Fixture maturity only until separately evaluated live. Effort: medium/large; schema commit first, skill and routing consumers next.
 
 ## REF-05 — guided intent and independent acceptance preparation
+
+**Current state:** authority-free guided intent and frozen acceptance records are implemented with safe path/argv validation and positive/negative-control requirements. General repository execution and model-authored oracle installation remain unsupported.
 
 **Outcome:** the user supplies a natural-language task and meaningful constraints; AgentKit prepares inspectable internal contracts.
 
@@ -94,6 +98,8 @@ One integration owner reviews cross-component changes and runs the full suite. K
 
 ## REF-06 — one workflow facade and useful terminal progress
 
+**Current state:** the existing strict facade now reconnects to fixture and static-product workflows, and a validated `RunView` projection is fixture-tested. A full-screen TUI and a unified executable repository workflow remain deferred.
+
 **Outcome:** one consistent command experience across supported repository, fixture and product paths.
 
 **Owners/seams:** frontend owner; `__main__.py`, `terminal_workflow.py`, pinned OpenHarness protocol/renderer. Version a `RunView` with objective, workflow kind, stage, active assignment, actual last-activity time, candidate summary, failure, acceptance coverage, resource completeness and validated next actions. Protocol migration preserves old consumers and rejects unknown authority fields.
@@ -105,6 +111,8 @@ One integration owner reviews cross-component changes and runs the full suite. K
 **Gate:** an unfamiliar operator can explain plan, current activity and next action from the default view. Validate with a small interaction prototype before building a full-screen TUI. Effort: large, with plain streaming first.
 
 ## REF-07 — design-guided product work
+
+**Current state:** a hash-bound `DesignBrief` and role-relevant product planning context are implemented. Provider performance against the new design skills is not live-tested.
 
 **Outcome:** visual/interaction intent survives planning, implementation and critique.
 
@@ -118,6 +126,8 @@ One integration owner reviews cross-component changes and runs the full suite. K
 
 ## REF-08 — actual browser acceptance capability
 
+**Current state:** private candidate snapshots and strict external browser-report validation are implemented and fixture-tested, including candidate/session/screenshot/independence binding. No controlled browser driver is installed or validated, so the actual-browser gate remains open.
+
 **Outcome:** repeatable browser interaction is available within a declared supported boundary, or the product gate explains exactly why it is unavailable.
 
 **Owners/seams:** browser/runtime owner; current `web_acceptance.py`, snapshot/preview owner, external browser-driver adapter. Select an already available driver when it can satisfy the contract; dependency/browser installation requires separate review and authorization. This ticket does not assume access to the user's existing browser profile.
@@ -130,6 +140,8 @@ One integration owner reviews cross-component changes and runs the full suite. K
 
 ## REF-09 — review-ready result and bounded refinement
 
+**Current state:** a validated result projection and bounded refinement decision invalidate verification, browser, review and approval evidence. Existing revision-bound packages remain the delivery artifact. Human-oriented HTML export remains unimplemented.
+
 **Outcome:** results are understandable and usable without opening raw JSON archives.
 
 **Owners/seams:** frontend/package owner; existing portable-package exporter/verifier, immutable candidate/evidence. Lead with change summary, try-it/replay commands, acceptance matrix and unresolved findings; expose diff, design decisions, usage and provenance next. Optional escaped static HTML artifact must execute no candidate or model-supplied script.
@@ -141,6 +153,8 @@ One integration owner reviews cross-component changes and runs the full suite. K
 **Gate:** a second engineer can identify what changed, what was tested and what remains uncertain without reading provider transcripts. Effort: medium.
 
 ## REF-10 — operator acceptance, then measured pilot
+
+**Current state:** the frozen, consented, failure-inclusive R4 pilot ledger is adapted with CLI commands and offline tests. It has no execution authority and no participant results have been collected.
 
 **Outcome:** demonstrate the product journey, not another isolated successful inference.
 

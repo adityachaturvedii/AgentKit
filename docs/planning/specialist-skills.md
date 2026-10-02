@@ -1,6 +1,6 @@
-# Specialist agents and skills: proposed contracts
+# Specialist agents and skills
 
-Status: design only. This document proposes extensions to the [current role contracts](../phase4-role-contracts.md), not additional installed agents or skills. Runtime implementation is sequenced in the [backlog](refinement-backlog.md).
+Status: the versioned specialist/profile foundation and the first four skills are implemented and fixture-tested. Additional specialist performance, `frontend-implementation` and `design-review` remain proposed and are sequenced in the [backlog](refinement-backlog.md).
 
 ## Three distinct concepts
 
@@ -42,7 +42,7 @@ Preserve the ten existing audited skills and their source/license attribution. D
 | `acceptance-design` | Derive expected results independently; validate nonempty discovery; distinguish runtime/test-harness/product failures; handle cross-realm JS objects/errors | Known-good control passes, intentional defect fails, broken harness errors distinctly; no expected-patch leakage |
 | `design-review` | Compare exact candidate observations with chosen direction; separate usability/accessibility defects from preference and suggested scope additions | Reviewer cites actual elements/flows/evidence; missing viewport/focus evidence stays unknown; no ungrounded “looks good” pass |
 
-Start with the first three plus acceptance design; reuse existing behavioral/frontend procedures until the implementation and review gaps justify their separate skills. Skill count is not a success metric. Combine or drop a proposed skill if forward tasks show no useful distinction.
+The first three plus acceptance design are now bundled and hash-verified in worker context. Existing behavioral/frontend procedures remain in use until implementation and review gaps justify separate `frontend-implementation` or `design-review` skills. Skill count is not a success metric. Combine or drop a proposed skill if forward tasks show no useful distinction.
 
 Bundle new files within the AgentKit repository, never the operator's global skills directories. Audit any imported material for source pin, license/dependency closure, adaptations and tests before adoption. The planning methodology uses the local skill-creator guidance (concise discriminating triggers, progressive disclosure, behavioral validation); no global skill content is copied into the runtime by this plan.
 
