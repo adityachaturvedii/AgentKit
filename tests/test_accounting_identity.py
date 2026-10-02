@@ -5,7 +5,11 @@ import subprocess
 import tempfile
 import unittest
 
+from agentkit.controller import UsageRecord
+from agentkit.delivery import EngineOutcome
 from agentkit.git_broker import GitBroker, GitBrokerError, GitIdentity
+from agentkit.orchestration import Phase4Workflow
+from agentkit.phase4_fixtures import CALCULATOR
 from agentkit.usage_summary import summarize_usage
 
 
@@ -69,6 +73,39 @@ class UsageSummaryTests(unittest.TestCase):
         self.assertEqual(summary['provider_usage']['input_tokens']['completeness'], 'unknown')
         self.assertIsNone(summary['provider_usage']['input_tokens']['reported_subtotal'])
         self.assertEqual(summary['local_checks']['cli_launches'], 1)
+
+    def test_phase4_status_shows_partial_subtotals_and_keeps_legacy_unknown(self):
+        class ReportingSpecialist:
+            engine = 'codex'
+            model = None
+
+            def run_assignment(self, workspace, assignment, output, boundary, prompt, policy):
+                (Path(workspace) / 'calculator.py').write_text(
+                    CALCULATOR.final_files['calculator.py'])
+                return EngineOutcome(
+                    'succeeded', .01,
+                    UsageRecord(input_tokens=11, output_tokens=3, source='fixture'),
+                    {'simulated': True})
+
+        with tempfile.TemporaryDirectory(prefix='agentkit-usage-status-') as temporary:
+            workflow = Phase4Workflow.submit(
+                Path(temporary) / 'status-workflow', 'usage-status',
+                'Correct total arithmetic.', 'calculator', max_calls=3,
+                max_provider_calls=2, max_concurrency=1)
+            workflow.specialist_factory = lambda provider, fixture: ReportingSpecialist()
+            workflow.start('usage-status')
+            budget = workflow.status('usage-status')['budget']
+            reporting = budget['usage_reporting']
+
+            self.assertEqual(reporting['cli_launches'],
+                             {'provider': 2, 'local_checks': 1, 'total': 3})
+            self.assertEqual(reporting['provider_usage']['input_tokens'], {
+                'reported_subtotal': 11,
+                'contributing_execution_count': 1,
+                'missing_execution_count': 1,
+                'completeness': 'partial',
+            })
+            self.assertIsNone(budget['token_usage']['input_tokens'])
 
 
 class GitIdentityTests(unittest.TestCase):

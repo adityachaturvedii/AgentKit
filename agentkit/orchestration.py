@@ -28,6 +28,7 @@ from .phase4_state import Phase4State
 from .planning import propose, validate_proposal
 from .process import run_process
 from .runtime_contracts import ExecutionBoundary, LivePolicy
+from .usage_summary import summarize_usage
 
 
 def _safe_scope(paths):
@@ -1291,19 +1292,10 @@ class Phase4Workflow:
         failures = [record.to_dict() for record in project_failures(controller)]
         task = self.store.task(task_id)
         budget = controller['budget']
-        usage_fields = ('input_tokens', 'output_tokens', 'cached_input_tokens',
-                        'cache_creation_tokens', 'reasoning_tokens')
-        observed = {name: 0 for name in usage_fields}
-        unknown = {name: False for name in usage_fields}
         executions = []
         for row in controller['executions']:
             usage = json.loads(row['usage_json']) if row['usage_json'] else {}
             details = json.loads(row['result_json']) if row['result_json'] else {}
-            for name in usage_fields:
-                if usage.get(name) is None:
-                    unknown[name] = True
-                else:
-                    observed[name] += usage[name]
             executions.append({'execution_id': row['execution_id'], 'role': row['role'],
                                'engine': row['engine'],
                                'requested_configuration': {
@@ -1313,8 +1305,21 @@ class Phase4Workflow:
                                                {'model': None, 'effort': None}),
                                'status': row['status'], 'elapsed_seconds': row['elapsed_seconds'],
                                'usage': usage or None})
-        token_usage = {name: (None if not executions or unknown[name] else observed[name])
-                       for name in usage_fields}
+        usage_reporting = summarize_usage(
+            executions, wall_elapsed_seconds=budget['elapsed_seconds'],
+            reservations={
+                'active_calls': budget['active_calls'],
+                'reserved_calls': budget['reserved_calls'],
+                'provider_reserved_calls': budget['provider_reserved_calls'],
+                'verification_reserve': budget['verification_reserve'],
+                'review_reserve': budget['review_reserve'],
+            })
+        provider_usage = usage_reporting['provider_usage']
+        token_usage = {
+            name: (item['reported_subtotal'] if item['completeness'] == 'complete' else None)
+            for name, item in provider_usage.items()
+            if name not in ('estimated_cost_usd', 'billed_cost_usd')
+        }
         plan = snapshot['plan']['plan']
         findings = []
         resolved_findings = []
@@ -1396,8 +1401,13 @@ class Phase4Workflow:
                                                             budget['elapsed_seconds'] -
                                                             budget['reserved_elapsed_seconds']),
                            'token_usage': token_usage,
-                           'estimated_cost_usd': None, 'billed_cost_usd': None,
-                           'cost_note': 'Unknown remains unknown; CLI estimates are not billing.'},
+                           'usage_reporting': usage_reporting,
+                           'estimated_cost_usd':
+                               provider_usage['estimated_cost_usd']['reported_subtotal'],
+                           'billed_cost_usd':
+                               provider_usage['billed_cost_usd']['reported_subtotal'],
+                           'cost_note': ('Reported subtotals include completeness metadata; '
+                                         'estimates are not billing and missing values remain unknown.')},
                 'blocker': blocker, 'attention': attention, 'findings': findings,
                 'failures': failures,
                 'current_failure': (failures[-1] if failures and task['state'] in
