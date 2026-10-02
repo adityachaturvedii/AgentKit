@@ -23,6 +23,9 @@ RESOURCE_DOCS = (
     "docs/r3-portable-package.md",
     "docs/r3-provenance-manifest.md",
     "docs/r3-terminal-workflow.md",
+    "docs/r4-pilot-protocol.md",
+    "docs/r4-pilot-validation-report.md",
+    "docs/examples/pilot-protocol.json",
     "docs/skill-contract.md",
 )
 FRONTEND_FILES = (

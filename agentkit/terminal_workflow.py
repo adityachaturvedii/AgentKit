@@ -10,13 +10,22 @@ class TerminalWorkflow:
     """Expose task lifecycle commands without accepting authority-bearing input."""
 
     def __init__(self, root, task_id, *, live=False, authorized=False,
-                 workflow_factory=Phase4Workflow):
+                 workflow_factory=None, workflow_kind='fixture'):
         if not isinstance(task_id, str) or not task_id.strip() or len(task_id) > 128:
             raise ValueError("invalid terminal task id")
         if type(live) is not bool or type(authorized) is not bool:
             raise ValueError("terminal policy flags must be booleans")
         self.root = Path(root).resolve()
         self.task_id = task_id
+        if workflow_kind not in ('fixture', 'static-product'):
+            raise ValueError('unsupported terminal workflow kind')
+        if workflow_factory is None:
+            if workflow_kind == 'static-product':
+                from .product import ProductWorkflow
+                workflow_factory = ProductWorkflow
+            else:
+                workflow_factory = Phase4Workflow
+        self.workflow_kind = workflow_kind
         self.workflow = workflow_factory(self.root, live=live, authorized=authorized)
         # Bind exactly the requested task. Never enumerate or infer another task.
         self.workflow.store.task(self.task_id)

@@ -1,26 +1,44 @@
-# Product-refinement planning validation
+# Product-refinement implementation validation
 
-Scope: documentation and engineering design only. No executable code, skill catalog, provider profile, global CLI configuration, historical evidence or generated product is changed.
+Validated branch: `implementation/refinement-completion`, based on integration merge `54e62f6946e7be204e3bc4ba866a767bf7a8f74c`.
 
-## Source and ancestry review
+## Implemented offline
 
-- Read the workspace and target worktree AGENTS instructions, product direction, engineering plan, planning decisions, controller/role/graph/resource and skill contracts, catalog, terminal facade/renderer and relevant product/adapter/broker/status implementation.
-- Inspected R5 `9a05b63` and its retained request/result/candidate/verification records; treated diagnostic mechanics/browser observations as separate from blocked authoritative delivery.
-- Inspected the separate R4 `3dd45c6` pilot validation; recognized implemented synthetic protocol/ledger without claiming actual collection.
-- Refreshed `origin` successfully. Verified integration `8d9cc311df47355ce64e588b8cb8de60a4ae25ae` and release `cd81a4e`; both R5 and R4 work are outside that integration tip. Dedicated branch `planning/product-refinement` starts from the refreshed integration tip.
-- Applied local skill-creator guidance to proposed skill structure, progressive context, discriminating triggers and forward evaluation. No global skills were installed, modified or copied into the toolkit.
+- Four bundled skills: product shaping, interaction design, visual design and acceptance design. Their v1 handoff examples validate through the existing authority-free schema.
+- Validated records for guided intent, design briefs, frozen independent acceptance, concise run views, bounded refinements and quality-stage recovery decisions.
+- Product planning loads only role-relevant shaping/design procedures and rechecks their hashes. Acceptance-design content is held out of implementation planning.
+- The terminal facade can reconnect to fixture or static-product controllers without starting work. `refine intake` accepts a plain brief plus a bounded inventory and returns an inspectable non-authoritative draft.
+- Static-product browser evidence can be bound to a private plain-file candidate snapshot, exact revision/session, independent verifier metadata and hashed screenshots. The validator does not operate a browser.
+- The frozen R4 matched-pilot ledger is adapted as an offline, authority-free component with strict consent, assignment, observation, missingness and descriptive-report contracts.
 
-## Checks
+## Adapted ancestry
 
-- `python3 -m agentkit check`: passed; 10 existing skills, 7 domains, 10 examples and 3 source records remain structurally valid. Its local-link scan includes the new planning documents.
-- `python3 -m unittest tests.test_distribution_docs tests.test_branding -v`: 9 tests passed, no skips. Public README presentation, distribution boundaries and stable branding/interfaces remain unchanged.
-- An additional check of the four new planning documents resolved all 8 local Markdown links.
-- `git diff --check`: passed. Final staged-path inspection is restricted to documentation; no runtime/skill/catalog/evidence file changes.
+The integration branch deliberately did not merge divergent R4 `3dd45c6` or R5 `9a05b63`. This change adapts only:
 
-Full runtime/provider tests and browser/live inference were deliberately not repeated for a documentation-only plan. Existing regression counts are historical evidence tied to their recorded revisions; they are not results for this planning change.
+- `agentkit/web_acceptance.py` and its focused tests from the R5 ancestry, excluding historical live archives and unrelated product/controller changes.
+- `agentkit/pilot.py`, its CLI/tests, protocol example and guides from R4, excluding any claim that a pilot has run.
+
+Historical evidence is unchanged. R5's live SplitSmart archive remains diagnostic evidence for its recorded revision and is not validation of this candidate.
+
+## Validation results
+
+- Full Python suite: 334 tests run, 331 passed, 3 host-bound skips.
+- Focused Node terminal suite: 8 passed.
+- `python3 -m agentkit check`: passed with 14 skills, 7 domains, 14 examples and 3 pinned sources.
+- Python bytecode compilation passed with its cache redirected to a disposable writable directory; the default macOS cache path is outside this managed sandbox.
+- `git diff --check`: passed.
+
+## Validation classes
+
+- **Fixture-tested:** schema rejection, path and command bounds, skill-content hashes, controlled product-planning context, candidate snapshot integrity, strict external browser reports, refinement invalidation, narrow quality recovery and the complete offline pilot ledger.
+- **Host-only:** the existing loopback preview lifecycle is expected to be checked outside the managed outer sandbox. Inside this environment it skips on socket permission denial.
+- **Live-tested:** none for this change. No provider inference, authentication flow or quota was used.
+- **Unsupported/unverified:** controlled browser-driver operation; browser credential/egress/process isolation; real touch hardware; live specialist quality comparisons; general repository execution; automatic oracle installation; full-screen TUI; collected pilot outcomes; publication or deployment.
+
+## Security and authority boundaries
+
+The new records cannot grant execution, filesystem, budget, approval or publication authority. Acceptance commands use a controller allowlist (`python3` and `node`) and browser/manual checks cannot embed commands. Recovery is limited to verification or browser-verification after confirmed process termination, exact candidate/manifest matching, a typed environment/oracle correction and remaining call/time capacity. Pilot commands only write their own fresh private ledger and never launch providers or projects.
 
 ## Remaining gates
 
-Every REF ticket remains proposed. No provider identifiers/options, model rankings, new dependency closure, browser boundary, recovery transition, specialized worker performance, UI usability or pilot outcome is newly validated. These have concrete offline, host and separately authorized live acceptance gates in the backlog.
-
-No publication, PR, merge, installation, additional repository access, credential access or inference occurred. Network use was limited to refreshing the already authorized AgentKit repository's Git refs.
+REF-08 cannot close until an already reviewed browser driver can run in a fresh profile with controlled loopback access, cleanup and recorded browser/version evidence. REF-10 cannot close without a separately authorized, consented pilot. Live skill graduation and the product acceptance journey need new finite inference authorization and must bind their evidence to the executable revision tested.

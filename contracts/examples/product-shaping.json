@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "revision": "0000000000000000000000000000000000000000",
+  "status": "blocked",
+  "summary": "Example shape only; no verification has run.",
+  "evidence": [],
+  "limitations": [
+    "Template only; no capability or evidence supplied."
+  ],
+  "next_actions": [
+    "Supply task-specific observations and validate."
+  ],
+  "task_id": "example-product-shaping",
+  "kind": "product-shaping",
+  "payload": {
+    "user_job": "Example user completes one job.",
+    "critical_journey": "Start, act, observe result.",
+    "requirements": [
+      "Example requirement."
+    ],
+    "assumptions": [
+      "Example assumption."
+    ],
+    "scope": [
+      "Example scope."
+    ],
+    "exclusions": [
+      "Example exclusion."
+    ],
+    "acceptance": [
+      "Example observable outcome."
+    ],
+    "material_question": null
+  }
+}

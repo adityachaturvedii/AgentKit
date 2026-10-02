@@ -70,6 +70,34 @@
       "description": "Assemble revision-bound local delivery evidence and a proposed PR without publishing or merging.",
       "path": "skills/delivery-evidence/SKILL.md",
       "output_kind": "delivery-evidence"
+    },
+    {
+      "id": "product-shaping",
+      "intent": "shape-product",
+      "description": "Turn a materially ambiguous product brief into a small user-centered scope and observable acceptance proposal.",
+      "path": "skills/product-shaping/SKILL.md",
+      "output_kind": "product-shaping"
+    },
+    {
+      "id": "interaction-design",
+      "intent": "design-interaction",
+      "description": "Specify state transitions, recovery, focus, touch behavior and responsive ordering for a material interaction change.",
+      "path": "skills/interaction-design/SKILL.md",
+      "output_kind": "interaction-design"
+    },
+    {
+      "id": "visual-design",
+      "intent": "design-visual",
+      "description": "Turn a consequential visual direction into concrete hierarchy, tokens, layouts and component states.",
+      "path": "skills/visual-design/SKILL.md",
+      "output_kind": "visual-design"
+    },
+    {
+      "id": "acceptance-design",
+      "intent": "design-acceptance",
+      "description": "Propose independent acceptance with positive and negative calibration when existing checks are inadequate.",
+      "path": "skills/acceptance-design/SKILL.md",
+      "output_kind": "acceptance-design"
     }
   ],
   "domains": [

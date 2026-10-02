@@ -26,6 +26,8 @@ from .process import run_process
 from .runtime_contracts import ExecutionRequest
 from .resource_policy import (output_exhaustion_recovery, resolve_product_task_budget,
                               resolve_role_resources)
+from .web_acceptance import (WebAcceptanceError, create_preview_snapshot,
+                             validate_browser_report)
 
 
 PRODUCT_SCHEMA_VERSION = 1
@@ -73,8 +75,11 @@ def static_web_inventory():
 
 def planning_context(toolkit_root):
     root = Path(toolkit_root).resolve()
-    selected = ('skills/task-contract/SKILL.md', 'skills/interface-design/SKILL.md',
-                'domains/frontend.md')
+    # Planning receives only the role-relevant product skills. Acceptance design
+    # is intentionally held for the independent acceptance-preparation role.
+    selected = ('skills/task-contract/SKILL.md', 'skills/product-shaping/SKILL.md',
+                'skills/interface-design/SKILL.md', 'skills/interaction-design/SKILL.md',
+                'skills/visual-design/SKILL.md', 'domains/frontend.md')
     items = []
     total = 0
     for relative in selected:
@@ -83,7 +88,7 @@ def planning_context(toolkit_root):
             raise ProductPlanningError('planning context path is unavailable')
         raw = target.read_bytes()
         total += len(raw)
-        if total > 8192:
+        if total > 16384:
             raise ProductPlanningError('planning context exceeds its bounded allocation')
         items.append({'path': relative, 'sha256': hashlib.sha256(raw).hexdigest(),
                       'content': raw.decode('utf-8')})
@@ -777,7 +782,14 @@ class ProductWorkflow(Phase4Workflow):
             previous = json.loads(session_path.read_text())
             if previous.get('status') == 'running':
                 raise ControllerError('existing preview ownership requires explicit reconciliation')
-        handler = partial(SimpleHTTPRequestHandler, directory=task['worktree'])
+        manifest = self.broker.manifest(Path(task['worktree']), exclude_git=True)
+        snapshot_root = self._fresh(self.evidence_root, 'preview-snapshot')
+        try:
+            preview = create_preview_snapshot(
+                task['worktree'], snapshot_root, manifest, task['head_revision'])
+        except WebAcceptanceError as exc:
+            raise ControllerError('preview snapshot rejected: ' + str(exc)) from exc
+        handler = partial(SimpleHTTPRequestHandler, directory=preview['snapshot_root'])
         try:
             server = ThreadingHTTPServer(('127.0.0.1', 0), handler)
         except OSError as exc:
@@ -790,6 +802,10 @@ class ProductWorkflow(Phase4Workflow):
             'process_group': os.getpgrp(), 'argv': ['agentkit', 'product', 'preview-serve'],
             'port': port, 'url': 'http://127.0.0.1:' + str(port) + '/',
             'candidate_revision': task['head_revision'], 'candidate_identity': identity,
+            'session_id': preview['session_id'],
+            'snapshot_sha256': preview['snapshot_sha256'],
+            'manifest_sha256': preview['manifest_sha256'],
+            'snapshot_root': preview['snapshot_root'],
             'started_monotonic': time.monotonic(),
             'containment_limit': ('Foreground controller-owned loopback server only; browser egress '
                                   'and remote browser effects are not contained.'),
@@ -809,11 +825,65 @@ class ProductWorkflow(Phase4Workflow):
             session_path.write_text(json.dumps(session, indent=2, sort_keys=True) + '\n')
         return session
 
+    def _implementation_authors(self, task_id):
+        authors = []
+        for item in self.store.snapshot(task_id)['executions']:
+            if item['role'] in ('implementer', 'implementation', 'repair') and item['status'] == 'succeeded':
+                label = item['engine']
+                if label not in authors:
+                    authors.append(label)
+        if not authors:
+            raise ControllerError('browser evidence has no successful implementation author')
+        return authors
+
     def record_browser_evidence(self, task_id, evidence):
         task = self.store.task(task_id)
         if task['state'] != 'review_complete':
             raise ControllerError('browser evidence requires the reviewed candidate')
         actual = self._candidate_identity(task_id)
+        if isinstance(evidence, dict) and 'session_id' in evidence:
+            session_path = self.evidence_root / 'preview-session.json'
+            if not session_path.is_file():
+                raise ControllerError('browser evidence requires a recorded owned preview session')
+            session = json.loads(session_path.read_text())
+            receipt = {
+                'schema_version': 1,
+                'candidate_revision': session.get('candidate_revision'),
+                'session_id': session.get('session_id'),
+                'snapshot_sha256': session.get('snapshot_sha256'),
+                'status': session.get('status'),
+                'cleanup_confirmed': session.get('cleanup_confirmed'),
+            }
+            try:
+                normalized = validate_browser_report(
+                    evidence, acceptance=task['contract']['acceptance'],
+                    candidate_revision=task['head_revision'], preview_receipt=receipt,
+                    evidence_root=self.evidence_root,
+                    implementation_authors=self._implementation_authors(task_id))
+            except WebAcceptanceError as exc:
+                raise ControllerError('browser evidence rejected: ' + str(exc)) from exc
+            if actual['revision'] != task['head_revision'] or not actual['clean']:
+                raise ControllerError('browser evidence is bound to another candidate')
+            artifact = self.store.put_artifact(json.dumps(normalized, sort_keys=True))
+            evidence_id = 'product-browser-' + str(task['repair_count'])
+            self.store.add_evidence(
+                task_id, evidence_id, task['head_revision'], 'browser-check',
+                normalized['status'], artifact, normalized, authority=self.store.authority)
+            self._write_json(
+                'evidence/browser-evidence-' + str(task['repair_count']) + '.json', normalized)
+            if normalized['status'] == 'failed':
+                failed = [item for item in normalized['checks'] if item['status'] == 'failed']
+                if normalized['visual_judgment']['status'] == 'failed':
+                    failed.append({'visual_judgment': normalized['visual_judgment']})
+                signature = hashlib.sha256(json.dumps(failed, sort_keys=True).encode()).hexdigest()
+                decision = self.store.record_failure(
+                    task_id, signature, json.dumps(failed), authority=self.store.authority)
+                if decision == 'repair_allowed':
+                    self._transition(task_id, 'review_complete', 'repairing', 'repair-browser',
+                                     'repair concrete browser acceptance failure')
+                self._write_status(task_id)
+                return self.result(task_id)
+            return self._drive(task_id)
         if (not isinstance(evidence, dict) or
                 set(evidence) != {'schema_version', 'candidate_revision', 'browser', 'checks',
                                  'screenshots', 'visual_judgment', 'preview_cleanup'} or

@@ -15,7 +15,7 @@ class PackTests(unittest.TestCase):
     def test_offline_pack_consistency(self):
         report = check_pack()
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(report["skills"], 10)
+        self.assertEqual(report["skills"], 14)
 
     def test_explicit_selection_rejects_unknown_or_injected_intent(self):
         for intent in ("publish", "review; gh pr create", "../../secret"):
@@ -41,7 +41,7 @@ class PackTests(unittest.TestCase):
             result = subprocess.run([sys.executable, "-m", "agentkit", "check"], cwd=dst,
                                     env=env, capture_output=True, text=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(json.loads(result.stdout)["skills"], 10)
+            self.assertEqual(json.loads(result.stdout)["skills"], 14)
             self.assertEqual(list(home.iterdir()), [])
 
     def test_planned_commands_are_not_available(self):

@@ -14,6 +14,9 @@ from agentkit.product import (PRODUCT_PROJECT_POLICY, LiveProductPlanner, Produc
                               static_web_inventory, validate_product_document)
 from agentkit.runtime_contracts import (CancellationStatus, ExecutionResult, UsageObservation)
 from agentkit.resource_policy import resolve_role_resources
+from agentkit.terminal_workflow import TerminalWorkflow
+from agentkit.integrations.openharness.protocol import FrontendRequest
+from agentkit.web_acceptance import create_preview_snapshot
 
 
 BRIEF = 'Build a small accessible browser counter with keyboard and touch controls.'
@@ -176,6 +179,14 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(verification['status'], 'passed')
         self.assertEqual(verification['revision'], result['task']['head_revision'])
 
+    def test_terminal_facade_reconnects_to_product_without_starting_it(self):
+        workflow, specialist = self.workflow('product-terminal')
+        backend = TerminalWorkflow(
+            workflow.root, 'product-terminal', workflow_kind='static-product')
+        events = backend.handle(FrontendRequest('status', 'product-terminal'))
+        self.assertEqual(events[0].task.state, 'contracted')
+        self.assertEqual(specialist.prompts, [])
+
     def test_browser_gate_binds_evidence_and_package_to_exact_revision(self):
         workflow, _ = self.workflow('browser')
         result = workflow.start('browser')
@@ -202,6 +213,42 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(package['head_revision'], head)
         self.assertFalse(package['approval']['recorded'])
         self.assertEqual(package['browser_verification'][0]['revision'], head)
+
+    def test_external_browser_report_is_bound_to_private_snapshot_and_independent_verifier(self):
+        workflow, _ = self.workflow('external-browser')
+        result = workflow.start('external-browser')
+        task = result['task']
+        manifest = workflow.broker.manifest(Path(task['worktree']), exclude_git=True)
+        snapshot = create_preview_snapshot(
+            task['worktree'], workflow.evidence_root / 'external-preview', manifest,
+            task['head_revision'])
+        (workflow.evidence_root / 'preview-session.json').write_text(json.dumps({
+            'schema_version': 1, 'candidate_revision': task['head_revision'],
+            'session_id': snapshot['session_id'],
+            'snapshot_sha256': snapshot['snapshot_sha256'],
+            'status': 'stopped', 'cleanup_confirmed': True,
+        }))
+        authors = workflow._implementation_authors('external-browser')
+        report = {
+            'schema_version': 1, 'candidate_revision': task['head_revision'],
+            'session_id': snapshot['session_id'],
+            'snapshot_sha256': snapshot['snapshot_sha256'],
+            'browser': {'name': 'Fixture Browser', 'version': '1.0'},
+            'verifier': {'id': 'independent-operator', 'type': 'human'},
+            'implementation_authors': authors,
+            'checks': [
+                {'id': item['id'], 'status': 'passed', 'action': 'Exercise ' + item['id'],
+                 'assertion': item['expected'], 'observation': 'Observed expected behavior.'}
+                for item in ACCEPTANCE
+            ],
+            'screenshots': [],
+            'visual_judgment': {'status': 'passed', 'observation': 'Readable at fixture size.'},
+        }
+        final = workflow.record_browser_evidence('external-browser', report)
+        self.assertEqual(final['task']['state'], 'awaiting_pr_approval')
+        details = final['status']['browser_verification'][0]['details']
+        self.assertEqual(details['session_id'], snapshot['session_id'])
+        self.assertEqual(details['verifier']['id'], 'independent-operator')
 
     def test_preview_process_lifecycle_when_loopback_is_available(self):
         workflow, _ = self.workflow('preview')

@@ -375,3 +375,15 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Verify the documented submit → plan → start → status → package commands using a fresh deterministic calculator fixture; status reached `awaiting_pr_approval`.
 - [x] Verify the text-metrics proposal and OpenHarness reuse demo with disposable output; no provider calls.
 - [x] Resolve all 32 local README links; pass two branding tests, offline structural checks and whitespace hygiene. Runtime code is unchanged; the earlier 215-test reconciliation result remains historical evidence.
+
+## Product refinement completion — offline foundation
+
+- [x] Add four repository-local specialist skills and v1 handoff examples; validate their catalog, links and authority-free schemas.
+- [x] Add validated guided-intent, design-brief, frozen-acceptance, run-view, refinement and narrow quality-recovery records.
+- [x] Supply product shaping, interaction and visual design content to the actual planner context with dispatch-time hashes; keep acceptance design independent.
+- [x] Extend the strict terminal facade to existing static-product workflows and add authority-free `refine intake` from a plain brief and bounded inventory.
+- [x] Adapt the R5 private snapshot and external browser-report validator without importing historical evidence or claiming browser control.
+- [x] Adapt the R4 frozen matched-pilot ledger, CLI, protocol example and offline validation without claiming participant results.
+- [ ] Validate an actual controlled browser driver and host boundary; fixture report validation alone does not close REF-08.
+- [ ] Run separately authorized live specialist forward evaluations and a consented pilot; no inference or participant collection occurred in this batch.
+- [ ] General repository execution, full-screen TUI, browser credential/egress isolation, deployment and publication remain unsupported.
