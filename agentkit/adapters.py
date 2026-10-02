@@ -14,6 +14,8 @@ from .process import run_process
 from .redaction import redact, redacted_stream
 from .resource_policy import capability_profile, provider_control_support
 from .runtime_contracts import ExecutionBoundary, ExecutionResult, LivePolicy, UsageObservation
+from .runtime_readiness import (RuntimeRequirement, evaluate_readiness, prepared_environment,
+                                requirement_for_profile)
 from .validation import _pairs, _depth
 
 
@@ -475,16 +477,19 @@ def _file_fingerprint(path):
             'size': path.stat().st_size, 'mode': oct(path.stat().st_mode & 0o777)}
 
 
-def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), cancel_event=None):
+def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), cancel_event=None,
+                       runtime_requirement=None):
     """Run one bounded task in a caller-created disposable workspace."""
     output = Path(directory)
     if output.exists() or output.is_symlink() or not output.parent.is_dir():
         raise ValueError('result directory must be fresh with an existing parent')
     if not isinstance(boundary, ExecutionBoundary):
         raise TypeError('trusted ExecutionBoundary required')
-    def blocked(reason, detail):
+    def blocked(reason, detail, readiness=None):
         result = ExecutionResult(request.engine, request.task_id, 'blocked', reason, None, 0)
         result.limitations = [detail]
+        if readiness is not None:
+            result.provider_details['runtime_readiness'] = readiness.to_dict()
         return persist_result(directory, request, result)
     if not policy.subscription_smoke_authorized:
         return blocked('billing_policy', 'No trusted authorization for an existing-subscription smoke. No process launched.')
@@ -545,6 +550,19 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
             env.update(CLAUDE_CODE_TMPDIR=str(runtime), CLAUDE_TMPDIR=str(runtime))
         profile = owned_code_profile(runtime, workspace, denied, write_exceptions, network=True)
         selected_profile = capability_profile(request.capability_profile, request.mode)
+        if runtime_requirement is None:
+            runtime_requirement = requirement_for_profile(selected_profile.profile_id)
+        if not isinstance(runtime_requirement, RuntimeRequirement):
+            raise TypeError('trusted RuntimeRequirement required')
+        if runtime_requirement.capability_profile != selected_profile.profile_id:
+            return blocked('runtime_unavailable',
+                           'Runtime requirement does not match the selected capability profile.')
+        env = prepared_environment(env, runtime_requirement)
+        readiness = evaluate_readiness(
+            runtime_requirement, env, workspace, ('/usr/bin/sandbox-exec', '-p', profile),
+            process_runner=run_process)
+        if readiness.state != 'verified':
+            return blocked('runtime_' + readiness.state, readiness.evidence, readiness)
         predicate = lambda stdout, stderr: stop_on_limit(
             stdout, stderr, selected_profile.tools)
         outcome = run_process(['/usr/bin/sandbox-exec', '-p', profile] + argv,
@@ -557,6 +575,7 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
                                        authorization=policy.evidence, managed_mode='external-seatbelt-owned-code',
                                        denied_read_paths=[str(p) for p in denied],
                                        capability_profile=selected_profile.profile_id,
+                                       runtime_readiness=readiness.to_dict(),
                                        resource_resolution=request.resource_resolution,
                                        launch_configuration=_launch_metadata(argv, env),
                                        execution_counts={'cli_launches': 1,

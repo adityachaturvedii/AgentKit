@@ -298,6 +298,21 @@ R0 accepts architecture option B: a component port around the durable AgentKit c
 - [ ] Phase 6: GitHub broker, installation/update/rollback and machine handover.
 - [ ] Phase 7: held-out matched baseline evaluations and calibrated release.
 
+## Product refinement batch 1
+
+- [x] Refresh remote refs and verify integration `e763d6a` contains planning commit `280a434`; keep release `090e77b` unchanged.
+- [x] Inspect divergent R4 `3dd45c6` and R5 `9a05b63` ancestry and changes without merging either branch or promoting their historical evidence.
+- [x] Freeze shared record schemas, file ownership and integration order before parallel work.
+- [x] REF-01: verify approved Python/Node runtime availability inside the actual prepared worker environment and block missing, changed or unprobeable runtimes before provider inference.
+- [x] REF-02 first portion: project typed failures into status while preserving original cause, repair disposition, evidence identity and narrow authentication recovery prerequisites.
+- [x] REF-03: retain reported usage subtotals with completeness metadata, separate local checks and provider telemetry, and accept validated per-run Git identity without consulting global/repository identity.
+- [x] REF-04 contract foundation: add versioned specialist profiles and hash-bound role-relevant skill bindings without expanding controller authority or installing proposed skills.
+- [x] Exercise real controller/adapter seams with external inference transport stubbed; use only deterministic providers and disposable repositories.
+- [ ] Reconcile the R5 product path before passing its pinned Node identity through REF-01; this batch deliberately does not merge R5.
+- [ ] Implement the four proposed skill payloads only after their source/license/forward-test gates; this batch defines contracts and detailed plans only.
+- [ ] Extend typed failure projection to repository-delivery and terminal rendering only through their existing authoritative status protocols; no generic unblock transition exists.
+- [x] Run the final integrated regression suite, structural check and diff hygiene, then record exact results in the batch validation report.
+
 ## Project documentation
 
 - [x] Preserve the historical public README redesign from `afad0a7` in branch ancestry; its layout predates the current mainline documentation and is not a claim about the active README format.

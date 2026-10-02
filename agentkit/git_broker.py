@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 import re
 import shutil
@@ -14,10 +15,41 @@ class GitBrokerError(ValueError):
 
 OID = re.compile(r'^[0-9a-f]{40,64}$')
 SAFE = re.compile(r'^[A-Za-z0-9._/-]+$')
+EMAIL = re.compile(r'^[^\s<>@]+@[^\s<>@]+$')
+
+
+@dataclass(frozen=True)
+class GitIdentity:
+    """Controller-owned identity for commits created during one broker run."""
+
+    name: str
+    email: str
+    source: str
+
+    def __post_init__(self):
+        if (type(self.name) is not str or not self.name.strip() or self.name != self.name.strip() or
+                len(self.name) > 200 or any(ord(character) < 32 for character in self.name) or
+                '<' in self.name or '>' in self.name):
+            raise GitBrokerError('invalid Git identity name')
+        if (type(self.email) is not str or len(self.email) > 254 or
+                not EMAIL.fullmatch(self.email)):
+            raise GitBrokerError('invalid Git identity email')
+        if (type(self.source) is not str or not self.source or len(self.source) > 100 or
+                not re.fullmatch(r'[A-Za-z0-9._-]+', self.source)):
+            raise GitBrokerError('invalid Git identity source')
+
+
+DEFAULT_IDENTITY = GitIdentity('AgentKit Controller', 'controller@localhost',
+                               'controller-default')
 
 
 class GitBroker:
-    def __init__(self, managed_root):
+    def __init__(self, managed_root, *, identity=None):
+        if identity is None:
+            identity = DEFAULT_IDENTITY
+        if not isinstance(identity, GitIdentity):
+            raise GitBrokerError('trusted GitIdentity is required')
+        self.identity = identity
         self.root = Path(managed_root).resolve()
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.repositories = self.root / 'repositories'
@@ -44,8 +76,8 @@ class GitBroker:
                 '-C', str(repository), *args]
         env = {k: v for k, v in os.environ.items() if k in ('PATH', 'HOME', 'LANG', 'LC_ALL')}
         env.update(GIT_CONFIG_GLOBAL='/dev/null', GIT_CONFIG_NOSYSTEM='1',
-                   GIT_AUTHOR_NAME='AgentKit Controller', GIT_AUTHOR_EMAIL='controller@localhost',
-                   GIT_COMMITTER_NAME='AgentKit Controller', GIT_COMMITTER_EMAIL='controller@localhost')
+                   GIT_AUTHOR_NAME=self.identity.name, GIT_AUTHOR_EMAIL=self.identity.email,
+                   GIT_COMMITTER_NAME=self.identity.name, GIT_COMMITTER_EMAIL=self.identity.email)
         run = subprocess.run(argv, cwd=str(cwd or repository), env=env, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, timeout=20, check=False)
         if run.returncode:
