@@ -21,3 +21,9 @@ Primary references checked (documentation may move; installed behavior is author
 Adaptation: provider event schemas are translated into neutral records; missing metrics stay unknown and raw redacted fields remain available. No output is treated as an approval or proof of its own success. Safe mode/ignore-config controls are per process, not edits to user configuration. `--bare` was deliberately excluded because it would change the authentication assumptions. API-key environment variables and provider overrides are not inherited.
 
 This integration review is narrower than an audit of either entire CLI or every transitive dependency. No claim is made that a version, license, advertised flag or checksum proves runtime isolation. See [contracts](runtime-contracts.md), [effective matrix](sandbox-matrix.md), and [validation](phase2-validation-report.md).
+
+## Codex 0.159.3 compatibility follow-up
+
+On 2026-10-02, a realistic product preflight found installed Codex CLI 0.159.3 while the managed gate still required 0.154.0. No inference was launched. The follow-up inspected the installed root and `exec` help and the official 0.159 release/source material. Version 0.159.3 advertises the existing JSONL, ephemeral, ignore-config/rules and sandbox controls, plus `--strict-config`; its root command also advertises `--no-daemon` because the shared app-server daemon is enabled by default in this release line.
+
+AgentKit now requires exact 0.159.3 for new managed Codex execution and invokes `codex --no-daemon exec --strict-config ...`. The whole-process Seatbelt boundary, ignored user configuration/rules, disabled optional tool surfaces, subscription-only authentication check and controller timeout remain independent requirements. This is a narrow compatibility review, not a full re-audit or a portability claim. The 0.154.0 records above and their candidate evidence remain historical.

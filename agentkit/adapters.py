@@ -96,7 +96,8 @@ class CodexAdapter:
             disabled.append('shell_tool')
         for name in disabled:
             settings['features.' + name] = 'false'
-        argv = [executable, 'exec', '--json', '--ephemeral', '--ignore-user-config', '--ignore-rules',
+        argv = [executable, '--no-daemon', 'exec', '--strict-config', '--json', '--ephemeral',
+                '--ignore-user-config', '--ignore-rules',
                 # A nested native macOS sandbox cannot initialize inside the
                 # whole-process Seatbelt guard. Owned-code commands therefore
                 # use that stricter outer path boundary as the sole OS sandbox.

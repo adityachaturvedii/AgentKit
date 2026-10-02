@@ -261,6 +261,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(argv[argv.index('--effort') + 1], 'high')
         codex = self.request('codex', model='codex-fixture-model')
         argv = ADAPTERS['codex'].argv('codex', codex, runtime)
+        self.assertEqual(argv[:4], ['codex', '--no-daemon', 'exec', '--strict-config'])
         self.assertEqual(argv[argv.index('--model') + 1], 'codex-fixture-model')
         self.assertNotIn('--effort', argv)
         with self.assertRaisesRegex(ValueError, 'unsupported by the tested Codex'):
@@ -320,6 +321,18 @@ class RuntimeTests(unittest.TestCase):
                 result = execute(self.request(), self.root / case, policy=LivePolicy(True))
             self.assertEqual(result.error_class, case)
 
+    def test_codex_current_contract_requires_daemon_and_strict_config_controls(self):
+        from agentkit.doctor import COMPATIBLE, REQUIRED
+        self.assertEqual(COMPATIBLE['codex'], '0.159.3')
+        self.assertIn('--no-daemon', REQUIRED['codex'])
+        self.assertIn('--strict-config', REQUIRED['codex'])
+        request = self.request('codex', mode='owned-code',
+                               capability_profile='web-product-implementation')
+        argv = ADAPTERS['codex'].argv('/fixture/codex', request, self.root)
+        self.assertEqual(argv[:4], ['/fixture/codex', '--no-daemon', 'exec', '--strict-config'])
+        self.assertIn('--ignore-user-config', argv)
+        self.assertIn('--ignore-rules', argv)
+
     def test_environment_does_not_inherit_credentials_or_loaders(self):
         with patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'fake', 'OPENAI_API_KEY': 'fake',
                                      'NODE_OPTIONS': 'fake', 'CLAUDE_CODE_USE_BEDROCK': '1'}):
@@ -332,6 +345,25 @@ class RuntimeTests(unittest.TestCase):
             cap = detect_engine('codex', Capability('unknown', 'fixture'))
         self.assertIsNone(cap.version)
         self.assertEqual(cap.authentication.state, 'unavailable')
+
+    def test_doctor_combines_codex_root_and_exec_help(self):
+        from agentkit.doctor import REQUIRED
+        executable = self.root / 'codex-fixture'
+        executable.write_bytes(b'fixture')
+        outcomes = [
+            ProcessOutcome(b'codex-cli 0.159.3\n', b'', 0, .01, None, CancellationStatus()),
+            ProcessOutcome((' '.join(flag for flag in REQUIRED['codex']
+                                      if flag != '--no-daemon') + '\n').encode(),
+                           b'', 0, .01, None, CancellationStatus()),
+            ProcessOutcome(b'--no-daemon\n', b'', 0, .01, None, CancellationStatus()),
+        ]
+        with patch('agentkit.doctor.shutil.which', return_value=str(executable)), \
+             patch('agentkit.doctor.run_process', side_effect=outcomes):
+            cap = detect_engine('codex', Capability('unknown', 'fixture'))
+        self.assertEqual(cap.version, '0.159.3')
+        self.assertTrue(all(cap.features[flag].state == 'verified'
+                            for flag in REQUIRED['codex']))
+        self.assertEqual(cap.features['tested_version'].state, 'verified')
 
     def test_auth_status_filters_identifiers(self):
         raw = json.dumps({'loggedIn': True, 'authMethod': 'claude.ai', 'apiProvider': 'firstParty',

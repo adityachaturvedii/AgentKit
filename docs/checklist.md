@@ -394,3 +394,11 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Add `refine result` only for an unapproved review-ready package whose actual clean candidate still matches its recorded head.
 - [x] Escape terminal control characters in plain output and keep JSON output machine-readable.
 - [x] Verify reconnecting never starts work and candidate tampering blocks result presentation.
+
+## Codex 0.159.3 compatibility gate
+
+- [x] Reproduce the realistic-trial preflight block before inference and retain its sanitized evidence separately.
+- [x] Inspect installed Codex root and `exec` help plus the official 0.159 release/source material.
+- [x] Pin managed execution to exact version 0.159.3 and require its advertised `--strict-config` and `--no-daemon` controls.
+- [x] Exercise the real owned-code request boundary with provider transport stubbed; assert the daemon and strict-config controls reach the launched argv.
+- [ ] Re-run the bounded realistic product trial from the corrected executable revision; the prior blocked preflight consumed zero inference calls.
