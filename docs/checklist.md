@@ -401,4 +401,8 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Inspect installed Codex root and `exec` help plus the official 0.159 release/source material.
 - [x] Pin managed execution to exact version 0.159.3 and require its advertised `--strict-config` and `--no-daemon` controls.
 - [x] Exercise the real owned-code request boundary with provider transport stubbed; assert the daemon and strict-config controls reach the launched argv.
-- [ ] Re-run the bounded realistic product trial from the corrected executable revision; the prior blocked preflight consumed zero inference calls.
+- [x] Re-run the bounded realistic product trial from corrected executable `fcaf591`; retain two live planning launches and stop within the four-launch authorization when only two launches remained for three mandatory stages.
+- [x] Record the stale Claude status/expired OAuth mismatch, missing forced recovery path, rejected nonconforming planner response, reported usage and absence of any implementation, verification, browser, review or approval evidence.
+- [ ] Add planning-stage authentication checkpoints with an explicit official-login refresh path and exact-stage resume.
+- [ ] Use a verified provider structured-output control for product planning and retain deterministic rejection of changed controller requirements.
+- [ ] Repeat the realistic product trial only under a new explicit live authorization after the recovery and structured-planning corrections pass offline tests.

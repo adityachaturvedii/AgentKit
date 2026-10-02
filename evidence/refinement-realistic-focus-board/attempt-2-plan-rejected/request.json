@@ -1,0 +1,35 @@
+{
+  "engine": "claude",
+  "task_id": "phase4-product-planner",
+  "cwd": "/private/var/folders/ff/msj2srcd0319csm7bnvf0tbh0000gq/T/agentkit-product-plan-9mj1_ib9",
+  "timeout_seconds": 300.0,
+  "max_output_bytes": 1048576,
+  "model": null,
+  "effort": null,
+  "mode": "model-only",
+  "capability_profile": "structured-planning",
+  "max_generated_output_tokens": null,
+  "resource_resolution": {
+    "timeout_seconds": {
+      "value": 300.0,
+      "source": "task-override",
+      "classification": "enforced",
+      "rationale": "Controller wall-clock process deadline."
+    },
+    "max_capture_bytes": {
+      "value": 1048576,
+      "source": "task-override",
+      "classification": "enforced",
+      "rationale": "Controller transport capture bound; not a generated-token limit."
+    },
+    "generated_output_tokens": {
+      "value": null,
+      "source": "provider-default",
+      "classification": "observable-only",
+      "rationale": "Unset: provider behavior and effective ceiling are unknown."
+    }
+  },
+  "schema_version": 1,
+  "prompt_sha256": "af56e2ac646ff2c70c8096c270dbd6015d820868d11b1a5548b4bcf451c47ed2",
+  "prompt_bytes": 16816
+}

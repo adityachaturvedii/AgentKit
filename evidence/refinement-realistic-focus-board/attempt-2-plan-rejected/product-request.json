@@ -1,0 +1,241 @@
+{
+  "acceptance": [
+    {
+      "expected": "game.js exposes CommonJS functions createInitialState(), addTask(state, text), toggleTask(state, id), removeTask(state, id), clearCompleted(state), and filterTasks(state, filter); state transitions support adding, completing, filtering, removing, and clearing tasks without losing unrelated tasks.",
+      "id": "task-mechanics"
+    },
+    {
+      "expected": "The browser UI restores and saves the current task list with localStorage while remaining usable if storage access fails.",
+      "id": "persistence"
+    },
+    {
+      "expected": "A user can add a task with Enter, navigate controls by keyboard with visible focus, and use comfortably sized pointer and touch controls.",
+      "id": "keyboard-touch"
+    },
+    {
+      "expected": "The interface remains readable and usable at desktop and narrow mobile viewport sizes without horizontal overflow.",
+      "id": "responsive-layout"
+    },
+    {
+      "expected": "The page includes concise instructions, an accessible task summary or status, clear empty/filter states, and readable labels for add, filter, remove, and clear actions.",
+      "id": "instructions-and-states"
+    },
+    {
+      "expected": "The documented local build and preview commands work with the dependency-free static project and the main flow produces no unexplained browser errors.",
+      "id": "local-product"
+    }
+  ],
+  "brief": "Build a polished browser-based daily focus board for a person managing a short list of tasks. They should be able to add tasks, mark them complete, filter all/active/completed items, remove individual tasks, and clear completed work. Preserve the list across reloads with local browser storage. Support efficient keyboard use as well as touch, responsive desktop and mobile layouts, concise instructions, readable accessible controls, visible focus states, and a cohesive calm visual design. Run locally with no account, backend, external service, dependency installation, or deployment.",
+  "inventory": {
+    "files": [
+      {
+        "bytes": 40,
+        "path": "README.md",
+        "sha256": "e4c505f6d23e31e455e273d9f2248907689aae80dc29ba1650dcde4ec2fae027"
+      },
+      {
+        "bytes": 0,
+        "path": "game.js",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "bytes": 140,
+        "path": "index.html",
+        "sha256": "6db128e49c6ede8764eaa0904c2ddea8390072f59638660abd81ae4a633076eb"
+      },
+      {
+        "bytes": 147,
+        "path": "package.json",
+        "sha256": "4c7660f7507320074f193509ec05541324ff23634995b82926fc59c3d7032359"
+      },
+      {
+        "bytes": 0,
+        "path": "styles.css",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "interfaces": [],
+    "project": "product-static-web-seed",
+    "sha256": "0d9529dbc6d39cbe01636b79678b3b673c6c40d185a7493f25aafdf8d3abeb35"
+  },
+  "limits": {
+    "concurrent_workers_max": 1,
+    "dependency_install": "unsupported; use the dependency-free static stack",
+    "implementation_assignments_max": 2,
+    "overall_seconds": 1000.0,
+    "planning_calls_max": 1,
+    "provider_invocations_total": 3,
+    "publication": "unsupported",
+    "repair_calls_max": 0,
+    "stage_timeout_seconds": {
+      "implementation": 300.0,
+      "planning": 300.0,
+      "review": 300.0
+    }
+  },
+  "planning_context": [
+    {
+      "path": "skills/task-contract/SKILL.md",
+      "sha256": "fef894f5d1f90b3533725508ec6747bb769a5d231bafc081acf3d544873eed8d"
+    },
+    {
+      "path": "skills/product-shaping/SKILL.md",
+      "sha256": "3dce34a534e1bd62cb2e396559d20adf08a34e7989bdd8b8be9b4171d780bd0a"
+    },
+    {
+      "path": "skills/interface-design/SKILL.md",
+      "sha256": "e36d9bdd041d457436cec6e9fb78af595db07f5e0ba77aeaa9c12214ea0e80a9"
+    },
+    {
+      "path": "skills/interaction-design/SKILL.md",
+      "sha256": "58d798ef8d3342e1a3edb3fa37b95d484b98678bffaaca00ea1b77838b4292ac"
+    },
+    {
+      "path": "skills/visual-design/SKILL.md",
+      "sha256": "7c9f728adbed69cf942af2f4fa33ac88bd12efd9bdb42990b637572bb98bf380"
+    },
+    {
+      "path": "domains/frontend.md",
+      "sha256": "c38f4d65595cf03c4f21c4f1839299ea511f355ab4ef219a347918b4cf8a7e17"
+    }
+  ],
+  "planning_route": {
+    "effort": null,
+    "model": null,
+    "node_id": "product-plan",
+    "profile_id": "claude-account-default",
+    "provider": "claude",
+    "reason": "Configured profile satisfies the tested model-only capability. Exact availability is checked by the read-only provider preflight at execution. Relative price and quality are unknown, so the explicit default is used. No larger or second model is added.",
+    "relative_cost": "unknown",
+    "role": "tech_lead"
+  },
+  "resource_policy": {
+    "stage_allocations": {
+      "implementation": {
+        "generated_output_tokens": {
+          "classification": "observable-only",
+          "rationale": "Unset: provider behavior and effective ceiling are unknown.",
+          "source": "provider-default",
+          "value": null
+        },
+        "max_capture_bytes": {
+          "classification": "enforced",
+          "rationale": "Controller transport capture bound; not a generated-token limit.",
+          "source": "role-policy",
+          "value": 1048576
+        },
+        "timeout_seconds": {
+          "classification": "enforced",
+          "rationale": "Controller wall-clock process deadline.",
+          "source": "task-override",
+          "value": 300.0
+        }
+      },
+      "planning": {
+        "generated_output_tokens": {
+          "classification": "observable-only",
+          "rationale": "Unset: provider behavior and effective ceiling are unknown.",
+          "source": "provider-default",
+          "value": null
+        },
+        "max_capture_bytes": {
+          "classification": "enforced",
+          "rationale": "Controller transport capture bound; not a generated-token limit.",
+          "source": "role-policy",
+          "value": 1048576
+        },
+        "timeout_seconds": {
+          "classification": "enforced",
+          "rationale": "Controller wall-clock process deadline.",
+          "source": "task-override",
+          "value": 300.0
+        }
+      },
+      "review": {
+        "generated_output_tokens": {
+          "classification": "observable-only",
+          "rationale": "Unset: provider behavior and effective ceiling are unknown.",
+          "source": "provider-default",
+          "value": null
+        },
+        "max_capture_bytes": {
+          "classification": "enforced",
+          "rationale": "Controller transport capture bound; not a generated-token limit.",
+          "source": "role-policy",
+          "value": 1048576
+        },
+        "timeout_seconds": {
+          "classification": "enforced",
+          "rationale": "Controller wall-clock process deadline.",
+          "source": "task-override",
+          "value": 300.0
+        }
+      },
+      "verification": {
+        "generated_output_tokens": {
+          "classification": "observable-only",
+          "rationale": "Unset: provider behavior and effective ceiling are unknown.",
+          "source": "provider-default",
+          "value": null
+        },
+        "max_capture_bytes": {
+          "classification": "enforced",
+          "rationale": "Controller transport capture bound; not a generated-token limit.",
+          "source": "role-policy",
+          "value": 1048576
+        },
+        "timeout_seconds": {
+          "classification": "enforced",
+          "rationale": "Controller wall-clock process deadline.",
+          "source": "task-override",
+          "value": 30.0
+        }
+      }
+    },
+    "task_budget": {
+      "max_calls": {
+        "classification": "enforced",
+        "rationale": "Explicit authorized task allocation.",
+        "source": "task-override",
+        "value": 4
+      },
+      "max_concurrency": {
+        "classification": "enforced",
+        "rationale": "Explicit authorized task allocation.",
+        "source": "task-override",
+        "value": 1
+      },
+      "max_elapsed_seconds": {
+        "classification": "enforced",
+        "rationale": "Explicit authorized task allocation.",
+        "source": "task-override",
+        "value": 1000.0
+      },
+      "max_escalations": {
+        "classification": "enforced",
+        "rationale": "Explicit authorized task allocation.",
+        "source": "task-override",
+        "value": 0
+      },
+      "max_provider_calls": {
+        "classification": "enforced",
+        "rationale": "Explicit authorized task allocation.",
+        "source": "task-override",
+        "value": 3
+      },
+      "max_repairs": {
+        "classification": "enforced",
+        "rationale": "Explicit authorized task allocation.",
+        "source": "task-override",
+        "value": 0
+      },
+      "max_retries": {
+        "classification": "enforced",
+        "rationale": "Explicit authorized task allocation.",
+        "source": "task-override",
+        "value": 0
+      }
+    }
+  },
+  "schema_version": 1
+}
