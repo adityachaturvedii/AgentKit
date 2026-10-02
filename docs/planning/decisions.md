@@ -25,6 +25,22 @@ Date: 2026-10-01. Distinguish user decisions from engineering recommendations. N
 | P-D12 | Existing-repository preview precedes the next web-game milestone | Matches the user's priority; Breakout remains a new-product acceptance case through the same pipeline |
 | P-D13 | Accept the R2 deterministic delivery slice while retaining a separate live/provider gate | Disposable imports, checks, protected acceptance and packaging validate the architecture without authorizing personal repositories or inference. R3 can build the terminal/package experience; a nominated repository and live provider path still need their own bounded validation. |
 
+## Proposed product-refinement decisions — 2026-10-02
+
+These are engineering recommendations prepared at the user's request to plan the next work, not implemented capabilities or new runtime authority.
+
+| ID | Recommendation | Reason and gate |
+|---|---|---|
+| RF-D01 | Start from refreshed integration and explicitly account for unintegrated R4/R5 work | Preserve existing fixes/evidence; normal PR/merge authorization remains necessary |
+| RF-D02 | Refine execution readiness, failure explanation and resource visibility before expanding orchestration | The latest product candidate exposed environment/oracle/status friction requiring developer intervention |
+| RF-D03 | Represent specialists as versioned profiles over base execution roles | Add relevant expertise without creating a second scheduler or bypassing state/authority checks |
+| RF-D04 | Add product shaping, interaction/visual design and acceptance-design skills with behavioral evaluation | Existing interface design addresses API contracts; visual quality needs explicit intent and evidence |
+| RF-D05 | Keep acceptance authoring independent and oracle corrections separate from implementation repair | Prevent self-grading, silent weakening and wasted repair calls; failed history remains immutable |
+| RF-D06 | Provide one terminal-first facade across supported workflows | Hide historical phase names and internal JSON assembly while retaining automation compatibility |
+| RF-D07 | Keep two provider workers, mandatory review reserves and contribution-based provider independence | Specialization must fit existing task budgets; optional critique cannot consume mandatory quality capacity |
+| RF-D08 | Gate browser automation on actual supported-host isolation/lifecycle tests | Browser availability or a screenshot does not establish functional acceptance or a safe boundary |
+| RF-D09 | Resolve future commit identity from trusted per-run configuration | Honor the user's identity without altering global settings or rewriting historical candidate evidence |
+
 ## Working assumptions and decision deadlines
 
 These defaults let planning proceed. Revisit at their milestone, not by asking for every implementation detail now.

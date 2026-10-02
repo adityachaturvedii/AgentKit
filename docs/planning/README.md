@@ -1,5 +1,9 @@
 # AgentKit reuse-first product plan
 
+## Next engineering increment
+
+The [product-refinement plan](refinement-plan.md) proposes the next user-experience and specialist-agent work after reviewing the separate R5 live checkpoint. Read its [specialist and skill contracts](specialist-skills.md) and [REF-00–10 implementation backlog](refinement-backlog.md) for dependencies, ownership and behavioral acceptance. These are planned capabilities, not implemented or live-tested features. The planning base is refreshed integration `8d9cc31`; R5 `9a05b63` and the R4 pilot ledger `3dd45c6` remain separate prerequisites rather than silently merged work. See [planning validation](refinement-validation.md).
+
 Planning review: 2026-10-01. Status: R0 reuse spike, R1 read-only intake, the R2 disposable-fixture delivery slice, R3 P11 portable-package verifier, P12 one-shot terminal workflow and P13 source-checkout/wheel compatibility and data-flow documentation are implemented. P13 public distribution remains incomplete until an outbound license exists; later capabilities are not authorization for paid inference or publication.
 
 The user has selected **both existing-repository engineering and new-product creation, with existing repositories first**, for **small engineering teams and some public open-source users**. Substantial reuse of OpenHarness is an explicit engineering preference. We will compare and adapt working code before writing replacements.
