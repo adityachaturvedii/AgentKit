@@ -155,7 +155,7 @@ def _interactive_launch(argv, env, cwd, timeout, cancel_event=None):
 
 def guided_login(provider, method='browser', *, timeout_seconds=600, cancel_event=None,
                  terminal_available=None, launcher=_interactive_launch, executable=None,
-                 status_probe=probe_authentication):
+                 status_probe=probe_authentication, force=False):
     """Reuse valid auth or run an official interactive login with uncaptured terminal I/O."""
     provider = _require_provider(provider)
     if (type(timeout_seconds) not in (int, float) or not math.isfinite(timeout_seconds) or
@@ -163,7 +163,7 @@ def guided_login(provider, method='browser', *, timeout_seconds=600, cancel_even
         raise ValueError('login timeout must be finite and between 1 and 1800 seconds')
     current = status_probe(provider, executable=executable)
     resolved = current.executable or executable or shutil.which(provider)
-    if current.state == 'verified' and current.mode == 'subscription':
+    if current.state == 'verified' and current.mode == 'subscription' and not force:
         command = shlex.join(login_argv(provider, resolved, method))
         return LoginResult(provider, 'already_authenticated', current, command, platform.node(),
                            'not_started')

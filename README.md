@@ -247,7 +247,7 @@ python3 -m agentkit task start \
   --authorize-subscription-smoke
 ```
 
-Live execution uses the installed CLI's existing subscription authentication. AgentKit does not introduce API keys, enable paid fallback, purchase credits or change authentication methods. If authentication is missing or expired, the task pauses at `authentication_required`. The official interactive login flow runs in an attached terminal and keeps passwords, MFA, tokens, codes and raw login output out of controller evidence and model context. See [guided authentication recovery](docs/authentication-recovery.md).
+Live execution uses the installed CLI's existing subscription authentication. AgentKit does not introduce API keys, enable paid fallback, purchase credits or change authentication methods. If authentication is missing or expired, the task pauses at `authentication_required` and reports an in-workflow recovery command. For static products, `agentkit product authenticate` runs the official interactive login in the attached terminal, verifies subscription mode and resumes only the interrupted stage. Passwords, MFA, tokens, codes and raw login output stay out of controller evidence and model context. See [guided authentication recovery](docs/authentication-recovery.md).
 
 Declare call, time and concurrency budgets when submitting a live task; inspect `task submit --help` and the [CLI guide](docs/phase4-cli-guide.md) before running it. Do not include live commands in ordinary CI.
 
@@ -267,7 +267,7 @@ See [resource policy and role capabilities](docs/cli-resource-policy.md) for enf
 
 ### Static web product work
 
-The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments; the controller validates scope, dependencies, acceptance and budget before execution. Product planning now receives hash-verified product-shaping, interaction-design and visual-design procedures. Protected mechanics checks and exact-revision browser evidence are required for acceptance. The browser-evidence path can create a private plain-file snapshot and validate an independent report against its revision, session, snapshot and screenshots. Browser interaction remains externally driven; the toolkit does not claim a general built-in browser agent or browser-process isolation.
+The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments through a CLI structured-output schema; the controller still validates scope, dependencies, acceptance and budget before execution. One unambiguous prose-wrapped JSON object can be recovered and strictly checked, while a task-budgeted corrective retry can receive the precise validation failure. Product planning receives hash-verified product-shaping, interaction-design and visual-design procedures. Protected mechanics checks and exact-revision browser evidence are required for acceptance. The browser-evidence path can create a private plain-file snapshot and validate an independent report against its revision, session, snapshot and screenshots. Browser interaction remains externally driven; the toolkit does not claim a general built-in browser agent or browser-process isolation.
 
 The first Breakout attempt failed during planning; the later integration checkpoint stopped on Claude authentication failures. No playable game or completed product acceptance is claimed. See the [product workflow](docs/product-workflow.md) for commands, prerequisites and retained evidence.
 

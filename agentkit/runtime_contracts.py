@@ -1,6 +1,7 @@
 """Versioned, provider-neutral Phase 2 contracts. No policy from worker JSON."""
 
 from dataclasses import asdict, dataclass, field
+import json
 import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -50,6 +51,7 @@ class ExecutionRequest:
     capability_profile: Optional[str] = None
     max_generated_output_tokens: Optional[int] = None
     resource_resolution: Optional[Dict[str, Any]] = None
+    output_schema: Optional[Dict[str, Any]] = None
     schema_version: int = SCHEMA_VERSION
 
     def __post_init__(self):
@@ -91,6 +93,16 @@ class ExecutionRequest:
             if (self.resource_resolution['generated_output_tokens']['value'] !=
                     self.max_generated_output_tokens):
                 raise ValueError('resolved provider output control does not match request')
+        if self.output_schema is not None:
+            if not isinstance(self.output_schema, dict):
+                raise ValueError('output schema must be an object')
+            try:
+                encoded_schema = json.dumps(self.output_schema, allow_nan=False,
+                                            sort_keys=True).encode()
+            except (TypeError, ValueError, RecursionError) as exc:
+                raise ValueError('output schema must be finite JSON') from exc
+            if not encoded_schema or len(encoded_schema) > 65536:
+                raise ValueError('output schema exceeds the bounded allocation')
 
     @classmethod
     def from_dict(cls, value):

@@ -5,6 +5,7 @@ import hashlib
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -13,12 +14,13 @@ import sys
 import tempfile
 import time
 
-from .adapters import execute
-from .controller import ControllerError, UsageRecord
+from .adapters import execute, structured_json_text
+from .auth import guided_login, safe_login_reason
+from .controller import ControllerError, StaleEvidence, UsageRecord
 from .delivery import EngineOutcome, LiveImplementer
 from .doctor import clean_environment, native_sandbox_capability, verification_profile
 from .orchestration import (Phase4Workflow, _manifest, build_contract, build_plan)
-from .phase4_contracts import ModelRegistry
+from .phase4_contracts import ModelRegistry, RouteDecision
 from .paths import resource_root
 from .phase4_fixtures import FixtureSpec, FixtureSubtask
 from .planning import bounded_inventory
@@ -137,6 +139,81 @@ def planner_prompt(brief, acceptance, inventory, limits, context):
         'VERIFIED_PLANNING_CONTEXT_JSON:\n' + json.dumps(context, sort_keys=True) + '\n'
         'REQUIRED_OUTPUT_SHAPE_JSON:\n' + json.dumps(schema, sort_keys=True)
     )
+
+
+def product_plan_schema(brief, acceptance, inventory, max_concurrency):
+    """Provider structured-output shape; controller validation remains authoritative."""
+    assignment = {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['id', 'objective', 'allowed_paths', 'dependencies', 'interfaces'],
+        'properties': {
+            'id': {'type': 'string', 'pattern': '^implement-[A-Za-z0-9-]+$'},
+            'objective': {'type': 'string', 'minLength': 1, 'maxLength': 2048},
+            'allowed_paths': {'type': 'array', 'minItems': 1, 'uniqueItems': True,
+                              'items': {'enum': list(WEB_EDITABLE_PATHS)}},
+            'dependencies': {'type': 'array', 'uniqueItems': True,
+                             'items': {'type': 'string', 'pattern': '^implement-[A-Za-z0-9-]+$'}},
+            'interfaces': {'type': 'array', 'minItems': 1,
+                           'items': {'type': 'string', 'minLength': 1}},
+        },
+    }
+    interface = {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['assignment', 'contract'],
+        'properties': {'assignment': {'type': 'string'},
+                       'contract': {'type': 'string', 'minLength': 1}},
+    }
+    dependency = {
+        'type': 'object', 'additionalProperties': False,
+        'required': ['source', 'target'],
+        'properties': {'source': {'type': 'string'}, 'target': {'type': 'string'}},
+    }
+    proposal_properties = {
+        'objective': {'type': 'string', 'minLength': 1},
+        'requirements': {'const': [{'source': 'user', 'text': brief}]},
+        'assumptions': {'type': 'array', 'minItems': 1,
+                        'items': {'type': 'string', 'minLength': 1}},
+        'acceptance': {'const': acceptance},
+        'assignments': {'type': 'array', 'minItems': 1, 'maxItems': 2,
+                        'items': assignment},
+        'interfaces': {'type': 'array', 'minItems': 1, 'items': interface},
+        'dependencies': {'type': 'array', 'items': dependency},
+        'integration_strategy': {'type': 'string', 'minLength': 1},
+        'verification_requirements': {'type': 'array', 'minItems': 1,
+                                      'items': {'type': 'string', 'minLength': 1}},
+        'review_requirements': {'type': 'array', 'minItems': 1,
+                                'items': {'type': 'string', 'minLength': 1}},
+        'roles': {'const': ['chief_of_staff', 'tech_lead', 'implementer',
+                            'verifier', 'reviewer']},
+        'model_profiles': {'const': {'implementer': 'controller-route',
+                                     'repair': 'controller-route',
+                                     'reviewer': 'controller-independent-route'}},
+        'resource_allocations': {
+            'type': 'object', 'additionalProperties': False,
+            'required': ['implementation_calls', 'verification_calls', 'review_calls',
+                         'maximum_concurrent_implementers'],
+            'properties': {
+                'implementation_calls': {'type': 'integer', 'minimum': 1, 'maximum': 2},
+                'verification_calls': {'const': 1}, 'review_calls': {'const': 1},
+                'maximum_concurrent_implementers': {
+                    'type': 'integer', 'minimum': 1, 'maximum': max_concurrency},
+            },
+        },
+        'inventory_sha256': {'const': inventory['sha256']},
+        'planner': {'const': {'kind': 'provider-tech-lead', 'model_call': True}},
+    }
+    proposal_required = list(proposal_properties)
+    return {
+        '$schema': 'https://json-schema.org/draft/2020-12/schema',
+        'type': 'object', 'additionalProperties': False,
+        'required': ['project', 'proposal'],
+        'properties': {
+            'project': {'const': PRODUCT_PROJECT_POLICY},
+            'proposal': {'type': 'object', 'additionalProperties': False,
+                         'required': proposal_required,
+                         'properties': proposal_properties},
+        },
+    }
 
 
 def validate_product_document(document, brief, acceptance, inventory, *, max_subtasks,
@@ -297,7 +374,7 @@ def _usage(result):
 
 class LiveProductPlanner:
     def __init__(self, provider, model=None, effort=None, *, timeout_seconds=None,
-                 max_output_bytes=None, max_generated_output_tokens=None):
+                 max_output_bytes=None, max_generated_output_tokens=None, output_schema=None):
         self.provider = provider
         self.model = model
         self.effort = effort
@@ -308,6 +385,7 @@ class LiveProductPlanner:
         self.timeout_seconds = self.resources['timeout_seconds']['value']
         self.max_output_bytes = self.resources['max_capture_bytes']['value']
         self.max_generated_output_tokens = self.resources['generated_output_tokens']['value']
+        self.output_schema = output_schema
 
     def run(self, prompt, output, policy, cancel_event=None):
         with tempfile.TemporaryDirectory(prefix='agentkit-product-plan-') as tmp:
@@ -317,11 +395,14 @@ class LiveProductPlanner:
                 model=self.model, effort=self.effort, mode='model-only',
                 capability_profile='structured-planning',
                 max_generated_output_tokens=self.max_generated_output_tokens,
-                resource_resolution=self.resources)
+                resource_resolution=self.resources, output_schema=self.output_schema)
             result = execute(request, output, policy=policy, cancel_event=cancel_event)
+        proposal = result.structured_output
+        if proposal is None:
+            proposal = structured_json_text(result.final_text, allow_wrapping_prose=True)
         return EngineOutcome(
             result.status, result.elapsed_seconds, _usage(result),
-            {'error_class': result.error_class, 'proposal_document': result.structured_output,
+            {'error_class': result.error_class, 'proposal_document': proposal,
              'artifacts': result.artifacts, 'limitations': result.limitations,
              'resource_resolution': self.resources,
              'requested_configuration': {'model': self.model, 'effort': self.effort},
@@ -338,7 +419,7 @@ class LiveProductPlanner:
         planner = LiveProductPlanner(
             self.provider, self.model, self.effort,
             timeout_seconds=min(self.timeout_seconds, remaining_seconds),
-            max_output_bytes=self.max_output_bytes)
+            max_output_bytes=self.max_output_bytes, output_schema=self.output_schema)
         planner.resources['generated_output_tokens'] = recovered['generated_output_tokens']
         planner.max_generated_output_tokens = None
         return planner
@@ -536,12 +617,14 @@ class ProductWorkflow(Phase4Workflow):
             max_concurrency=max_concurrency, max_timeout_seconds=max_timeout_seconds,
             verification_reserve=1, review_reserve=1,
             max_provider_calls=max_provider_calls,
-            max_planning_calls=1 + max_retries)
+            max_planning_calls=2 + max_retries)
         inventory = static_web_inventory()
         context = planning_context(resource_root())
         limits = {
             'provider_invocations_total': max_provider_calls,
-            'planning_calls_max': 1 + max_retries, 'implementation_assignments_max': 2,
+            'planning_calls_max': 2 + max_retries,
+            'planning_calls_note': 'includes one bounded authentication-resume allowance',
+            'implementation_assignments_max': 2,
             'concurrent_workers_max': max_concurrency, 'repair_calls_max': max_repairs,
             'stage_timeout_seconds': {
                 'planning': planning_timeout_seconds,
@@ -552,10 +635,11 @@ class ProductWorkflow(Phase4Workflow):
             'publication': 'unsupported',
         }
         prompt = planner_prompt(brief, acceptance, inventory, limits, context)
+        output_schema = product_plan_schema(brief, acceptance, inventory, max_concurrency)
         planner = planner or (LiveProductPlanner(
             planner_route.provider, planner_route.model, planner_route.effort,
             timeout_seconds=planning_timeout_seconds,
-            max_output_bytes=max_output_bytes) if live else None)
+            max_output_bytes=max_output_bytes, output_schema=output_schema) if live else None)
         if planner is None:
             raise ProductPlanningError('offline product submission requires a deterministic planner fixture')
         self._write_json('product-request.json', {
@@ -564,96 +648,175 @@ class ProductWorkflow(Phase4Workflow):
             'resource_policy': {'task_budget': task_budget,
                                 'stage_allocations': stage_resources},
             'planning_route': planner_route.to_dict(),
+            'planning_output_schema_sha256': hashlib.sha256(
+                json.dumps(output_schema, sort_keys=True).encode()).hexdigest(),
             'planning_context': [{k: item[k] for k in ('path', 'sha256')}
                                  for item in context['items']],
         })
         self._write_json('registry.json', registry.to_dict())
-        outcome, execution_id = self._run_engine(
-            task_id, 'planning', planner_route.provider, planner_route.model,
-            planning_timeout_seconds,
-            lambda: planner.run(prompt, self.evidence_root / 'planning-0', self.policy,
-                                cancel_event=self._cancellation(task_id)),
-            effort=planner_route.effort)
-        attempts = [{'execution_id': execution_id, 'status': outcome.status,
-                     'details': outcome.details, 'usage': asdict(outcome.usage)}]
-        if (outcome.status == 'failed' and
-                outcome.details.get('error_class') == 'output_limit' and
-                max_retries > 0 and hasattr(planner, 'without_output_override')):
-            recovered = planner.without_output_override(
-                remaining_calls=max_retries,
-                remaining_seconds=max_elapsed_seconds - outcome.elapsed_seconds)
-            if recovered is not None:
-                planner = recovered
-                outcome, execution_id = self._run_engine(
-                    task_id, 'planning', planner_route.provider, planner_route.model,
-                    planner.timeout_seconds,
-                    lambda: planner.run(
-                        prompt, self.evidence_root / 'planning-1', self.policy,
-                        cancel_event=self._cancellation(task_id)),
-                    effort=planner_route.effort)
-                attempts.append({'execution_id': execution_id, 'status': outcome.status,
-                                 'details': outcome.details,
-                                 'usage': asdict(outcome.usage)})
-        self._write_json('planning-result.json', {
-            'execution_id': execution_id, 'status': outcome.status,
-            'details': outcome.details, 'usage': asdict(outcome.usage),
-            'attempts': attempts})
-        if outcome.status != 'succeeded':
-            self._transition(task_id, 'received', 'blocked', 'planning-blocked',
-                             'inspect bounded product planning failure')
-            self._write_product_preplan_status(task_id)
-            return self
-        try:
-            raw_document = outcome.details.get('proposal_document')
-            raw_proposal = validate_product_document(
-                raw_document, brief, acceptance, inventory,
-                max_subtasks=2, max_concurrency=max_concurrency)
-            implementation_count = len(raw_proposal['assignments'])
-            mandatory_calls = 1 + implementation_count + 1 + 1
-            provider_calls = 1 + implementation_count + 1
-            allocated_time = (planning_timeout_seconds +
-                              implementation_count * implementation_timeout_seconds +
-                              verification_timeout_seconds + review_timeout_seconds)
-            if (mandatory_calls > max_calls or provider_calls > max_provider_calls or
-                    allocated_time > max_elapsed_seconds):
-                raise ProductPlanningError(
-                    'validated product plan cannot fit mandatory planning, implementation, '
-                    'verification and review reserves')
-            fixture = _dynamic_fixture(raw_proposal, mechanics_test)
-            proposal = json.loads(json.dumps(raw_proposal))
-            proposal['planner'] = {
-                **proposal['planner'],
-                'provider': planner_route.provider, 'profile_id': planner_route.profile_id,
-                'requested_model': planner_route.model, 'requested_effort': planner_route.effort,
-                'routing_reason': planner_route.reason,
-                'source_inventory_sha256': inventory['sha256'],
-            }
-            proposal['inventory_sha256'] = bounded_inventory(fixture)['sha256']
-            contract = build_contract(
-                task_id, brief, fixture, risk='material', max_calls=max_calls,
-                max_elapsed_seconds=max_elapsed_seconds, max_concurrency=max_concurrency,
-                max_provider_calls=max_provider_calls,
-                max_planning_calls=1 + max_retries,
-                max_repairs=max_repairs, max_retries=max_retries,
-                max_escalations=max_escalations,
-                implementation_timeout_seconds=implementation_timeout_seconds,
-                review_timeout_seconds=review_timeout_seconds,
-                verification_timeout_seconds=verification_timeout_seconds,
-                max_timeout_seconds=max_timeout_seconds,
-                max_output_bytes_per_call=max_output_bytes, proposal=proposal)
-            plan = build_plan(
-                contract, fixture, registry, resource_root(), proposal,
-                planner_accounted=True)
-        except Exception as exc:
+        planning_payload = {
+            'schema_version': 1, 'task_id': task_id, 'brief': brief,
+            'acceptance': acceptance, 'mechanics_test': mechanics_test,
+            'inventory': inventory, 'prompt': prompt, 'output_schema': output_schema,
+            'planner_route': planner_route.to_dict(), 'max_calls': max_calls,
+            'max_provider_calls': max_provider_calls, 'max_concurrency': max_concurrency,
+            'max_repairs': max_repairs, 'max_retries': max_retries,
+            'max_escalations': max_escalations,
+            'max_elapsed_seconds': max_elapsed_seconds,
+            'planning_timeout_seconds': planning_timeout_seconds,
+            'implementation_timeout_seconds': implementation_timeout_seconds,
+            'review_timeout_seconds': review_timeout_seconds,
+            'verification_timeout_seconds': verification_timeout_seconds,
+            'max_timeout_seconds': max_timeout_seconds,
+            'max_output_bytes': max_output_bytes,
+        }
+        self._write_json('controller/product-planning.json', planning_payload)
+        self._planning_planner = planner
+        return self._continue_product_planning(task_id, planning_payload, registry, planner)
+
+    def _planning_identity(self):
+        paths = [self.root / 'product-request.json', self.root / 'registry.json',
+                 self.controller_root / 'product-planning.json']
+        if any(not path.is_file() or path.is_symlink() for path in paths):
+            raise StaleEvidence('product planning inputs are absent or unsafe')
+        return {
+            'kind': 'planning', 'workflow_root': str(self.root),
+            'request_sha256': hashlib.sha256(paths[0].read_bytes()).hexdigest(),
+            'registry_sha256': hashlib.sha256(paths[1].read_bytes()).hexdigest(),
+            'protected_input_sha256': hashlib.sha256(paths[2].read_bytes()).hexdigest(),
+        }
+
+    def _continue_product_planning(self, task_id, payload, registry, planner):
+        brief, acceptance = payload['brief'], payload['acceptance']
+        inventory, prompt = payload['inventory'], payload['prompt']
+        planner_route = RouteDecision(**payload['planner_route'])
+        attempts = []
+        if (self.root / 'planning-result.json').is_file():
+            attempts = json.loads((self.root / 'planning-result.json').read_text()).get('attempts', [])
+        retries_used = sum(1 for item in attempts if item.get('controller_rejection') or
+                           item.get('details', {}).get('error_class') == 'output_limit')
+        rejection_signatures = {item.get('controller_rejection') for item in attempts
+                                if item.get('controller_rejection')}
+        raw_proposal = None
+        outcome = None
+        execution_id = None
+        while True:
+            index = len(attempts)
+            current_prompt = prompt
+            if rejection_signatures:
+                current_prompt += ('\nCONTROLLER_VALIDATION_FEEDBACK:\nCorrect the prior proposal. '
+                                   + sorted(rejection_signatures)[-1] +
+                                   '\nReturn only the schema-conforming object. Do not add or relabel user requirements.')
+            outcome, execution_id = self._run_engine(
+                task_id, 'planning', planner_route.provider, planner_route.model,
+                getattr(planner, 'timeout_seconds', payload['planning_timeout_seconds']),
+                lambda: planner.run(current_prompt, self.evidence_root / ('planning-' + str(index)),
+                                    self.policy, cancel_event=self._cancellation(task_id)),
+                effort=planner_route.effort)
+            attempt = {'execution_id': execution_id, 'status': outcome.status,
+                       'details': outcome.details, 'usage': asdict(outcome.usage)}
+            attempts.append(attempt)
+            self._write_json('planning-result.json', {
+                'execution_id': execution_id, 'status': outcome.status,
+                'details': outcome.details, 'usage': asdict(outcome.usage),
+                'attempts': attempts})
+            if (outcome.status == 'failed' and
+                    outcome.details.get('error_class') == 'authentication'):
+                self.store.checkpoint_authentication(
+                    task_id, execution_id, planner_route.provider,
+                    auth_reason=outcome.details.get('authentication_failure') or
+                    'missing_or_expired', candidate_identity=self._planning_identity(),
+                    authority=self.store.authority)
+                self._write_product_preplan_status(task_id)
+                return self
+            if (outcome.status == 'failed' and
+                    outcome.details.get('error_class') == 'output_limit' and
+                    retries_used < payload['max_retries'] and
+                    hasattr(planner, 'without_output_override')):
+                recovered = planner.without_output_override(
+                    remaining_calls=payload['max_retries'] - retries_used,
+                    remaining_seconds=payload['max_elapsed_seconds'] - outcome.elapsed_seconds)
+                if recovered is not None:
+                    planner = recovered
+                    retries_used += 1
+                    continue
+            if outcome.status != 'succeeded':
+                self._transition(task_id, 'received', 'blocked', 'planning-blocked',
+                                 'planning failed; inspect concise status or retained evidence')
+                self._write_product_preplan_status(task_id)
+                return self
+            try:
+                raw_proposal = validate_product_document(
+                    outcome.details.get('proposal_document'), brief, acceptance, inventory,
+                    max_subtasks=2, max_concurrency=payload['max_concurrency'])
+                break
+            except Exception as exc:
+                signature = type(exc).__name__ + ': ' + str(exc)
+                attempt['controller_rejection'] = signature
+                self._write_json('planning-result.json', {
+                    'execution_id': execution_id, 'status': 'rejected',
+                    'details': outcome.details, 'usage': asdict(outcome.usage),
+                    'attempts': attempts})
+                repeated = signature in rejection_signatures
+                rejection_signatures.add(signature)
+                if not repeated and retries_used < payload['max_retries']:
+                    retries_used += 1
+                    continue
+                self._write_json('planner-rejection.json', {
+                    'error': type(exc).__name__, 'reason': str(exc),
+                    'raw_document_sha256': hashlib.sha256(json.dumps(
+                        outcome.details.get('proposal_document'), sort_keys=True).encode()).hexdigest(),
+                    'automatic_retries_used': retries_used,
+                })
+                self._transition(task_id, 'received', 'blocked', 'planner-output-rejected',
+                                 'planner response remained invalid after bounded correction')
+                self._write_product_preplan_status(task_id)
+                return self
+
+        implementation_count = len(raw_proposal['assignments'])
+        planning_calls = len(attempts)
+        mandatory_calls = planning_calls + implementation_count + 1 + 1
+        provider_calls = planning_calls + implementation_count + 1
+        allocated_time = (planning_calls * payload['planning_timeout_seconds'] +
+                          implementation_count * payload['implementation_timeout_seconds'] +
+                          payload['verification_timeout_seconds'] +
+                          payload['review_timeout_seconds'])
+        if (mandatory_calls > payload['max_calls'] or
+                provider_calls > payload['max_provider_calls'] or
+                allocated_time > payload['max_elapsed_seconds']):
             self._write_json('planner-rejection.json', {
-                'error': type(exc).__name__, 'reason': str(exc),
-                'raw_document_sha256': hashlib.sha256(
-                    json.dumps(outcome.details.get('proposal_document'), sort_keys=True).encode()).hexdigest(),
-            })
-            self._transition(task_id, 'received', 'blocked', 'planner-output-rejected',
-                             'inspect rejected untrusted product plan')
+                'error': 'ProductPlanningError',
+                'reason': 'validated product plan cannot fit remaining mandatory stages'})
+            self._transition(task_id, 'received', 'blocked', 'planner-budget-rejected',
+                             'increase the explicit task call or time budget')
             self._write_product_preplan_status(task_id)
             return self
+        fixture = _dynamic_fixture(raw_proposal, payload['mechanics_test'])
+        proposal = json.loads(json.dumps(raw_proposal))
+        proposal['planner'] = {
+            **proposal['planner'], 'provider': planner_route.provider,
+            'profile_id': planner_route.profile_id,
+            'requested_model': planner_route.model,
+            'requested_effort': planner_route.effort,
+            'routing_reason': planner_route.reason,
+            'source_inventory_sha256': inventory['sha256'],
+        }
+        proposal['inventory_sha256'] = bounded_inventory(fixture)['sha256']
+        contract = build_contract(
+            task_id, brief, fixture, risk='material', max_calls=payload['max_calls'],
+            max_elapsed_seconds=payload['max_elapsed_seconds'],
+            max_concurrency=payload['max_concurrency'],
+            max_provider_calls=payload['max_provider_calls'],
+            max_planning_calls=2 + payload['max_retries'],
+            max_repairs=payload['max_repairs'], max_retries=payload['max_retries'],
+            max_escalations=payload['max_escalations'],
+            implementation_timeout_seconds=payload['implementation_timeout_seconds'],
+            review_timeout_seconds=payload['review_timeout_seconds'],
+            verification_timeout_seconds=payload['verification_timeout_seconds'],
+            max_timeout_seconds=payload['max_timeout_seconds'],
+            max_output_bytes_per_call=payload['max_output_bytes'], proposal=proposal)
+        plan = build_plan(contract, fixture, registry, resource_root(), proposal,
+                          planner_accounted=True)
         node = shutil.which('node')
         if not node:
             self._transition(task_id, 'received', 'blocked', 'node-unavailable',
@@ -694,10 +857,89 @@ class ProductWorkflow(Phase4Workflow):
     def _write_product_preplan_status(self, task_id):
         task = self.store.task(task_id)
         snapshot = self.store.snapshot(task_id)
+        checkpoint = self.store.authentication_checkpoint(task_id)
         self._write_json('status.json', {
             'task_id': task_id, 'state': task['state'], 'stage': 'planning',
             'next_action': task['next_action'], 'executions': snapshot['executions'],
+            'authentication': ({'provider': checkpoint['provider'],
+                                'action': 'agentkit product authenticate --root ' +
+                                str(self.root) + ' --task-id ' + task_id +
+                                ' --live --authorize-subscription-smoke'}
+                               if checkpoint else None),
             'approval_package': None})
+
+    def resume(self, task_id):
+        checkpoint = self.store.authentication_checkpoint(task_id)
+        planning_path = self.controller_root / 'product-planning.json'
+        if not (self.root / 'plan.json').is_file() and planning_path.is_file():
+            identity = self._planning_identity()
+            if checkpoint and checkpoint['interrupted_role'] == 'planning':
+                self.store.resume_after_authentication(
+                    task_id, candidate_identity=identity, authority=self.store.authority)
+            else:
+                task = self.store.task(task_id)
+                historical = self.store.snapshot(task_id)['authentication_checkpoints']
+                resumed = [item for item in historical
+                           if item['interrupted_role'] == 'planning' and item['status'] == 'resumed']
+                if (task['state'] != 'received' or not resumed or
+                        json.loads(resumed[-1]['candidate_identity_json']) != identity):
+                    return super().resume(task_id)
+            payload_path = self.controller_root / 'product-planning.json'
+            payload = json.loads(payload_path.read_text())
+            if (not isinstance(payload, dict) or payload.get('schema_version') != 1 or
+                    payload.get('task_id') != task_id):
+                raise StaleEvidence('protected product planning inputs are invalid')
+            registry = ModelRegistry.from_dict(json.loads((self.root / 'registry.json').read_text()))
+            planner = getattr(self, '_planning_planner', None)
+            if planner is None:
+                route = RouteDecision(**payload['planner_route'])
+                planner = LiveProductPlanner(
+                    route.provider, route.model, route.effort,
+                    timeout_seconds=payload['planning_timeout_seconds'],
+                    max_output_bytes=payload['max_output_bytes'],
+                    output_schema=payload['output_schema'])
+            return self._continue_product_planning(task_id, payload, registry, planner).status(task_id)
+        return super().resume(task_id)
+
+    def authenticate(self, task_id, *, method='browser', timeout_seconds=600,
+                     login=guided_login):
+        checkpoint = self.store.authentication_checkpoint(task_id)
+        if not checkpoint:
+            raise ControllerError('product is not waiting for provider authentication')
+        if method not in ('browser', 'device') or (
+                checkpoint['provider'] == 'claude' and method != 'browser'):
+            raise ValueError('Claude uses browser login; Codex supports browser or device login')
+        if (type(timeout_seconds) not in (int, float) or
+                not math.isfinite(timeout_seconds) or not 1 <= timeout_seconds <= 1800):
+            raise ValueError('login timeout must be finite and between 1 and 1800 seconds')
+        claim = self.store.claim_authentication_login(
+            task_id, checkpoint['provider'], authority=self.store.authority)
+        if not claim['claimed']:
+            return {'authentication': {'provider': checkpoint['provider'],
+                                       'status': claim['status']},
+                    'workflow': self.status(task_id)}
+        try:
+            result = login(checkpoint['provider'], method, timeout_seconds=timeout_seconds,
+                           force=True)
+        except BaseException:
+            self.store.reconcile_authentication_login(
+                claim['session_id'], 'uncertain', 'launcher_exception',
+                owner_nonce=claim['owner_nonce'], authority=self.store.authority)
+            raise
+        if result.termination == 'uncertain':
+            self.store.reconcile_authentication_login(
+                claim['session_id'], 'uncertain', 'process_termination_unconfirmed',
+                owner_nonce=claim['owner_nonce'], authority=self.store.authority)
+            return {'authentication': result.to_dict(), 'workflow': self.status(task_id)}
+        outcome = ('succeeded' if result.status in ('succeeded', 'already_authenticated') else
+                   'timed_out' if result.status == 'timed_out' else
+                   'cancelled' if result.status == 'cancelled' else 'failed')
+        self.store.finish_authentication_login(
+            claim['session_id'], outcome, auth_mode=result.authentication.mode,
+            reason=safe_login_reason(result), owner_nonce=claim['owner_nonce'],
+            authority=self.store.authority)
+        workflow = (self.resume(task_id) if outcome == 'succeeded' else self.status(task_id))
+        return {'authentication': result.to_dict(), 'workflow': workflow}
 
     def _fixture(self, task_id):
         target = self.root / 'product-spec.json'
@@ -749,8 +991,14 @@ class ProductWorkflow(Phase4Workflow):
         if not (self.root / 'plan.json').is_file():
             task = self.store.task(task_id)
             snapshot = self.store.snapshot(task_id)
+            checkpoint = self.store.authentication_checkpoint(task_id)
             return {'task_id': task_id, 'state': task['state'], 'stage': 'planning',
                     'next_action': task['next_action'], 'executions': snapshot['executions'],
+                    'authentication': ({'provider': checkpoint['provider'],
+                                        'action': 'agentkit product authenticate --root ' +
+                                        str(self.root) + ' --task-id ' + task_id +
+                                        ' --live --authorize-subscription-smoke'}
+                                       if checkpoint else None),
                     'approval_package': None}
         return super().status(task_id)
 

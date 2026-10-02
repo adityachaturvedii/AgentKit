@@ -79,6 +79,42 @@ class RuntimeTests(unittest.TestCase):
                       '```json\n{"x":1,"x":2}\n```', '```json\nNaN\n```'):
             self.assertIsNone(structured_json_text(value))
 
+    def test_one_prose_wrapped_json_fence_is_recovered_only_when_explicitly_allowed(self):
+        wrapped = ('I prepared the requested plan.\n```json\n'
+                   '{"project":"fixture","assignments":[]}\n```\n'
+                   'The controller should still validate every field.')
+        self.assertIsNone(structured_json_text(wrapped))
+        self.assertEqual(structured_json_text(wrapped, allow_wrapping_prose=True),
+                         {'project': 'fixture', 'assignments': []})
+        self.assertIsNone(structured_json_text(
+            wrapped + '\n```json\n{"second":true}\n```', allow_wrapping_prose=True))
+
+    def test_structured_output_schema_reaches_each_real_adapter_request(self):
+        schema = {'type': 'object', 'additionalProperties': False,
+                  'required': ['answer'], 'properties': {'answer': {'type': 'string'}}}
+        for engine in ('codex', 'claude'):
+            with self.subTest(engine=engine):
+                runtime = self.root / ('runtime-' + engine)
+                runtime.mkdir()
+                request = self.request(engine, output_schema=schema)
+                argv = ADAPTERS[engine].argv(engine, request, runtime)
+                if engine == 'codex':
+                    index = argv.index('--output-schema')
+                    schema_path = Path(argv[index + 1])
+                    self.assertEqual(json.loads(schema_path.read_text()), schema)
+                    self.assertEqual(schema_path.stat().st_mode & 0o777, 0o600)
+                else:
+                    index = argv.index('--json-schema')
+                    self.assertEqual(json.loads(argv[index + 1]), schema)
+
+    def test_expired_oauth_is_classified_as_authentication(self):
+        result = normalize(
+            self.request('claude'),
+            ProcessOutcome(b'', b'Error: OAuth access token has expired', 1, .01, None,
+                           CancellationStatus()))
+        self.assertEqual(result.error_class, 'authentication')
+        self.assertEqual(result.provider_details['authentication_failure'], 'expired')
+
     def test_simulated_errors_both_providers(self):
         for engine in ADAPTERS:
             for category in ('authentication', 'rate_limit', 'usage_limit'):
@@ -251,6 +287,9 @@ class RuntimeTests(unittest.TestCase):
                 ExecutionRequest.from_dict(dict(args, **{key: value}))
         with self.assertRaises(TypeError):
             ExecutionRequest.from_dict(dict(args, subscription_smoke_authorized=True))
+        for schema in ([], {'value': float('nan')}, {'value': object()}):
+            with self.assertRaisesRegex(ValueError, 'output schema'):
+                ExecutionRequest.from_dict(dict(args, output_schema=schema))
 
     def test_model_and_supported_effort_are_explicit_cli_arguments(self):
         runtime = self.root / 'runtime-model-options'

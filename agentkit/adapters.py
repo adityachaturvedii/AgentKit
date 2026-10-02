@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import uuid
 
@@ -24,7 +25,8 @@ def error_class(text):
     for label, needles in [
         ("output_limit", ("output token maximum", "max_output_tokens", "generated output limit")),
         ("usage_limit", ("usage limit", "quota exceeded", "insufficient_quota", "credit balance", "payment required", "additional payment", "extra usage", "out of credits")),
-        ("authentication", ("unauthorized", "authentication", "invalid api key", "not logged in", "login required", "401")),
+        ("authentication", ("unauthorized", "authentication", "invalid api key", "not logged in", "login required", "401",
+                            "oauth access token has expired", "oauth token has expired", "token has expired")),
         ("rate_limit", ("rate limit", "rate_limit", "429", "overloaded")),
         ("sandbox_unavailable", ("sandbox_apply", "sandbox unavailable", "failed to initialize sandbox", "sandbox initialization")),
         ("guard_denied", ("operation not permitted", "permission denied")),
@@ -39,6 +41,7 @@ def authentication_reason(text):
     """Return a bounded category; never retain the provider's authentication message."""
     lowered = text.lower()
     if any(value in lowered for value in ('expired oauth', 'oauth token has expired',
+                                           'oauth access token has expired', 'token has expired',
                                            'token expired', 'reauthenticationrequired')):
         return 'expired'
     if any(value in lowered for value in ('not logged in', 'login required', 'unauthorized', '401')):
@@ -60,13 +63,21 @@ def _usage(data, source, final=True):
                             source=source, final=final, provider_details=redact(data))
 
 
-def structured_json_text(value):
-    """Parse one JSON object, allowing only a single exact Markdown JSON fence."""
+def structured_json_text(value, *, allow_wrapping_prose=False):
+    """Parse one JSON object, optionally isolating one unambiguous JSON fence."""
     if not isinstance(value, str):
         return None
     candidate = value.strip()
     if candidate.startswith('```json\n') and candidate.endswith('\n```'):
         candidate = candidate[8:-4].strip()
+    elif allow_wrapping_prose:
+        matches = list(re.finditer(r'```json\n([\s\S]*?)\n```', candidate))
+        if len(matches) != 1:
+            return None
+        outside = candidate[:matches[0].start()] + candidate[matches[0].end():]
+        if '```' in outside or len(outside.encode()) > 8192:
+            return None
+        candidate = matches[0].group(1).strip()
     try:
         parsed = json.loads(candidate, object_pairs_hook=_pairs,
                             parse_constant=lambda _: (_ for _ in ()).throw(ValueError('nonfinite')))
@@ -107,6 +118,12 @@ class CodexAdapter:
             argv.extend(['-c', key + '=' + value])
         if request.model:
             argv.extend(['--model', request.model])
+        if request.output_schema is not None:
+            schema_path = Path(runtime) / 'output-schema.json'
+            with os.fdopen(os.open(schema_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
+                json.dump(request.output_schema, stream, sort_keys=True, allow_nan=False)
+                stream.write('\n')
+            argv.extend(['--output-schema', str(schema_path)])
         argv.append('-')
         return argv
 
@@ -174,6 +191,9 @@ class ClaudeAdapter:
             argv.extend(['--model', request.model])
         if request.effort:
             argv.extend(['--effort', request.effort])
+        if request.output_schema is not None:
+            argv.extend(['--json-schema', json.dumps(
+                request.output_schema, sort_keys=True, separators=(',', ':'), allow_nan=False)])
         return argv
 
     def parse(self, events, result, allowed_tools=()):

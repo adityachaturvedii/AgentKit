@@ -403,6 +403,8 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Exercise the real owned-code request boundary with provider transport stubbed; assert the daemon and strict-config controls reach the launched argv.
 - [x] Re-run the bounded realistic product trial from corrected executable `fcaf591`; retain two live planning launches and stop within the four-launch authorization when only two launches remained for three mandatory stages.
 - [x] Record the stale Claude status/expired OAuth mismatch, missing forced recovery path, rejected nonconforming planner response, reported usage and absence of any implementation, verification, browser, review or approval evidence.
-- [ ] Add planning-stage authentication checkpoints with an explicit official-login refresh path and exact-stage resume.
-- [ ] Use a verified provider structured-output control for product planning and retain deterministic rejection of changed controller requirements.
+- [x] Add planning-stage authentication checkpoints with an in-product official-login command, hash-bound protected inputs and automatic exact-stage resume after verified subscription login.
+- [x] Pass a strict schema through the installed Codex and Claude structured-output controls, recover one unambiguous prose-wrapped JSON fence, and retain deterministic rejection of changed controller requirements.
+- [x] Give one bounded corrective retry precise controller validation feedback without replaying the provider transcript; stop repeated identical failures and preserve every attempt in budgets and evidence.
+- [x] Cover expired OAuth classification, forced official-login refresh, protected-input staleness, automatic planning resume, schema propagation and corrective replanning with disposable offline tests.
 - [ ] Repeat the realistic product trial only under a new explicit live authorization after the recovery and structured-planning corrections pass offline tests.

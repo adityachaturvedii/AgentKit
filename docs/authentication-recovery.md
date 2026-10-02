@@ -30,6 +30,17 @@ python3 -m agentkit auth-login claude \
 
 For Codex, browser login is the default. Add `--method device` when the browser callback cannot reach the CLI. Claude's browser flow already provides its supported manual code prompt fallback.
 
+Static-product workflows expose the same recovery as a product command and resume automatically after successful verification:
+
+```sh
+python3 -m agentkit product authenticate \
+  --root /absolute/path/to/product-workflow \
+  --task-id product-demo \
+  --live --authorize-subscription-smoke
+```
+
+This covers authentication discovered during planning as well as implementation, repair or review. Planning recovery binds the original product request, model registry and private controller planning input by hash; candidate-stage recovery retains the repository/worktree identity described below.
+
 The command first reuses a working subscription login. Otherwise, it identifies the provider and local machine, then attaches the official CLI directly to the terminal. Standard input, output and error are inherited rather than piped. Passwords and MFA remain on the official page, and any authorization code is entered only into the official CLI prompt. The controller receives only a bounded result category and sanitized subscription status. If no safe TTY is available, the command prints the exact official CLI command and leaves the checkpoint unclaimed.
 
 After successful login, resume only the interrupted stage:
@@ -69,7 +80,7 @@ Resume requires all of the following:
 - task state is exactly `authentication_required`;
 - the actual controller-owned repository path, worktree path, branch, Git HEAD, clean status and complete file-manifest digest still match the checkpoint;
 - candidate revision and referenced evidence are unchanged and current, and each referenced artifact still matches its content hash; and
-- the checkpoint names an implementer, repair, or reviewer stage.
+- the checkpoint names planning, implementer, repair, or reviewer, and only the narrow interrupted stage is resumable.
 
 Cancelled, failed, or timed-out login leaves a recoverable checkpoint. Ctrl+C terminates and reaps the official login process group where this can be established; launcher failures with uncertain termination enter explicit reconciliation instead of reopening login. Network, quota, rate-limit, permission, sandbox and ordinary execution failures do not create authentication checkpoints. A changed candidate, dirty worktree, wrong branch or repository, stale evidence, non-subscription login or unresolved execution blocks resume before task state changes or approval packaging. PR approval remains separate and revision-bound.
 

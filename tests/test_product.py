@@ -6,6 +6,7 @@ import threading
 import unittest
 from unittest.mock import patch
 
+from agentkit.auth import AuthenticationStatus, LoginResult
 from agentkit.controller import ControllerError, UsageRecord
 from agentkit.delivery import EngineOutcome
 from agentkit.orchestration import DeterministicReviewer
@@ -142,6 +143,37 @@ class RecoveringPlanner:
             return None
         self.resources = resolve_role_resources('planning', task_timeout_seconds=5)
         return self
+
+
+class CorrectingPlanner(StaticProductPlanner):
+    timeout_seconds = 5
+
+    def __init__(self, invalid, corrected):
+        super().__init__(corrected)
+        self.invalid = invalid
+        self.prompts = []
+
+    def run(self, prompt, output, policy, cancel_event=None):
+        self.calls += 1
+        self.prompts.append(prompt)
+        Path(output).mkdir(mode=0o700)
+        document = self.invalid if self.calls == 1 else self.document
+        return EngineOutcome('succeeded', .01, UsageRecord(source='fake'),
+                             {'proposal_document': document, 'simulated': True})
+
+
+class AuthenticationThenPlan(StaticProductPlanner):
+    timeout_seconds = 5
+
+    def run(self, prompt, output, policy, cancel_event=None):
+        self.calls += 1
+        Path(output).mkdir(mode=0o700)
+        if self.calls == 1:
+            return EngineOutcome(
+                'failed', .01, UsageRecord(source='fake'),
+                {'error_class': 'authentication', 'authentication_failure': 'expired'})
+        return EngineOutcome('succeeded', .01, UsageRecord(source='fake'),
+                             {'proposal_document': self.document, 'simulated': True})
 
 
 class ProductTests(unittest.TestCase):
@@ -376,6 +408,126 @@ class ProductTests(unittest.TestCase):
                          'provider-default')
         self.assertIn('verified planning skill content', request.prompt)
         self.assertIsNone(result.details['provider_reported_configuration']['model'])
+
+    def test_live_planner_requests_schema_and_recovers_one_wrapped_json_object(self):
+        captured = {}
+        document = proposal()
+
+        def fake_execute(request, output, policy, cancel_event=None):
+            captured['request'] = request
+            return ExecutionResult(
+                'claude', request.task_id, 'succeeded', None, 0, .1,
+                final_text=('Here is the proposal.\n```json\n' + json.dumps(document) +
+                            '\n```\nReady for controller validation.'),
+                usage=UsageObservation(source='fixture', final=True),
+                cancellation=CancellationStatus(), provider_details={})
+
+        schema = {'type': 'object', 'required': ['project']}
+        with patch('agentkit.product.execute', side_effect=fake_execute):
+            result = LiveProductPlanner(
+                'claude', timeout_seconds=12, output_schema=schema).run(
+                    'bounded planning request', self.root / 'wrapped-plan', object())
+        self.assertEqual(captured['request'].output_schema, schema)
+        self.assertEqual(result.details['proposal_document'], document)
+
+    def test_invalid_plan_gets_bounded_controller_feedback_and_corrective_retry(self):
+        invalid = proposal()
+        invalid['proposal']['requirements'] = [
+            {'source': 'user', 'text': BRIEF},
+            {'source': 'user', 'text': 'invented requirement'},
+        ]
+        planner = CorrectingPlanner(invalid, proposal())
+        workflow = ProductWorkflow.submit_product(
+            self.root / 'corrected-plan', 'corrected-plan', BRIEF, ACCEPTANCE, MECHANICS,
+            planner=planner, live=False, max_retries=1,
+            planning_timeout_seconds=5, implementation_timeout_seconds=5,
+            review_timeout_seconds=5, verification_timeout_seconds=5)
+        self.assertEqual(workflow.store.task('corrected-plan')['state'], 'contracted')
+        self.assertEqual(planner.calls, 2)
+        self.assertNotIn('CONTROLLER_VALIDATION_FEEDBACK', planner.prompts[0])
+        self.assertIn('CONTROLLER_VALIDATION_FEEDBACK', planner.prompts[1])
+        self.assertIn('changed the user requirement', planner.prompts[1])
+        attempts = json.loads((workflow.root / 'planning-result.json').read_text())['attempts']
+        self.assertEqual(len(attempts), 2)
+        self.assertIn('controller_rejection', attempts[0])
+
+    def test_product_authentication_happens_in_product_and_resumes_planning(self):
+        planner = AuthenticationThenPlan(proposal())
+        workflow = ProductWorkflow.submit_product(
+            self.root / 'auth-plan', 'auth-plan', BRIEF, ACCEPTANCE, MECHANICS,
+            planner=planner, live=False, max_retries=0,
+            planning_timeout_seconds=5, implementation_timeout_seconds=5,
+            review_timeout_seconds=5, verification_timeout_seconds=5)
+        status = workflow.status('auth-plan')
+        self.assertEqual(status['state'], 'authentication_required')
+        self.assertIn('agentkit product authenticate', status['authentication']['action'])
+        with self.assertRaisesRegex(ValueError, 'Claude uses browser'):
+            workflow.authenticate('auth-plan', method='device', login=lambda *args: None)
+        with self.assertRaisesRegex(ValueError, 'login timeout'):
+            workflow.authenticate('auth-plan', timeout_seconds=0, login=lambda *args: None)
+        self.assertEqual(workflow.store.authentication_checkpoint('auth-plan')['status'], 'waiting')
+
+        def fake_login(provider, method, **kwargs):
+            self.assertEqual((provider, method), ('claude', 'browser'))
+            self.assertTrue(kwargs['force'])
+            return LoginResult(
+                provider, 'succeeded',
+                AuthenticationStatus(provider, 'verified', 'subscription', 'authenticated',
+                                     provider),
+                provider + ' auth login --claudeai', 'fixture-host', 'confirmed_ended')
+
+        recovered = workflow.authenticate('auth-plan', login=fake_login)
+        self.assertEqual(recovered['authentication']['status'], 'succeeded')
+        self.assertEqual(workflow.store.task('auth-plan')['state'], 'contracted')
+        self.assertEqual(planner.calls, 2)
+        attempts = json.loads((workflow.root / 'planning-result.json').read_text())['attempts']
+        self.assertEqual([item['status'] for item in attempts], ['failed', 'succeeded'])
+        budget = workflow.store.snapshot('auth-plan')['budget']
+        self.assertEqual(budget['planning_completed_calls'], 2)
+
+    def test_changed_protected_planning_input_prevents_post_login_resume(self):
+        planner = AuthenticationThenPlan(proposal())
+        workflow = ProductWorkflow.submit_product(
+            self.root / 'stale-auth-plan', 'stale-auth-plan', BRIEF, ACCEPTANCE, MECHANICS,
+            planner=planner, live=False, max_retries=0,
+            planning_timeout_seconds=5, implementation_timeout_seconds=5,
+            review_timeout_seconds=5, verification_timeout_seconds=5)
+        login = workflow.store.claim_authentication_login(
+            'stale-auth-plan', 'claude', authority=workflow.store.authority)
+        workflow.store.finish_authentication_login(
+            login['session_id'], 'succeeded', auth_mode='subscription', reason='authenticated',
+            owner_nonce=login['owner_nonce'], authority=workflow.store.authority)
+        request = workflow.root / 'product-request.json'
+        value = json.loads(request.read_text())
+        value['brief'] = 'changed while login was pending'
+        request.write_text(json.dumps(value))
+        with self.assertRaisesRegex(Exception, 'changed|pending'):
+            workflow.resume('stale-auth-plan')
+        self.assertEqual(workflow.store.task('stale-auth-plan')['state'],
+                         'authentication_required')
+
+    def test_restart_after_verified_login_resumes_pending_planning_stage(self):
+        planner = AuthenticationThenPlan(proposal())
+        root = self.root / 'restart-auth-plan'
+        workflow = ProductWorkflow.submit_product(
+            root, 'restart-auth-plan', BRIEF, ACCEPTANCE, MECHANICS,
+            planner=planner, live=False, max_retries=0,
+            planning_timeout_seconds=5, implementation_timeout_seconds=5,
+            review_timeout_seconds=5, verification_timeout_seconds=5)
+        claim = workflow.store.claim_authentication_login(
+            'restart-auth-plan', 'claude', authority=workflow.store.authority)
+        workflow.store.finish_authentication_login(
+            claim['session_id'], 'succeeded', auth_mode='subscription', reason='authenticated',
+            owner_nonce=claim['owner_nonce'], authority=workflow.store.authority)
+        workflow.store.resume_after_authentication(
+            'restart-auth-plan', candidate_identity=workflow._planning_identity(),
+            authority=workflow.store.authority)
+
+        reopened = ProductWorkflow(root, live=False)
+        reopened._planning_planner = planner
+        status = reopened.resume('restart-auth-plan')
+        self.assertEqual(status['state'], 'contracted')
+        self.assertEqual(planner.calls, 2)
 
     def test_product_workflow_selects_web_implementation_capability(self):
         workflow, _ = self.workflow('web-capability')

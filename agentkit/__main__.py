@@ -167,6 +167,8 @@ def main(argv=None):
     auth_login.add_argument("provider", choices=("codex", "claude"))
     auth_login.add_argument("--method", choices=("browser", "device"), default="browser")
     auth_login.add_argument("--timeout", type=float, default=600)
+    auth_login.add_argument("--force", action="store_true",
+                            help="run the official login flow even when status appears authenticated")
     auth_login.add_argument("--workflow", help="existing workflow root with an authentication checkpoint")
     auth_login.add_argument("--task-id", default="phase3-demo")
     auth_reconcile = commands.add_parser(
@@ -301,6 +303,14 @@ def main(argv=None):
         command.add_argument("--task-id", required=True)
         command.add_argument("--live", action="store_true")
         command.add_argument("--authorize-subscription-smoke", action="store_true")
+    product_authenticate = product_commands.add_parser(
+        "authenticate", help="complete official provider login and resume the interrupted stage")
+    product_authenticate.add_argument("--root", required=True)
+    product_authenticate.add_argument("--task-id", required=True)
+    product_authenticate.add_argument("--method", choices=("browser", "device"), default="browser")
+    product_authenticate.add_argument("--timeout", type=float, default=600)
+    product_authenticate.add_argument("--live", action="store_true")
+    product_authenticate.add_argument("--authorize-subscription-smoke", action="store_true")
     browser_record = product_commands.add_parser(
         "browser-record", help="validate exact-revision controller-owned browser evidence")
     browser_record.add_argument("--root", required=True)
@@ -439,7 +449,8 @@ def main(argv=None):
                                           'machine': 'this host'}, indent=2))
                         return 0
             try:
-                result = guided_login(args.provider, args.method, timeout_seconds=args.timeout)
+                result = guided_login(args.provider, args.method, timeout_seconds=args.timeout,
+                                      force=args.force)
             except KeyboardInterrupt:
                 if store is not None and claim is not None and claim['claimed']:
                     store.reconcile_authentication_login(
@@ -624,6 +635,11 @@ def main(argv=None):
                 print(json.dumps(workflow.start(args.task_id), indent=2))
             elif args.product_command == 'resume':
                 print(json.dumps(workflow.resume(args.task_id), indent=2))
+            elif args.product_command == 'authenticate':
+                if not live or not authorized:
+                    raise ValueError('product authentication recovery requires live subscription authorization')
+                print(json.dumps(workflow.authenticate(
+                    args.task_id, method=args.method, timeout_seconds=args.timeout), indent=2))
             elif args.product_command == 'cancel':
                 print(json.dumps(workflow.cancel(args.task_id), indent=2))
             elif args.product_command == 'preview-serve':

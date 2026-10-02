@@ -55,3 +55,7 @@ Product correctness is untested because no product files were generated. The pro
 Security evidence is limited to the tested planning path: external macOS guard initialization, a model-only Claude invocation with no tools or MCP servers, sanitized persisted output and no recorded login material. No worker filesystem boundary, candidate verification boundary, browser boundary or cross-provider review boundary was exercised in this trial.
 
 The manifest hashes 24 retained evidence files. Controller SQLite databases and authentication state are excluded. The archive includes the brief, protected acceptance, protected mechanics test, request metadata, redacted streams, normalized results, controller projections, versions and usage summary.
+
+## Corrective follow-up
+
+A later offline corrective branch adds product-owned official-login recovery, planning-stage checkpoints, provider schema propagation, one unambiguous fenced-object compatibility path and one bounded controller-feedback retry. Those changes are fixture-tested and covered by the repository regression suite; they did not rerun this trial or alter its archive. The results above remain evidence for `fcaf591`, while the corrective executable requires separately authorized live validation before it can claim a successful realistic workflow.

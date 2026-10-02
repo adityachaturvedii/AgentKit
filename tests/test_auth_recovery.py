@@ -152,6 +152,21 @@ class AuthenticationRecoveryTests(unittest.TestCase):
         self.assertEqual(result.status, 'already_authenticated')
         self.assertEqual(calls, [])
 
+        statuses = iter((
+            AuthenticationStatus('claude', 'verified', 'subscription', 'authenticated', 'claude'),
+            AuthenticationStatus('claude', 'verified', 'subscription', 'authenticated', 'claude'),
+        ))
+        launched = []
+
+        def forced_status(provider, executable=None):
+            return next(statuses)
+
+        forced = guided_login(
+            'claude', force=True, status_probe=forced_status, terminal_available=True,
+            launcher=lambda *args: launched.append(args) or 'succeeded')
+        self.assertEqual(forced.status, 'succeeded')
+        self.assertEqual(len(launched), 1)
+
     def test_missing_and_expired_failures_are_bounded_categories(self):
         self.assertEqual(authentication_reason('Not logged in; login required'), 'missing')
         self.assertEqual(authentication_reason('OAuth token has expired'), 'expired')
