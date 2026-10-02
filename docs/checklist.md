@@ -1,5 +1,15 @@
 # Implementation checklist
 
+## Proposed product-refinement increment
+
+- [x] Refresh remote refs and record integration `8d9cc31`, separate R5 `9a05b63` and R4 `3dd45c6` ancestry before starting the dedicated planning worktree.
+- [x] Document the next product experience, specialist responsibilities, proposed skill contracts, resource/independence rules and engineering acceptance gates in `docs/planning/refinement-plan.md`, `specialist-skills.md` and `refinement-backlog.md`.
+- [ ] REF-00: reconcile prerequisites through separately authorized publication/merge flow.
+- [ ] REF-01–03: close worker-readiness, actionable failure/recovery, usage visibility and future Git identity gaps.
+- [ ] REF-04–06: implement evaluated specialist/skill profiles, guided intake/acceptance and a coherent workflow facade.
+- [ ] REF-07–09: deliver design-guided implementation, supported browser checks and an understandable result/refinement path.
+- [ ] REF-10: complete operator acceptance and then collect a separately authorized pilot; no new live validation is claimed by this plan.
+
 ## Phase 0
 
 - [x] Read and preserve the supplied implementation specification.

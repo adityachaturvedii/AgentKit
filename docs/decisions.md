@@ -1,5 +1,7 @@
 # Decision log
 
+Product-refinement planning (2026-10-02): the user requested the next engineering set, including mature specialized agents and skills. The proposed RF-D01–09 decisions are recorded in the [planning register](planning/decisions.md), with implementation gates in the [REF backlog](planning/refinement-backlog.md). This documentation change does not implement those capabilities, integrate the separate R4/R5 branches, grant new execution scope or authorize publication.
+
 | ID | Decision | Reason and consequence |
 |---|---|---|
 | D001 | Create a new local repository at `portable-agentkit`, develop in sibling `portable-agentkit-phase01` on `implementation/phase-0-1`. | No existing project repository is needed or inspected. Git identity is command-local `Agentkit Builder <agentkit@localhost>`; hooks and global Git config are disabled for bootstrap operations. No remote configured. |
