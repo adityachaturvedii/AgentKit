@@ -19,6 +19,7 @@ from .controller import (AuthenticationRecoveryError, ControllerError, Controlle
 from .delivery import EngineOutcome, LiveImplementer, LiveReviewer, validate_review
 from .doctor import clean_environment, native_sandbox_capability, verification_profile
 from .git_broker import GitBroker, GitBrokerError
+from .failure_reporting import project_failures
 from .phase4_contracts import (ExecutionPlan, GraphEdge, GraphNode, ModelRegistry,
                                ROLE_CONTRACTS, RouteDecision, TaskContract)
 from .phase4_fixtures import FIXTURES, fixture_catalog, get_fixture
@@ -1287,6 +1288,7 @@ class Phase4Workflow:
     def status(self, task_id):
         snapshot = self.state.snapshot(task_id)
         controller = snapshot['controller']
+        failures = [record.to_dict() for record in project_failures(controller)]
         task = self.store.task(task_id)
         budget = controller['budget']
         usage_fields = ('input_tokens', 'output_tokens', 'cached_input_tokens',
@@ -1397,6 +1399,9 @@ class Phase4Workflow:
                            'estimated_cost_usd': None, 'billed_cost_usd': None,
                            'cost_note': 'Unknown remains unknown; CLI estimates are not billing.'},
                 'blocker': blocker, 'attention': attention, 'findings': findings,
+                'failures': failures,
+                'current_failure': (failures[-1] if failures and task['state'] in
+                                    ('blocked', 'repairing', 'authentication_required') else None),
                 'resolved_findings': resolved_findings,
                 'verification': verification, 'browser_verification': browser_verification,
                 'executions': executions,
