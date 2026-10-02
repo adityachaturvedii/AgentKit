@@ -170,6 +170,16 @@ def main(argv=None):
     project_plan.add_argument("--state-root", required=True)
     project_plan.add_argument("--project-id", required=True)
     project_plan.add_argument("--request", required=True)
+    refine = commands.add_parser(
+        "refine", help="prepare a bounded product intent without granting execution authority")
+    refine_commands = refine.add_subparsers(dest="refine_command", required=True)
+    refine_intake = refine_commands.add_parser(
+        "intake", help="derive an inspectable draft from a request and bounded inventory")
+    refine_intake.add_argument("--request-file", required=True)
+    refine_intake.add_argument("--inventory", required=True,
+                               help="JSON object containing the controller-visible paths")
+    refine_intake.add_argument("--kind", choices=("fixture", "repository", "static-product"),
+                               required=True)
     task = commands.add_parser("task", help="Phase 4 disposable task intake and orchestration")
     task_commands = task.add_subparsers(dest="task_command", required=True)
     task_commands.add_parser("fixtures", help="list supported controller-created disposable targets")
@@ -272,12 +282,33 @@ def main(argv=None):
         command = workflow_commands.add_parser(name, help=help_text)
         command.add_argument("--root", required=True, help="existing Phase 4 workflow root")
         command.add_argument("--task-id", required=True)
+        command.add_argument("--kind", choices=("fixture", "static-product"), default="fixture")
         command.add_argument("--format", choices=("plain", "json", "events", "terminal"),
                              default="plain")
         if name in ("start", "resume"):
             command.add_argument("--live", action="store_true")
             command.add_argument("--authorize-subscription-smoke", action="store_true",
                                  help="authorize bounded live provider execution for this invocation")
+    pilot = commands.add_parser(
+        "pilot", help="manage an offline frozen, failure-inclusive evaluation ledger")
+    pilot_commands = pilot.add_subparsers(dest="pilot_command", required=True)
+    pilot_init = pilot_commands.add_parser(
+        "init", help="validate and freeze a pilot protocol in a fresh private directory")
+    pilot_init.add_argument("--root", required=True)
+    pilot_init.add_argument("--protocol", required=True)
+    for name, help_text in (
+            ("status", "show protocol identity and observation completeness"),
+            ("report", "derive a neutral descriptive report from every assignment")):
+        command = pilot_commands.add_parser(name, help=help_text)
+        command.add_argument("--root", required=True)
+    pilot_record = pilot_commands.add_parser(
+        "record", help="append one immutable terminal observation")
+    pilot_record.add_argument("--root", required=True)
+    pilot_record.add_argument("--observation", required=True)
+    pilot_feedback = pilot_commands.add_parser(
+        "feedback", help="append structured pseudonymous participant feedback")
+    pilot_feedback.add_argument("--root", required=True)
+    pilot_feedback.add_argument("--feedback", required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "list":
@@ -439,6 +470,13 @@ def main(argv=None):
                 print(json.dumps(ProjectRegistry(args.state_root).plan(
                     args.project_id, args.request), indent=2))
             return 0
+        elif args.command == "refine":
+            from .refinement import guided_intake
+            request = Path(args.request_file).read_text()
+            inventory = read_json(args.inventory)
+            print(json.dumps(guided_intake(
+                request, inventory, workflow_kind=args.kind).to_dict(), indent=2))
+            return 0
         elif args.command == "task":
             from .orchestration import Phase4Workflow, phase4_fixture_catalog
             if args.task_command == 'fixtures':
@@ -565,9 +603,25 @@ def main(argv=None):
             if authorized and not live:
                 raise ValueError('subscription authorization is valid only with --live')
             request_type = 'package_summary' if args.workflow_command == 'package' else args.workflow_command
-            backend = TerminalWorkflow(args.root, args.task_id, live=live, authorized=authorized)
+            backend = TerminalWorkflow(args.root, args.task_id, live=live, authorized=authorized,
+                                       workflow_kind=args.kind)
             events = backend.handle(FrontendRequest(request_type, args.task_id))
             _emit_workflow(events, args.format)
+            return 0
+        elif args.command == "pilot":
+            from .pilot import (build_report, initialize_pilot, pilot_status,
+                                record_feedback, record_observation)
+            if args.pilot_command == "init":
+                result = initialize_pilot(args.root, read_json(args.protocol))
+            elif args.pilot_command == "status":
+                result = pilot_status(args.root)
+            elif args.pilot_command == "record":
+                result = record_observation(args.root, read_json(args.observation))
+            elif args.pilot_command == "feedback":
+                result = record_feedback(args.root, read_json(args.feedback))
+            else:
+                result = build_report(args.root)
+            print(json.dumps(result, indent=2))
             return 0
         else:
             print(json.dumps(check_pack(), indent=2))

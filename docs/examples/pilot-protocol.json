@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "pilot_id": "r4-synthetic-pilot-v1",
+  "title": "AgentKit matched direct-CLI exploratory pilot",
+  "randomization_seed": "r4-synthetic-example-seed-v1",
+  "consent_version": "pilot-consent-v1",
+  "provider_disclosure_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+  "retention_policy_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+  "conditions": [
+    {
+      "condition_id": "direct_cli",
+      "mode": "direct_cli",
+      "provider": "fixture-provider",
+      "model": "fixture-model",
+      "effort": "fixture-effort",
+      "execution_profile": "synthetic-offline-record-only",
+      "call_limit": 2,
+      "time_limit_seconds": 300
+    },
+    {
+      "condition_id": "agentkit",
+      "mode": "agentkit",
+      "provider": "fixture-provider",
+      "model": "fixture-model",
+      "effort": "fixture-effort",
+      "execution_profile": "synthetic-offline-record-only",
+      "call_limit": 2,
+      "time_limit_seconds": 300
+    }
+  ],
+  "participants": [
+    {
+      "participant_id": "synthetic-operator-a",
+      "local_evaluation_consent": true,
+      "artifact_sharing_consent": false
+    },
+    {
+      "participant_id": "synthetic-operator-b",
+      "local_evaluation_consent": true,
+      "artifact_sharing_consent": false
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "synthetic-invoice-001",
+      "project_id": "synthetic-disposable-invoice",
+      "base_revision": "1111111111111111111111111111111111111111",
+      "task_contract_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "acceptance_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "stratum": "python-small",
+      "follow_up_days": 7
+    },
+    {
+      "task_id": "synthetic-parser-002",
+      "project_id": "synthetic-disposable-parser",
+      "base_revision": "4444444444444444444444444444444444444444",
+      "task_contract_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+      "acceptance_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "stratum": "python-small",
+      "follow_up_days": 7
+    }
+  ]
+}

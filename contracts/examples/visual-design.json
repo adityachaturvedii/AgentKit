@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "revision": "0000000000000000000000000000000000000000",
+  "status": "blocked",
+  "summary": "Example shape only; no verification has run.",
+  "evidence": [],
+  "limitations": [
+    "Template only; no capability or evidence supplied."
+  ],
+  "next_actions": [
+    "Supply task-specific observations and validate."
+  ],
+  "task_id": "example-visual-design",
+  "kind": "visual-design",
+  "payload": {
+    "direction": "Example direction.",
+    "rationale": "Example only.",
+    "tokens": [
+      "spacing: 8px."
+    ],
+    "components": [
+      "Button states."
+    ],
+    "responsive": [
+      "Single column when narrow."
+    ],
+    "accessibility": [
+      "Contrast remains to be measured."
+    ],
+    "assets": [
+      "No external assets."
+    ]
+  }
+}
