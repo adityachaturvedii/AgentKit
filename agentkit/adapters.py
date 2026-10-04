@@ -88,6 +88,14 @@ def structured_json_text(value, *, allow_wrapping_prose=False):
     return parsed if isinstance(parsed, dict) else None
 
 
+def effective_allowed_tools(request):
+    """Provider protocol tools allowed by the validated request, not by model output."""
+    tools = list(capability_profile(request.capability_profile, request.mode).tools)
+    if request.engine == 'claude' and request.output_schema is not None:
+        tools.append('StructuredOutput')
+    return tuple(tools)
+
+
 class IncompleteStream(ValueError):
     """A typed stream ended without its required terminal record."""
 
@@ -154,7 +162,8 @@ class CodexAdapter:
         final = finals[0]
         if final['type'] == 'turn.failed':
             result.status = 'failed'
-            result.error_class = error_class(json.dumps(final))
+            if result.error_class is None:
+                result.error_class = error_class(json.dumps(final))
         else:
             result.usage = _usage(final.get('usage'), 'codex.turn.completed')
         result.provider_details['terminal_type'] = final['type']
@@ -230,7 +239,8 @@ class ClaudeAdapter:
         result.session_id = final.get('session_id', result.session_id)
         if final.get('is_error') is True or final.get('subtype') != 'success':
             result.status = 'failed'
-            result.error_class = error_class(json.dumps(final))
+            if result.error_class is None:
+                result.error_class = error_class(json.dumps(final))
         result.final_text = final.get('result')
         if isinstance(final.get('structured_output'), dict):
             result.structured_output = final['structured_output']
@@ -269,8 +279,8 @@ def normalize(request, outcome):
             if not isinstance(value, dict) or not isinstance(value.get('type'), str):
                 raise ValueError('event must be typed object')
             events.append(value)
-        profile = capability_profile(request.capability_profile, request.mode)
-        ADAPTERS[request.engine].parse(events, result, allowed_tools=profile.tools)
+        ADAPTERS[request.engine].parse(events, result,
+                                       allowed_tools=effective_allowed_tools(request))
     except IncompleteStream:
         if not outcome.stop_reason:
             result.status, result.error_class = 'failed', 'truncated_output'
@@ -463,9 +473,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
                               timeout=request.timeout_seconds, max_bytes=request.max_output_bytes,
                               cancel_event=cancel_event,
                               stop_predicate=lambda stdout, stderr: stop_on_limit(
-                                  stdout, stderr,
-                                  capability_profile(request.capability_profile,
-                                                     request.mode).tools))
+                                  stdout, stderr, effective_allowed_tools(request)))
         result = normalize(request, outcome)
         result.provider_details.update(version=cap.version, executable_sha256=cap.executable_sha256,
                                        authentication='subscription-reported', paid_overflow='unknown',
@@ -486,7 +494,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
             if installation_before != installation_after:
                 result.status, result.error_class = 'failed', 'startup_state_changed'
         result.limitations.extend(['Whole-process guard denies global writes; parent provider network and auth access remain available.',
-                                  'Tool-enabled execution is unsupported. Tool disabling is not OS credential isolation.',
+                                  'External action tools are disabled; Claude StructuredOutput is allowed only for a controller-supplied schema. This is not OS credential isolation.',
                                   'No API keys, paid-mode fallback, purchase or billing-setting change is performed. Stop on reported limits; no controller retry.'])
         if request.engine == 'codex':
             result.limitations.append('Codex built-in transport retries cannot be set to zero without changing provider; wall time bounds the process and reported retries terminate it. Hidden attempts remain unknown.')
@@ -586,7 +594,7 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
         if readiness.state != 'verified':
             return blocked('runtime_' + readiness.state, readiness.evidence, readiness)
         predicate = lambda stdout, stderr: stop_on_limit(
-            stdout, stderr, selected_profile.tools)
+            stdout, stderr, effective_allowed_tools(request))
         outcome = run_process(['/usr/bin/sandbox-exec', '-p', profile] + argv,
                               cwd=str(workspace), env=env, stdin=request.prompt.encode(),
                               timeout=request.timeout_seconds, max_bytes=request.max_output_bytes,

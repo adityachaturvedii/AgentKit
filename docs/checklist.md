@@ -424,3 +424,11 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Classify provider schema rejection as `invalid_request` and show an actionable controller/provider compatibility next action instead of generic planning failure.
 - [x] Add behavioral coverage for the schema shape, real adapter argument, error classification, product status and immutable failed evidence.
 - [ ] Live-validate the corrected schema and remaining product stages against a committed executable under a new bounded attempt; the failed `d86b61c` launch does not validate later code.
+
+## Claude structured-output protocol correction
+
+- [x] Retain the fresh `638e67c` live failure: Claude accepted the schema, advertised only `StructuredOutput`, and AgentKit stopped it as an unexpected tool before inference.
+- [x] Allow exactly Claude `StructuredOutput` only when the validated execution request contains an output schema; keep every action tool and MCP surface denied.
+- [x] Preserve the monitor's `unexpected_tools` cause when a provider terminal error follows controller termination.
+- [x] Add transport-level regressions for schema-bound success, schema-absent rejection and original stop-reason preservation.
+- [ ] Run a new bounded live workflow only against the committed correction; neither zero-token failed launch validates the corrected executable.

@@ -1,0 +1,122 @@
+{
+  "attempts": [
+    {
+      "details": {
+        "artifacts": {
+          "request.json": "c8f0d05294d97852f6866214fb3a47d19ca5041357a52cb3b1162e8cf611eaf7",
+          "stderr.redacted.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout.redacted.jsonl": "0e4ef7be336a77dc4e2181a4ebd20a605ac45c7bfc9656133e86c179ad7d1a67"
+        },
+        "authentication_failure": null,
+        "error_class": "provider_error",
+        "limitations": [
+          "Provider events and final text are claims; fixture acceptance is independently computed.",
+          "Usage counts are provider-reported. Missing fields stay null. Cost estimates are not billing.",
+          "Process groups cannot prove detached-descendant or remote cancellation.",
+          "Whole-process guard denies global writes; parent provider network and auth access remain available.",
+          "Tool-enabled execution is unsupported. Tool disabling is not OS credential isolation.",
+          "No API keys, paid-mode fallback, purchase or billing-setting change is performed. Stop on reported limits; no controller retry."
+        ],
+        "proposal_document": null,
+        "provider_reported_configuration": {
+          "effort": null,
+          "model": "claude-opus-5[1m]"
+        },
+        "requested_configuration": {
+          "effort": null,
+          "model": null
+        },
+        "resource_resolution": {
+          "generated_output_tokens": {
+            "classification": "observable-only",
+            "rationale": "Unset: provider behavior and effective ceiling are unknown.",
+            "source": "provider-default",
+            "value": null
+          },
+          "max_capture_bytes": {
+            "classification": "enforced",
+            "rationale": "Controller transport capture bound; not a generated-token limit.",
+            "source": "task-override",
+            "value": 1048576
+          },
+          "timeout_seconds": {
+            "classification": "enforced",
+            "rationale": "Controller wall-clock process deadline.",
+            "source": "task-override",
+            "value": 240.0
+          }
+        }
+      },
+      "execution_id": "9dc8ddfb-eb06-4f8c-8d78-fcb3f30ae65e",
+      "status": "failed",
+      "usage": {
+        "billed_cost_usd": null,
+        "cache_creation_tokens": 0,
+        "cached_input_tokens": 0,
+        "estimated_cost_usd": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_tokens": null,
+        "source": "claude.result"
+      }
+    }
+  ],
+  "details": {
+    "artifacts": {
+      "request.json": "c8f0d05294d97852f6866214fb3a47d19ca5041357a52cb3b1162e8cf611eaf7",
+      "stderr.redacted.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout.redacted.jsonl": "0e4ef7be336a77dc4e2181a4ebd20a605ac45c7bfc9656133e86c179ad7d1a67"
+    },
+    "authentication_failure": null,
+    "error_class": "provider_error",
+    "limitations": [
+      "Provider events and final text are claims; fixture acceptance is independently computed.",
+      "Usage counts are provider-reported. Missing fields stay null. Cost estimates are not billing.",
+      "Process groups cannot prove detached-descendant or remote cancellation.",
+      "Whole-process guard denies global writes; parent provider network and auth access remain available.",
+      "Tool-enabled execution is unsupported. Tool disabling is not OS credential isolation.",
+      "No API keys, paid-mode fallback, purchase or billing-setting change is performed. Stop on reported limits; no controller retry."
+    ],
+    "proposal_document": null,
+    "provider_reported_configuration": {
+      "effort": null,
+      "model": "claude-opus-5[1m]"
+    },
+    "requested_configuration": {
+      "effort": null,
+      "model": null
+    },
+    "resource_resolution": {
+      "generated_output_tokens": {
+        "classification": "observable-only",
+        "rationale": "Unset: provider behavior and effective ceiling are unknown.",
+        "source": "provider-default",
+        "value": null
+      },
+      "max_capture_bytes": {
+        "classification": "enforced",
+        "rationale": "Controller transport capture bound; not a generated-token limit.",
+        "source": "task-override",
+        "value": 1048576
+      },
+      "timeout_seconds": {
+        "classification": "enforced",
+        "rationale": "Controller wall-clock process deadline.",
+        "source": "task-override",
+        "value": 240.0
+      }
+    }
+  },
+  "execution_id": "9dc8ddfb-eb06-4f8c-8d78-fcb3f30ae65e",
+  "status": "failed",
+  "usage": {
+    "billed_cost_usd": null,
+    "cache_creation_tokens": 0,
+    "cached_input_tokens": 0,
+    "estimated_cost_usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning_tokens": null,
+    "source": "claude.result"
+  }
+}

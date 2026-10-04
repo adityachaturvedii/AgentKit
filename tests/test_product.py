@@ -219,6 +219,20 @@ class ProductTests(unittest.TestCase):
         self.assertIsNone(summary['candidate_revision'])
         self.assertFalse(summary['publication_approval_recorded'])
 
+    def test_structured_output_surface_blocker_archive_is_hash_bound(self):
+        root = ROOT / 'evidence' / 'product-structured-output-surface-blocker'
+        manifest = json.loads((root / 'manifest.json').read_text())
+        actual = {str(path.relative_to(root)): path for path in root.rglob('*')
+                  if path.is_file() and path.name != 'manifest.json'}
+        recorded = {item['path']: item for item in manifest['files']}
+        self.assertEqual(set(actual), set(recorded))
+        for relative, path in actual.items():
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                             recorded[relative]['sha256'])
+        summary = json.loads((root / 'summary.json').read_text())
+        self.assertEqual(summary['reported_usage']['output_tokens'], 0)
+        self.assertIsNone(summary['candidate_revision'])
+
     def test_product_schema_uses_provider_portable_vocabulary_without_remote_metaschema(self):
         schema = product_plan_schema(BRIEF, ACCEPTANCE, static_web_inventory(), 2)
         self.assertNotIn('$schema', schema)

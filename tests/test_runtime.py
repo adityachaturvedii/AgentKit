@@ -8,8 +8,9 @@ import threading
 import unittest
 from unittest.mock import patch
 
-from agentkit.adapters import (ADAPTERS, execute, execute_owned_code, normalize, persist_result,
-                               stop_on_limit, structured_json_text)
+from agentkit.adapters import (ADAPTERS, effective_allowed_tools, execute,
+                               execute_owned_code, normalize, persist_result, stop_on_limit,
+                               structured_json_text)
 from agentkit.doctor import auth_summary, clean_environment, detect_engine, owned_code_profile
 from agentkit.process import ProcessOutcome, run_process
 from agentkit.redaction import redact, redacted_stream
@@ -197,6 +198,27 @@ class RuntimeTests(unittest.TestCase):
     def test_runtime_tools_violate_model_only_mode(self):
         result = normalize(self.request('claude'), self.fixture('claude', 'tools'))
         self.assertEqual(result.error_class, 'unexpected_tools')
+
+    def test_claude_structured_output_surface_is_allowed_only_for_validated_schema(self):
+        request = self.request('claude', output_schema={
+            'type': 'object', 'additionalProperties': False,
+            'required': ['answer'], 'properties': {'answer': {'type': 'string'}}})
+        events = [
+            {'type': 'system', 'subtype': 'init', 'tools': ['StructuredOutput'],
+             'mcp_servers': [], 'model': 'fixture-model'},
+            {'type': 'result', 'subtype': 'success', 'is_error': False,
+             'structured_output': {'answer': 'fixture'}, 'usage': {}},
+        ]
+        raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
+        allowed = effective_allowed_tools(request)
+        self.assertEqual(allowed, ('StructuredOutput',))
+        self.assertIsNone(stop_on_limit(raw, b'', allowed))
+        result = normalize(
+            request, ProcessOutcome(raw, b'', 0, .01, None, CancellationStatus()))
+        self.assertEqual(result.status, 'succeeded')
+        self.assertEqual(result.structured_output, {'answer': 'fixture'})
+        self.assertEqual(effective_allowed_tools(self.request('claude')), ())
+        self.assertEqual(stop_on_limit(raw, b''), 'unexpected_tools')
 
     def test_tool_use_events_fail_even_without_init_advertisement(self):
         for engine, event, terminal in [
@@ -472,6 +494,11 @@ class RuntimeTests(unittest.TestCase):
         self.assertIsNone(stop_on_limit(b'', b'Reconnecting... 1/5'))
         raw = b'{"type":"system","subtype":"init","tools":["Bash"]}\n'
         self.assertEqual(stop_on_limit(raw, b''), 'unexpected_tools')
+        terminal = raw + b'{"type":"result","subtype":"error_during_execution","is_error":true}\n'
+        outcome = ProcessOutcome(terminal, b'', 143, .01, 'unexpected_tools',
+                                 CancellationStatus(requested=True, reason='unexpected_tools'))
+        self.assertEqual(normalize(self.request('claude'), outcome).error_class,
+                         'unexpected_tools')
 
     def test_stopped_authentication_launch_preserves_complete_terminal_usage(self):
         events = [
