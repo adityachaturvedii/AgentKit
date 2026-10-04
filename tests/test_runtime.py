@@ -361,8 +361,11 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(result.error_class, case)
 
     def test_codex_current_contract_requires_daemon_and_strict_config_controls(self):
-        from agentkit.doctor import COMPATIBLE, REQUIRED
-        self.assertEqual(COMPATIBLE['codex'], '0.159.3')
+        from agentkit.doctor import COMPATIBLE, REQUIRED, compatible_version
+        self.assertEqual(COMPATIBLE['codex'], '0.160.0')
+        self.assertTrue(compatible_version('codex', '0.159.3'))
+        self.assertTrue(compatible_version('codex', '0.160.0'))
+        self.assertFalse(compatible_version('codex', '0.160.1'))
         self.assertIn('--no-daemon', REQUIRED['codex'])
         self.assertIn('--strict-config', REQUIRED['codex'])
         request = self.request('codex', mode='owned-code',
@@ -389,20 +392,24 @@ class RuntimeTests(unittest.TestCase):
         from agentkit.doctor import REQUIRED
         executable = self.root / 'codex-fixture'
         executable.write_bytes(b'fixture')
-        outcomes = [
-            ProcessOutcome(b'codex-cli 0.159.3\n', b'', 0, .01, None, CancellationStatus()),
-            ProcessOutcome((' '.join(flag for flag in REQUIRED['codex']
-                                      if flag != '--no-daemon') + '\n').encode(),
-                           b'', 0, .01, None, CancellationStatus()),
-            ProcessOutcome(b'--no-daemon\n', b'', 0, .01, None, CancellationStatus()),
-        ]
-        with patch('agentkit.doctor.shutil.which', return_value=str(executable)), \
-             patch('agentkit.doctor.run_process', side_effect=outcomes):
-            cap = detect_engine('codex', Capability('unknown', 'fixture'))
-        self.assertEqual(cap.version, '0.159.3')
-        self.assertTrue(all(cap.features[flag].state == 'verified'
-                            for flag in REQUIRED['codex']))
-        self.assertEqual(cap.features['tested_version'].state, 'verified')
+        for version in ('0.159.3', '0.160.0'):
+            with self.subTest(version=version):
+                outcomes = [
+                    ProcessOutcome(('codex-cli ' + version + '\n').encode(), b'', 0, .01,
+                                   None, CancellationStatus()),
+                    ProcessOutcome((' '.join(flag for flag in REQUIRED['codex']
+                                              if flag != '--no-daemon') + '\n').encode(),
+                                   b'', 0, .01, None, CancellationStatus()),
+                    ProcessOutcome(b'--no-daemon\n', b'', 0, .01, None,
+                                   CancellationStatus()),
+                ]
+                with patch('agentkit.doctor.shutil.which', return_value=str(executable)), \
+                     patch('agentkit.doctor.run_process', side_effect=outcomes):
+                    cap = detect_engine('codex', Capability('unknown', 'fixture'))
+                self.assertEqual(cap.version, version)
+                self.assertTrue(all(cap.features[flag].state == 'verified'
+                                    for flag in REQUIRED['codex']))
+                self.assertEqual(cap.features['tested_version'].state, 'verified')
 
     def test_auth_status_filters_identifiers(self):
         raw = json.dumps({'loggedIn': True, 'authMethod': 'claude.ai', 'apiProvider': 'firstParty',

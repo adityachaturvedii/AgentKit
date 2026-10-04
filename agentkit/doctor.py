@@ -14,12 +14,20 @@ from .process import run_process
 from .runtime_contracts import Capability, EngineCapabilities
 
 
-COMPATIBLE = {"codex": "0.159.3", "claude": "2.1.220"}
+COMPATIBLE = {"codex": "0.160.0", "claude": "2.1.220"}
+REVIEWED_VERSIONS = {
+    "codex": frozenset(("0.159.3", "0.160.0")),
+    "claude": frozenset(("2.1.220",)),
+}
 REQUIRED = {
     "codex": ["--json", "--output-schema", "--ephemeral", "--ignore-user-config", "--ignore-rules",
               "--sandbox", "--strict-config", "--no-daemon"],
     "claude": ["--print", "--output-format", "--json-schema", "--safe-mode", "--setting-sources", "--settings", "--strict-mcp-config", "--tools", "--no-session-persistence"],
 }
+
+
+def compatible_version(engine, version):
+    return engine in REVIEWED_VERSIONS and version in REVIEWED_VERSIONS[engine]
 
 
 def clean_environment():
@@ -145,7 +153,7 @@ def detect_engine(engine, sandbox):
         args = [executable, "exec", "--help"] if engine == "codex" else [executable, "--help"]
         help_result = run_process(prefix + args, cwd=tmp, env=env, timeout=5)
         help_text = help_result.stdout.decode("utf-8", "replace")
-        # Codex 0.159 exposes daemon control only on the root command while its
+        # Reviewed Codex 0.159/0.160 releases expose daemon control only on the root command while their
         # execution-specific controls remain on `exec --help`.
         if engine == "codex":
             root_help = run_process(prefix + [executable, "--help"], cwd=tmp, env=env,
@@ -155,13 +163,15 @@ def detect_engine(engine, sandbox):
         for flag in REQUIRED[engine]:
             cap.features[flag] = Capability("verified" if help_result.exit_code == 0 and flag in help_text else "unknown",
                                             "Advertised by installed CLI help; effective behavior requires separate integration evidence.")
-        cap.features["tested_version"] = Capability("verified" if cap.version == COMPATIBLE[engine] else "unknown",
-                                                   "Compatibility target " + COMPATIBLE[engine] + "; different versions fail managed preflight.")
+        reviewed = ', '.join(sorted(REVIEWED_VERSIONS[engine]))
+        cap.features["tested_version"] = Capability(
+            "verified" if compatible_version(engine, cap.version) else "unknown",
+            "Reviewed compatible versions: " + reviewed + "; other versions fail managed preflight.")
         cap.features['credential_isolation'] = Capability('unavailable', 'Managed parent retains its authentication and broad read access. Tool-enabled modes are blocked.')
         cap.features['tool_sandbox_effectiveness'] = Capability('unknown', 'Requires separate per-platform canary evidence; CLI flags are not an isolation proof.')
         cap.features['usage_reporting'] = Capability('unknown', 'Doctor performs no inference. Events may omit usage; missing quantities remain unknown.')
         cap.features['zero_native_retries'] = Capability('unavailable' if engine == 'codex' else 'unknown',
-            'Codex 0.159.3 exposes no supported per-launch subscription retry limit; controller wall time bounds the CLI launch.' if engine == 'codex' else
+            'Reviewed Codex 0.159.3/0.160.0 help exposes no supported per-launch subscription retry limit; controller wall time bounds the CLI launch.' if engine == 'codex' else
             'Claude Code 2.1.220 help exposes no retry-limit flag; productive requests use the provider default and controller wall time.')
         if sandbox.state == "verified":
             auth_env = clean_environment()

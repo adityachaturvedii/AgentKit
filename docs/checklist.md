@@ -408,3 +408,11 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Give one bounded corrective retry precise controller validation feedback without replaying the provider transcript; stop repeated identical failures and preserve every attempt in budgets and evidence.
 - [x] Cover expired OAuth classification, forced official-login refresh, protected-input staleness, automatic planning resume, schema propagation and corrective replanning with disposable offline tests.
 - [ ] Repeat the realistic product trial only under a new explicit live authorization after the recovery and structured-planning corrections pass offline tests.
+
+## Codex 0.160.0 compatibility follow-up
+
+- [x] Stop the next product preflight before inference when installed Codex 0.160.0 falls outside the reviewed set.
+- [x] Inspect the installed official package metadata plus root and `exec` help; retain all required daemon, strict-config, schema, JSONL, ephemeral, ignore-config/rules and sandbox controls.
+- [x] Accept only reviewed Codex 0.159.3 and 0.160.0; keep every other version fail-closed.
+- [x] Exercise both reviewed versions through doctor fixtures and the unchanged real adapter argument boundary without provider transport.
+- [ ] Re-run the product workflow from a host context where the existing macOS Seatbelt boundary initializes; this managed session adds no live inference evidence.

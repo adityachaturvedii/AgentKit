@@ -9,7 +9,7 @@ import re
 import shutil
 import uuid
 
-from .doctor import (COMPATIBLE, REQUIRED, clean_environment, detect_engine,
+from .doctor import (REQUIRED, clean_environment, compatible_version, detect_engine,
                      native_sandbox_capability, owned_code_profile, readonly_profile)
 from .process import run_process
 from .redaction import redact, redacted_stream
@@ -431,7 +431,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
     cap = detect_engine(request.engine, sandbox)
     if not cap.executable:
         return blocked('missing_executable', 'CLI executable absent. No install or alternate engine fallback.')
-    if cap.version != COMPATIBLE[request.engine] or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
+    if not compatible_version(request.engine, cap.version) or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
         return blocked('incompatible_cli', 'Installed version or required flags not verified. No fallback or install.')
     if cap.authentication.state != 'verified' or cap.authentication_mode != 'subscription':
         return blocked('authentication', 'Existing subscription auth is unavailable or unknown. No auth changes or fallback.')
@@ -535,7 +535,7 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
     cap = detect_engine(request.engine, sandbox)
     if not cap.executable:
         return blocked('missing_executable', 'CLI executable absent. No install or alternate engine fallback.')
-    if cap.version != COMPATIBLE[request.engine] or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
+    if not compatible_version(request.engine, cap.version) or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
         return blocked('incompatible_cli', 'Installed version or required flags not verified. No fallback or install.')
     if cap.authentication.state != 'verified' or cap.authentication_mode != 'subscription':
         return blocked('authentication', 'Existing subscription auth is unavailable or unknown. No auth changes or fallback.')
