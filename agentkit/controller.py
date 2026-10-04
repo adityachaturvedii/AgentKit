@@ -116,6 +116,21 @@ def _validated_candidate_identity(value):
     return value
 
 
+def _validated_planning_identity(value):
+    required = {'kind', 'workflow_root', 'request_sha256', 'registry_sha256',
+                'protected_input_sha256'}
+    if not isinstance(value, dict) or set(value) != required or value.get('kind') != 'planning':
+        raise AuthenticationRecoveryError('complete planning identity is required')
+    if (not isinstance(value['workflow_root'], str) or
+            not Path(value['workflow_root']).is_absolute() or
+            any(not isinstance(value[name], str) or len(value[name]) != 64 or
+                any(character not in '0123456789abcdef' for character in value[name])
+                for name in ('request_sha256', 'registry_sha256',
+                             'protected_input_sha256'))):
+        raise StaleEvidence('planning identity is incomplete or invalid')
+    return value
+
+
 class ControllerStore:
     """One-process controller with durable transactional state and event history."""
 
@@ -735,17 +750,19 @@ class ControllerStore:
         refs = tuple(evidence_refs)
         if any(not isinstance(item, str) or not item for item in refs):
             raise AuthenticationRecoveryError('evidence references must be nonempty strings')
-        identity = _validated_candidate_identity(candidate_identity)
         checkpoint_id = str(uuid.uuid4())
         now = _now()
         with self.transaction() as db:
             task = db.execute('SELECT state,head_revision FROM tasks WHERE task_id=?', (task_id,)).fetchone()
             execution = db.execute('SELECT * FROM executions WHERE execution_id=? AND task_id=?',
                                    (execution_id, task_id)).fetchone()
-            if not task or task['state'] not in ('implementing', 'repairing', 'reviewing'):
+            if not task or task['state'] not in ('received', 'implementing', 'repairing', 'reviewing'):
                 raise AuthenticationRecoveryError('authentication recovery is invalid for this task state')
-            expected_role = {'implementing': 'implementer', 'repairing': 'repair',
-                             'reviewing': 'reviewer'}[task['state']]
+            expected_role = {'received': 'planning', 'implementing': 'implementer',
+                             'repairing': 'repair', 'reviewing': 'reviewer'}[task['state']]
+            identity = (_validated_planning_identity(candidate_identity)
+                        if expected_role == 'planning' else
+                        _validated_candidate_identity(candidate_identity))
             if (not execution or execution['role'] != expected_role or execution['engine'] != provider or
                     execution['status'] not in ('failed', 'blocked')):
                 raise AuthenticationRecoveryError('interrupted execution is not a completed provider stage')
@@ -759,10 +776,13 @@ class ControllerStore:
                           "('reserved','running','cancel_requested','reconciliation_required') LIMIT 1",
                           (task_id,)).fetchone():
                 raise ReconciliationRequired('execution uncertainty must be resolved before authentication recovery')
-            if (identity['revision'] != task['head_revision'] or
+            if expected_role != 'planning' and (
+                    identity['revision'] != task['head_revision'] or
                     identity['branch'] != db.execute('SELECT branch FROM tasks WHERE task_id=?',
                                                      (task_id,)).fetchone()['branch']):
                 raise StaleEvidence('authentication checkpoint candidate does not match controller state')
+            checkpoint_revision = (identity['request_sha256'] if expected_role == 'planning'
+                                   else task['head_revision'])
             active_checkpoint = db.execute('''SELECT 1 FROM authentication_checkpoints
                 WHERE task_id=? AND status IN ('waiting','ready','login_reconciliation_required') LIMIT 1''',
                                            (task_id,)).fetchone()
@@ -791,13 +811,13 @@ class ControllerStore:
                           login_session_id,created_at,updated_at)
                           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
                        (checkpoint_id, task_id, provider, account_context, task['state'], expected_role,
-                        task['head_revision'], execution_id, _json(list(refs)), _json(identity),
+                        checkpoint_revision, execution_id, _json(list(refs)), _json(identity),
                         'waiting', session_id, now, now))
             self._append(db, task_id, task_id + '-authentication-required-' + checkpoint_id,
                          'authentication_required', {
                              'checkpoint_id': checkpoint_id, 'provider': provider,
                              'interrupted_state': task['state'], 'interrupted_role': expected_role,
-                             'candidate_revision': task['head_revision'], 'evidence_refs': list(refs),
+                             'candidate_revision': checkpoint_revision, 'evidence_refs': list(refs),
                              'reason': auth_reason,
                          })
             db.execute('''UPDATE tasks SET state='authentication_required',next_action=?,
@@ -963,7 +983,6 @@ class ControllerStore:
     def resume_after_authentication(self, task_id, *, candidate_identity=None, authority=None):
         """Restore exactly the interrupted stage after all revision/lifecycle checks pass."""
         self._require(authority)
-        identity = _validated_candidate_identity(candidate_identity)
         now = _now()
         with self.transaction() as db:
             task = db.execute('SELECT * FROM tasks WHERE task_id=?', (task_id,)).fetchone()
@@ -972,16 +991,26 @@ class ControllerStore:
                 ORDER BY rowid DESC LIMIT 1''', (task_id,)).fetchone()
             if not task or task['state'] != 'authentication_required' or not checkpoint:
                 raise AuthenticationRecoveryError('task is not waiting for authentication')
+            identity = (_validated_planning_identity(candidate_identity)
+                        if checkpoint['interrupted_role'] == 'planning' else
+                        _validated_candidate_identity(candidate_identity))
             session = db.execute('SELECT * FROM authentication_sessions WHERE session_id=?',
                                  (checkpoint['login_session_id'],)).fetchone()
             if (checkpoint['status'] != 'ready' or not session or session['status'] != 'succeeded' or
                     session['auth_mode'] != 'subscription'):
                 raise AuthenticationRecoveryError('subscription login has not been verified')
-            if task['head_revision'] != checkpoint['candidate_revision']:
+            if (checkpoint['interrupted_role'] != 'planning' and
+                    task['head_revision'] != checkpoint['candidate_revision']):
                 raise StaleEvidence('candidate changed while authentication was pending')
             recorded_identity = json.loads(checkpoint['candidate_identity_json'])
-            if (identity != recorded_identity or identity['repository'] != recorded_identity.get('repository') or
-                    identity['worktree'] != task['worktree'] or identity['branch'] != task['branch'] or
+            if checkpoint['interrupted_role'] == 'planning':
+                if (identity != recorded_identity or
+                        identity['request_sha256'] != checkpoint['candidate_revision']):
+                    raise StaleEvidence('planning request changed while authentication was pending')
+            elif (identity != recorded_identity or
+                    identity['repository'] != recorded_identity.get('repository') or
+                    identity['worktree'] != task['worktree'] or
+                    identity['branch'] != task['branch'] or
                     identity['revision'] != task['head_revision']):
                 raise StaleEvidence('actual repository, branch, HEAD, cleanliness, or manifest changed')
             if db.execute("SELECT 1 FROM executions WHERE task_id=? AND status IN "
@@ -999,7 +1028,7 @@ class ControllerStore:
                 if not evidence or not self._artifact_intact(evidence['artifact_sha256']):
                     raise StaleEvidence('checkpoint evidence became stale')
             target = checkpoint['interrupted_state']
-            if target not in ('implementing', 'repairing', 'reviewing'):
+            if target not in ('received', 'implementing', 'repairing', 'reviewing'):
                 raise AuthenticationRecoveryError('checkpoint stage is not resumable')
             db.execute("UPDATE authentication_checkpoints SET status='resumed',updated_at=? WHERE checkpoint_id=?",
                        (now, checkpoint['checkpoint_id']))
@@ -1009,7 +1038,7 @@ class ControllerStore:
                          'authentication_resumed', {'checkpoint_id': checkpoint['checkpoint_id'],
                                                     'provider': checkpoint['provider'],
                                                     'state': target,
-                                                    'candidate_revision': task['head_revision']})
+                                                    'candidate_revision': checkpoint['candidate_revision']})
         return self.task(task_id)
 
     def authentication_checkpoint(self, task_id):

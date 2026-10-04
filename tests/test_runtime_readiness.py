@@ -140,6 +140,8 @@ class RuntimeReadinessTests(unittest.TestCase):
             return evaluate_readiness(req, env, workspace, self.guard_prefix())
 
         def external_transport(argv, **kwargs):
+            self.assertEqual(argv[3:7],
+                             ['/fixture/codex', '--no-daemon', 'exec', '--strict-config'])
             provider_launches.append((argv, kwargs))
             stdout = (json.dumps({'type': 'thread.started', 'thread_id': 'fixture'}) + '\n' +
                       json.dumps({'type': 'item.completed', 'item': {

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "authorized_provider_launches": 4,
+  "actual_cli_launches": 2,
+  "remaining_launches": 2,
+  "workflow_completion_requires_remaining_launches": 3,
+  "attempts": [
+    {
+      "stage": "planning",
+      "provider": "claude",
+      "outcome": "authentication",
+      "elapsed_seconds": 3.213868,
+      "reported": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "cache_creation_tokens": 0,
+        "estimated_cost_usd": 0,
+        "billed_cost_usd": null
+      }
+    },
+    {
+      "stage": "planning",
+      "provider": "claude",
+      "outcome": "provider_succeeded_controller_rejected",
+      "elapsed_seconds": 88.654304,
+      "reported": {
+        "input_tokens": 2,
+        "output_tokens": 6896,
+        "cached_input_tokens": 0,
+        "cache_creation_tokens": 8703,
+        "estimated_cost_usd": 0.25944,
+        "billed_cost_usd": null
+      }
+    }
+  ],
+  "internal_provider_requests": "unknown",
+  "billing_effect": "unknown"
+}

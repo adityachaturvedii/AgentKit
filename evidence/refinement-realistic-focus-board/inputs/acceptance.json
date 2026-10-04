@@ -1,0 +1,8 @@
+[
+  {"id":"task-mechanics","expected":"game.js exposes CommonJS functions createInitialState(), addTask(state, text), toggleTask(state, id), removeTask(state, id), clearCompleted(state), and filterTasks(state, filter); state transitions support adding, completing, filtering, removing, and clearing tasks without losing unrelated tasks."},
+  {"id":"persistence","expected":"The browser UI restores and saves the current task list with localStorage while remaining usable if storage access fails."},
+  {"id":"keyboard-touch","expected":"A user can add a task with Enter, navigate controls by keyboard with visible focus, and use comfortably sized pointer and touch controls."},
+  {"id":"responsive-layout","expected":"The interface remains readable and usable at desktop and narrow mobile viewport sizes without horizontal overflow."},
+  {"id":"instructions-and-states","expected":"The page includes concise instructions, an accessible task summary or status, clear empty/filter states, and readable labels for add, filter, remove, and clear actions."},
+  {"id":"local-product","expected":"The documented local build and preview commands work with the dependency-free static project and the main flow produces no unexplained browser errors."}
+]

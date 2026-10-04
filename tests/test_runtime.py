@@ -8,8 +8,9 @@ import threading
 import unittest
 from unittest.mock import patch
 
-from agentkit.adapters import (ADAPTERS, execute, execute_owned_code, normalize, persist_result,
-                               stop_on_limit, structured_json_text)
+from agentkit.adapters import (ADAPTERS, effective_allowed_tools, execute,
+                               execute_owned_code, normalize, persist_result, stop_on_limit,
+                               structured_json_text)
 from agentkit.doctor import auth_summary, clean_environment, detect_engine, owned_code_profile
 from agentkit.process import ProcessOutcome, run_process
 from agentkit.redaction import redact, redacted_stream
@@ -78,6 +79,49 @@ class RuntimeTests(unittest.TestCase):
         for value in ('before ```json\n{}\n```', '```JSON\n{}\n```', '```json\n{}\n``` after',
                       '```json\n{"x":1,"x":2}\n```', '```json\nNaN\n```'):
             self.assertIsNone(structured_json_text(value))
+
+    def test_one_prose_wrapped_json_fence_is_recovered_only_when_explicitly_allowed(self):
+        wrapped = ('I prepared the requested plan.\n```json\n'
+                   '{"project":"fixture","assignments":[]}\n```\n'
+                   'The controller should still validate every field.')
+        self.assertIsNone(structured_json_text(wrapped))
+        self.assertEqual(structured_json_text(wrapped, allow_wrapping_prose=True),
+                         {'project': 'fixture', 'assignments': []})
+        self.assertIsNone(structured_json_text(
+            wrapped + '\n```json\n{"second":true}\n```', allow_wrapping_prose=True))
+
+    def test_structured_output_schema_reaches_each_real_adapter_request(self):
+        schema = {'type': 'object', 'additionalProperties': False,
+                  'required': ['answer'], 'properties': {'answer': {'type': 'string'}}}
+        for engine in ('codex', 'claude'):
+            with self.subTest(engine=engine):
+                runtime = self.root / ('runtime-' + engine)
+                runtime.mkdir()
+                request = self.request(engine, output_schema=schema)
+                argv = ADAPTERS[engine].argv(engine, request, runtime)
+                if engine == 'codex':
+                    index = argv.index('--output-schema')
+                    schema_path = Path(argv[index + 1])
+                    self.assertEqual(json.loads(schema_path.read_text()), schema)
+                    self.assertEqual(schema_path.stat().st_mode & 0o777, 0o600)
+                else:
+                    index = argv.index('--json-schema')
+                    self.assertEqual(json.loads(argv[index + 1]), schema)
+
+    def test_expired_oauth_is_classified_as_authentication(self):
+        result = normalize(
+            self.request('claude'),
+            ProcessOutcome(b'', b'Error: OAuth access token has expired', 1, .01, None,
+                           CancellationStatus()))
+        self.assertEqual(result.error_class, 'authentication')
+        self.assertEqual(result.provider_details['authentication_failure'], 'expired')
+
+    def test_provider_schema_rejection_is_actionable_request_failure(self):
+        result = normalize(
+            self.request('claude'),
+            ProcessOutcome(b'', b'Error: --json-schema is not a valid JSON Schema: unknown schema',
+                           1, .01, None, CancellationStatus()))
+        self.assertEqual(result.error_class, 'invalid_request')
 
     def test_simulated_errors_both_providers(self):
         for engine in ADAPTERS:
@@ -154,6 +198,27 @@ class RuntimeTests(unittest.TestCase):
     def test_runtime_tools_violate_model_only_mode(self):
         result = normalize(self.request('claude'), self.fixture('claude', 'tools'))
         self.assertEqual(result.error_class, 'unexpected_tools')
+
+    def test_claude_structured_output_surface_is_allowed_only_for_validated_schema(self):
+        request = self.request('claude', output_schema={
+            'type': 'object', 'additionalProperties': False,
+            'required': ['answer'], 'properties': {'answer': {'type': 'string'}}})
+        events = [
+            {'type': 'system', 'subtype': 'init', 'tools': ['StructuredOutput'],
+             'mcp_servers': [], 'model': 'fixture-model'},
+            {'type': 'result', 'subtype': 'success', 'is_error': False,
+             'structured_output': {'answer': 'fixture'}, 'usage': {}},
+        ]
+        raw = ''.join(json.dumps(event) + '\n' for event in events).encode()
+        allowed = effective_allowed_tools(request)
+        self.assertEqual(allowed, ('StructuredOutput',))
+        self.assertIsNone(stop_on_limit(raw, b'', allowed))
+        result = normalize(
+            request, ProcessOutcome(raw, b'', 0, .01, None, CancellationStatus()))
+        self.assertEqual(result.status, 'succeeded')
+        self.assertEqual(result.structured_output, {'answer': 'fixture'})
+        self.assertEqual(effective_allowed_tools(self.request('claude')), ())
+        self.assertEqual(stop_on_limit(raw, b''), 'unexpected_tools')
 
     def test_tool_use_events_fail_even_without_init_advertisement(self):
         for engine, event, terminal in [
@@ -251,6 +316,9 @@ class RuntimeTests(unittest.TestCase):
                 ExecutionRequest.from_dict(dict(args, **{key: value}))
         with self.assertRaises(TypeError):
             ExecutionRequest.from_dict(dict(args, subscription_smoke_authorized=True))
+        for schema in ([], {'value': float('nan')}, {'value': object()}):
+            with self.assertRaisesRegex(ValueError, 'output schema'):
+                ExecutionRequest.from_dict(dict(args, output_schema=schema))
 
     def test_model_and_supported_effort_are_explicit_cli_arguments(self):
         runtime = self.root / 'runtime-model-options'
@@ -261,6 +329,7 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(argv[argv.index('--effort') + 1], 'high')
         codex = self.request('codex', model='codex-fixture-model')
         argv = ADAPTERS['codex'].argv('codex', codex, runtime)
+        self.assertEqual(argv[:4], ['codex', '--no-daemon', 'exec', '--strict-config'])
         self.assertEqual(argv[argv.index('--model') + 1], 'codex-fixture-model')
         self.assertNotIn('--effort', argv)
         with self.assertRaisesRegex(ValueError, 'unsupported by the tested Codex'):
@@ -320,6 +389,21 @@ class RuntimeTests(unittest.TestCase):
                 result = execute(self.request(), self.root / case, policy=LivePolicy(True))
             self.assertEqual(result.error_class, case)
 
+    def test_codex_current_contract_requires_daemon_and_strict_config_controls(self):
+        from agentkit.doctor import COMPATIBLE, REQUIRED, compatible_version
+        self.assertEqual(COMPATIBLE['codex'], '0.160.0')
+        self.assertTrue(compatible_version('codex', '0.159.3'))
+        self.assertTrue(compatible_version('codex', '0.160.0'))
+        self.assertFalse(compatible_version('codex', '0.160.1'))
+        self.assertIn('--no-daemon', REQUIRED['codex'])
+        self.assertIn('--strict-config', REQUIRED['codex'])
+        request = self.request('codex', mode='owned-code',
+                               capability_profile='web-product-implementation')
+        argv = ADAPTERS['codex'].argv('/fixture/codex', request, self.root)
+        self.assertEqual(argv[:4], ['/fixture/codex', '--no-daemon', 'exec', '--strict-config'])
+        self.assertIn('--ignore-user-config', argv)
+        self.assertIn('--ignore-rules', argv)
+
     def test_environment_does_not_inherit_credentials_or_loaders(self):
         with patch.dict(os.environ, {'ANTHROPIC_API_KEY': 'fake', 'OPENAI_API_KEY': 'fake',
                                      'NODE_OPTIONS': 'fake', 'CLAUDE_CODE_USE_BEDROCK': '1'}):
@@ -332,6 +416,29 @@ class RuntimeTests(unittest.TestCase):
             cap = detect_engine('codex', Capability('unknown', 'fixture'))
         self.assertIsNone(cap.version)
         self.assertEqual(cap.authentication.state, 'unavailable')
+
+    def test_doctor_combines_codex_root_and_exec_help(self):
+        from agentkit.doctor import REQUIRED
+        executable = self.root / 'codex-fixture'
+        executable.write_bytes(b'fixture')
+        for version in ('0.159.3', '0.160.0'):
+            with self.subTest(version=version):
+                outcomes = [
+                    ProcessOutcome(('codex-cli ' + version + '\n').encode(), b'', 0, .01,
+                                   None, CancellationStatus()),
+                    ProcessOutcome((' '.join(flag for flag in REQUIRED['codex']
+                                              if flag != '--no-daemon') + '\n').encode(),
+                                   b'', 0, .01, None, CancellationStatus()),
+                    ProcessOutcome(b'--no-daemon\n', b'', 0, .01, None,
+                                   CancellationStatus()),
+                ]
+                with patch('agentkit.doctor.shutil.which', return_value=str(executable)), \
+                     patch('agentkit.doctor.run_process', side_effect=outcomes):
+                    cap = detect_engine('codex', Capability('unknown', 'fixture'))
+                self.assertEqual(cap.version, version)
+                self.assertTrue(all(cap.features[flag].state == 'verified'
+                                    for flag in REQUIRED['codex']))
+                self.assertEqual(cap.features['tested_version'].state, 'verified')
 
     def test_auth_status_filters_identifiers(self):
         raw = json.dumps({'loggedIn': True, 'authMethod': 'claude.ai', 'apiProvider': 'firstParty',
@@ -387,6 +494,11 @@ class RuntimeTests(unittest.TestCase):
         self.assertIsNone(stop_on_limit(b'', b'Reconnecting... 1/5'))
         raw = b'{"type":"system","subtype":"init","tools":["Bash"]}\n'
         self.assertEqual(stop_on_limit(raw, b''), 'unexpected_tools')
+        terminal = raw + b'{"type":"result","subtype":"error_during_execution","is_error":true}\n'
+        outcome = ProcessOutcome(terminal, b'', 143, .01, 'unexpected_tools',
+                                 CancellationStatus(requested=True, reason='unexpected_tools'))
+        self.assertEqual(normalize(self.request('claude'), outcome).error_class,
+                         'unexpected_tools')
 
     def test_stopped_authentication_launch_preserves_complete_terminal_usage(self):
         events = [

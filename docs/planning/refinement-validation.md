@@ -8,6 +8,7 @@ Validated branch: `implementation/refinement-completion`, based on integration m
 - Validated records for guided intent, design briefs, frozen independent acceptance, concise run views, bounded refinements and quality-stage recovery decisions.
 - Product planning loads only role-relevant shaping/design procedures and rechecks their hashes. Acceptance-design content is held out of implementation planning.
 - The terminal facade can reconnect to fixture or static-product controllers without starting work. `refine intake` accepts a plain brief plus a bounded inventory and returns an inspectable non-authoritative draft.
+- `refine status` projects durable controller state without launching work. `refine result` revalidates the actual clean candidate and package head before presenting an unapproved review result.
 - Static-product browser evidence can be bound to a private plain-file candidate snapshot, exact revision/session, independent verifier metadata and hashed screenshots. The validator does not operate a browser.
 - The frozen R4 matched-pilot ledger is adapted as an offline, authority-free component with strict consent, assignment, observation, missingness and descriptive-report contracts.
 
@@ -22,7 +23,7 @@ Historical evidence is unchanged. R5's live SplitSmart archive remains diagnosti
 
 ## Validation results
 
-- Full Python suite: 334 tests run, 331 passed, 3 host-bound skips.
+- Full Python suite: 336 tests run, 333 passed, 3 host-bound skips.
 - Focused Node terminal suite: 8 passed.
 - `python3 -m agentkit check`: passed with 14 skills, 7 domains, 14 examples and 3 pinned sources.
 - Python bytecode compilation passed with its cache redirected to a disposable writable directory; the default macOS cache path is outside this managed sandbox.

@@ -1,0 +1,27 @@
+{
+  "task_id": "focus-board-realistic-v2",
+  "state": "blocked",
+  "stage": "planning",
+  "next_action": "inspect rejected untrusted product plan",
+  "executions": [
+    {
+      "execution_id": "8367b97f-15cc-47ed-b1c3-cba61f3ed756",
+      "task_id": "focus-board-realistic-v2",
+      "role": "planning",
+      "engine": "claude",
+      "model": null,
+      "effort": null,
+      "allocation_seconds": 300.0,
+      "status": "succeeded",
+      "pid": 91001,
+      "process_token": "phase4-controller-supervised:91001:ab90aa640d454ce388fe572bd8b7abef",
+      "started_at": "2026-10-02T05:32:51.542657+00:00",
+      "finished_at": "2026-10-02T05:34:21.221222+00:00",
+      "elapsed_seconds": 88.654304,
+      "usage_json": "{\"billed_cost_usd\":null,\"cache_creation_tokens\":8703,\"cached_input_tokens\":0,\"estimated_cost_usd\":0.25944,\"input_tokens\":2,\"output_tokens\":6896,\"reasoning_tokens\":null,\"source\":\"claude.result\"}",
+      "result_json": "{\"artifacts\":{\"request.json\":\"4ee5b651ad7430277b4fa186f34e69a6a62657a75bedd8e9e1706e0eb467a775\",\"stderr.redacted.txt\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"stdout.redacted.jsonl\":\"45f564e8f7203469e87d6d6d380db0991b8f0a381ff195881a2e286b1f01db89\"},\"authentication_failure\":null,\"error_class\":null,\"limitations\":[\"Provider events and final text are claims; fixture acceptance is independently computed.\",\"Usage counts are provider-reported. Missing fields stay null. Cost estimates are not billing.\",\"Process groups cannot prove detached-descendant or remote cancellation.\",\"Whole-process guard denies global writes; parent provider network and auth access remain available.\",\"Tool-enabled execution is unsupported. Tool disabling is not OS credential isolation.\",\"No API keys, paid-mode fallback, purchase or billing-setting change is performed. Stop on reported limits; no controller retry.\"],\"proposal_document\":null,\"provider_reported_configuration\":{\"effort\":null,\"model\":\"claude-opus-5[1m]\"},\"requested_configuration\":{\"effort\":null,\"model\":null},\"resource_resolution\":{\"generated_output_tokens\":{\"classification\":\"observable-only\",\"rationale\":\"Unset: provider behavior and effective ceiling are unknown.\",\"source\":\"provider-default\",\"value\":null},\"max_capture_bytes\":{\"classification\":\"enforced\",\"rationale\":\"Controller transport capture bound; not a generated-token limit.\",\"source\":\"task-override\",\"value\":1048576},\"timeout_seconds\":{\"classification\":\"enforced\",\"rationale\":\"Controller wall-clock process deadline.\",\"source\":\"task-override\",\"value\":300.0}}}",
+      "reconciliation_note": null
+    }
+  ],
+  "approval_package": null
+}

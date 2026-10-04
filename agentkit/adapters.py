@@ -5,10 +5,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import uuid
 
-from .doctor import (COMPATIBLE, REQUIRED, clean_environment, detect_engine,
+from .doctor import (REQUIRED, clean_environment, compatible_version, detect_engine,
                      native_sandbox_capability, owned_code_profile, readonly_profile)
 from .process import run_process
 from .redaction import redact, redacted_stream
@@ -22,9 +23,11 @@ from .validation import _pairs, _depth
 def error_class(text):
     text = text.lower()
     for label, needles in [
+        ("invalid_request", ("not a valid json schema", "invalid json schema", "unknown schema")),
         ("output_limit", ("output token maximum", "max_output_tokens", "generated output limit")),
         ("usage_limit", ("usage limit", "quota exceeded", "insufficient_quota", "credit balance", "payment required", "additional payment", "extra usage", "out of credits")),
-        ("authentication", ("unauthorized", "authentication", "invalid api key", "not logged in", "login required", "401")),
+        ("authentication", ("unauthorized", "authentication", "invalid api key", "not logged in", "login required", "401",
+                            "oauth access token has expired", "oauth token has expired", "token has expired")),
         ("rate_limit", ("rate limit", "rate_limit", "429", "overloaded")),
         ("sandbox_unavailable", ("sandbox_apply", "sandbox unavailable", "failed to initialize sandbox", "sandbox initialization")),
         ("guard_denied", ("operation not permitted", "permission denied")),
@@ -39,6 +42,7 @@ def authentication_reason(text):
     """Return a bounded category; never retain the provider's authentication message."""
     lowered = text.lower()
     if any(value in lowered for value in ('expired oauth', 'oauth token has expired',
+                                           'oauth access token has expired', 'token has expired',
                                            'token expired', 'reauthenticationrequired')):
         return 'expired'
     if any(value in lowered for value in ('not logged in', 'login required', 'unauthorized', '401')):
@@ -60,13 +64,21 @@ def _usage(data, source, final=True):
                             source=source, final=final, provider_details=redact(data))
 
 
-def structured_json_text(value):
-    """Parse one JSON object, allowing only a single exact Markdown JSON fence."""
+def structured_json_text(value, *, allow_wrapping_prose=False):
+    """Parse one JSON object, optionally isolating one unambiguous JSON fence."""
     if not isinstance(value, str):
         return None
     candidate = value.strip()
     if candidate.startswith('```json\n') and candidate.endswith('\n```'):
         candidate = candidate[8:-4].strip()
+    elif allow_wrapping_prose:
+        matches = list(re.finditer(r'```json\n([\s\S]*?)\n```', candidate))
+        if len(matches) != 1:
+            return None
+        outside = candidate[:matches[0].start()] + candidate[matches[0].end():]
+        if '```' in outside or len(outside.encode()) > 8192:
+            return None
+        candidate = matches[0].group(1).strip()
     try:
         parsed = json.loads(candidate, object_pairs_hook=_pairs,
                             parse_constant=lambda _: (_ for _ in ()).throw(ValueError('nonfinite')))
@@ -74,6 +86,14 @@ def structured_json_text(value):
     except (ValueError, RecursionError):
         return None
     return parsed if isinstance(parsed, dict) else None
+
+
+def effective_allowed_tools(request):
+    """Provider protocol tools allowed by the validated request, not by model output."""
+    tools = list(capability_profile(request.capability_profile, request.mode).tools)
+    if request.engine == 'claude' and request.output_schema is not None:
+        tools.append('StructuredOutput')
+    return tuple(tools)
 
 
 class IncompleteStream(ValueError):
@@ -96,7 +116,8 @@ class CodexAdapter:
             disabled.append('shell_tool')
         for name in disabled:
             settings['features.' + name] = 'false'
-        argv = [executable, 'exec', '--json', '--ephemeral', '--ignore-user-config', '--ignore-rules',
+        argv = [executable, '--no-daemon', 'exec', '--strict-config', '--json', '--ephemeral',
+                '--ignore-user-config', '--ignore-rules',
                 # A nested native macOS sandbox cannot initialize inside the
                 # whole-process Seatbelt guard. Owned-code commands therefore
                 # use that stricter outer path boundary as the sole OS sandbox.
@@ -106,6 +127,12 @@ class CodexAdapter:
             argv.extend(['-c', key + '=' + value])
         if request.model:
             argv.extend(['--model', request.model])
+        if request.output_schema is not None:
+            schema_path = Path(runtime) / 'output-schema.json'
+            with os.fdopen(os.open(schema_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
+                json.dump(request.output_schema, stream, sort_keys=True, allow_nan=False)
+                stream.write('\n')
+            argv.extend(['--output-schema', str(schema_path)])
         argv.append('-')
         return argv
 
@@ -135,7 +162,8 @@ class CodexAdapter:
         final = finals[0]
         if final['type'] == 'turn.failed':
             result.status = 'failed'
-            result.error_class = error_class(json.dumps(final))
+            if result.error_class is None:
+                result.error_class = error_class(json.dumps(final))
         else:
             result.usage = _usage(final.get('usage'), 'codex.turn.completed')
         result.provider_details['terminal_type'] = final['type']
@@ -173,6 +201,9 @@ class ClaudeAdapter:
             argv.extend(['--model', request.model])
         if request.effort:
             argv.extend(['--effort', request.effort])
+        if request.output_schema is not None:
+            argv.extend(['--json-schema', json.dumps(
+                request.output_schema, sort_keys=True, separators=(',', ':'), allow_nan=False)])
         return argv
 
     def parse(self, events, result, allowed_tools=()):
@@ -208,7 +239,8 @@ class ClaudeAdapter:
         result.session_id = final.get('session_id', result.session_id)
         if final.get('is_error') is True or final.get('subtype') != 'success':
             result.status = 'failed'
-            result.error_class = error_class(json.dumps(final))
+            if result.error_class is None:
+                result.error_class = error_class(json.dumps(final))
         result.final_text = final.get('result')
         if isinstance(final.get('structured_output'), dict):
             result.structured_output = final['structured_output']
@@ -247,8 +279,8 @@ def normalize(request, outcome):
             if not isinstance(value, dict) or not isinstance(value.get('type'), str):
                 raise ValueError('event must be typed object')
             events.append(value)
-        profile = capability_profile(request.capability_profile, request.mode)
-        ADAPTERS[request.engine].parse(events, result, allowed_tools=profile.tools)
+        ADAPTERS[request.engine].parse(events, result,
+                                       allowed_tools=effective_allowed_tools(request))
     except IncompleteStream:
         if not outcome.stop_reason:
             result.status, result.error_class = 'failed', 'truncated_output'
@@ -410,7 +442,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
     cap = detect_engine(request.engine, sandbox)
     if not cap.executable:
         return blocked('missing_executable', 'CLI executable absent. No install or alternate engine fallback.')
-    if cap.version != COMPATIBLE[request.engine] or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
+    if not compatible_version(request.engine, cap.version) or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
         return blocked('incompatible_cli', 'Installed version or required flags not verified. No fallback or install.')
     if cap.authentication.state != 'verified' or cap.authentication_mode != 'subscription':
         return blocked('authentication', 'Existing subscription auth is unavailable or unknown. No auth changes or fallback.')
@@ -441,9 +473,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
                               timeout=request.timeout_seconds, max_bytes=request.max_output_bytes,
                               cancel_event=cancel_event,
                               stop_predicate=lambda stdout, stderr: stop_on_limit(
-                                  stdout, stderr,
-                                  capability_profile(request.capability_profile,
-                                                     request.mode).tools))
+                                  stdout, stderr, effective_allowed_tools(request)))
         result = normalize(request, outcome)
         result.provider_details.update(version=cap.version, executable_sha256=cap.executable_sha256,
                                        authentication='subscription-reported', paid_overflow='unknown',
@@ -464,7 +494,7 @@ def execute(request, directory, *, policy=LivePolicy(), cancel_event=None):
             if installation_before != installation_after:
                 result.status, result.error_class = 'failed', 'startup_state_changed'
         result.limitations.extend(['Whole-process guard denies global writes; parent provider network and auth access remain available.',
-                                  'Tool-enabled execution is unsupported. Tool disabling is not OS credential isolation.',
+                                  'External action tools are disabled; Claude StructuredOutput is allowed only for a controller-supplied schema. This is not OS credential isolation.',
                                   'No API keys, paid-mode fallback, purchase or billing-setting change is performed. Stop on reported limits; no controller retry.'])
         if request.engine == 'codex':
             result.limitations.append('Codex built-in transport retries cannot be set to zero without changing provider; wall time bounds the process and reported retries terminate it. Hidden attempts remain unknown.')
@@ -514,7 +544,7 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
     cap = detect_engine(request.engine, sandbox)
     if not cap.executable:
         return blocked('missing_executable', 'CLI executable absent. No install or alternate engine fallback.')
-    if cap.version != COMPATIBLE[request.engine] or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
+    if not compatible_version(request.engine, cap.version) or any(cap.features.get(f).state != 'verified' for f in REQUIRED[request.engine]):
         return blocked('incompatible_cli', 'Installed version or required flags not verified. No fallback or install.')
     if cap.authentication.state != 'verified' or cap.authentication_mode != 'subscription':
         return blocked('authentication', 'Existing subscription auth is unavailable or unknown. No auth changes or fallback.')
@@ -564,7 +594,7 @@ def execute_owned_code(request, directory, boundary, *, policy=LivePolicy(), can
         if readiness.state != 'verified':
             return blocked('runtime_' + readiness.state, readiness.evidence, readiness)
         predicate = lambda stdout, stderr: stop_on_limit(
-            stdout, stderr, selected_profile.tools)
+            stdout, stderr, effective_allowed_tools(request))
         outcome = run_process(['/usr/bin/sandbox-exec', '-p', profile] + argv,
                               cwd=str(workspace), env=env, stdin=request.prompt.encode(),
                               timeout=request.timeout_seconds, max_bytes=request.max_output_bytes,
