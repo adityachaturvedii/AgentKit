@@ -115,6 +115,13 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(result.error_class, 'authentication')
         self.assertEqual(result.provider_details['authentication_failure'], 'expired')
 
+    def test_provider_schema_rejection_is_actionable_request_failure(self):
+        result = normalize(
+            self.request('claude'),
+            ProcessOutcome(b'', b'Error: --json-schema is not a valid JSON Schema: unknown schema',
+                           1, .01, None, CancellationStatus()))
+        self.assertEqual(result.error_class, 'invalid_request')
+
     def test_simulated_errors_both_providers(self):
         for engine in ADAPTERS:
             for category in ('authentication', 'rate_limit', 'usage_limit'):

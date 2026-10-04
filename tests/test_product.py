@@ -11,7 +11,7 @@ from agentkit.controller import ControllerError, UsageRecord
 from agentkit.delivery import EngineOutcome
 from agentkit.orchestration import DeterministicReviewer
 from agentkit.product import (PRODUCT_PROJECT_POLICY, LiveProductPlanner, ProductPlanningError,
-                              ProductWorkflow, StaticProductPlanner,
+                              ProductWorkflow, StaticProductPlanner, product_plan_schema,
                               static_web_inventory, validate_product_document)
 from agentkit.runtime_contracts import (CancellationStatus, ExecutionResult, UsageObservation)
 from agentkit.resource_policy import resolve_role_resources
@@ -31,6 +31,7 @@ assert.equal(app.increment(2), 3);
 assert.equal(app.reset(), 0);
 console.log('controller mechanics passed');
 '''
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def proposal(assignments=None):
@@ -176,6 +177,16 @@ class AuthenticationThenPlan(StaticProductPlanner):
                              {'proposal_document': self.document, 'simulated': True})
 
 
+class RejectedRequestPlanner(StaticProductPlanner):
+    timeout_seconds = 5
+
+    def run(self, prompt, output, policy, cancel_event=None):
+        self.calls += 1
+        Path(output).mkdir(mode=0o700)
+        return EngineOutcome('failed', .01, UsageRecord(source='fake'),
+                             {'error_class': 'invalid_request'})
+
+
 class ProductTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='agentkit-product-test-')
@@ -192,6 +203,38 @@ class ProductTests(unittest.TestCase):
         workflow.specialist_factory = lambda provider, fixture: specialist
         workflow.reviewer_override = DeterministicReviewer('claude')
         return workflow, specialist
+
+    def test_schema_compatibility_blocker_archive_is_hash_bound_and_has_no_candidate(self):
+        root = ROOT / 'evidence' / 'product-schema-compatibility-blocker'
+        manifest = json.loads((root / 'manifest.json').read_text())
+        actual = {str(path.relative_to(root)): path for path in root.rglob('*')
+                  if path.is_file() and path.name != 'manifest.json'}
+        recorded = {item['path']: item for item in manifest['files']}
+        self.assertEqual(set(actual), set(recorded))
+        for relative, path in actual.items():
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(),
+                             recorded[relative]['sha256'])
+        summary = json.loads((root / 'summary.json').read_text())
+        self.assertEqual(summary['result'], 'blocked_before_inference')
+        self.assertIsNone(summary['candidate_revision'])
+        self.assertFalse(summary['publication_approval_recorded'])
+
+    def test_product_schema_uses_provider_portable_vocabulary_without_remote_metaschema(self):
+        schema = product_plan_schema(BRIEF, ACCEPTANCE, static_web_inventory(), 2)
+        self.assertNotIn('$schema', schema)
+        self.assertEqual(schema['type'], 'object')
+        self.assertEqual(schema['properties']['proposal']['properties']['requirements'],
+                         {'const': [{'source': 'user', 'text': BRIEF}]})
+
+    def test_provider_request_rejection_has_actionable_product_status(self):
+        workflow = ProductWorkflow.submit_product(
+            self.root / 'rejected-request', 'rejected-request', BRIEF, ACCEPTANCE, MECHANICS,
+            planner=RejectedRequestPlanner(proposal()), live=False,
+            planning_timeout_seconds=5, implementation_timeout_seconds=5,
+            review_timeout_seconds=5, verification_timeout_seconds=5)
+        status = workflow.status('rejected-request')
+        self.assertEqual(status['state'], 'blocked')
+        self.assertIn('provider rejected the controller request', status['next_action'])
 
     def test_provider_plan_is_validated_and_drives_a_disposable_product(self):
         workflow, specialist = self.workflow()

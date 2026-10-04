@@ -416,3 +416,11 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [x] Accept only reviewed Codex 0.159.3 and 0.160.0; keep every other version fail-closed.
 - [x] Exercise both reviewed versions through doctor fixtures and the unchanged real adapter argument boundary without provider transport.
 - [ ] Re-run the product workflow from a host context where the existing macOS Seatbelt boundary initializes; this managed session adds no live inference evidence.
+
+## Provider schema compatibility correction
+
+- [x] Retain the bounded live preflight failure from executable `d86b61c`: Claude 2.1.220 rejected the Draft 2020-12 metaschema URI before returning any model event.
+- [x] Remove the remote metaschema declaration while keeping the strict provider-portable schema vocabulary and unchanged deterministic controller validation.
+- [x] Classify provider schema rejection as `invalid_request` and show an actionable controller/provider compatibility next action instead of generic planning failure.
+- [x] Add behavioral coverage for the schema shape, real adapter argument, error classification, product status and immutable failed evidence.
+- [ ] Live-validate the corrected schema and remaining product stages against a committed executable under a new bounded attempt; the failed `d86b61c` launch does not validate later code.

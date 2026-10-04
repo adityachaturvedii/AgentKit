@@ -23,6 +23,7 @@ from .validation import _pairs, _depth
 def error_class(text):
     text = text.lower()
     for label, needles in [
+        ("invalid_request", ("not a valid json schema", "invalid json schema", "unknown schema")),
         ("output_limit", ("output token maximum", "max_output_tokens", "generated output limit")),
         ("usage_limit", ("usage limit", "quota exceeded", "insufficient_quota", "credit balance", "payment required", "additional payment", "extra usage", "out of credits")),
         ("authentication", ("unauthorized", "authentication", "invalid api key", "not logged in", "login required", "401",

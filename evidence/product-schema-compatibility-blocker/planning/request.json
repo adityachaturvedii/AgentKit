@@ -1,0 +1,295 @@
+{
+  "engine": "claude",
+  "task_id": "phase4-product-planner",
+  "cwd": "/private/var/folders/ff/msj2srcd0319csm7bnvf0tbh0000gq/T/agentkit-product-plan-_0s19nc6",
+  "timeout_seconds": 240.0,
+  "max_output_bytes": 1048576,
+  "model": null,
+  "effort": null,
+  "mode": "model-only",
+  "capability_profile": "structured-planning",
+  "max_generated_output_tokens": null,
+  "resource_resolution": {
+    "timeout_seconds": {
+      "value": 240.0,
+      "source": "task-override",
+      "classification": "enforced",
+      "rationale": "Controller wall-clock process deadline."
+    },
+    "max_capture_bytes": {
+      "value": 1048576,
+      "source": "task-override",
+      "classification": "enforced",
+      "rationale": "Controller transport capture bound; not a generated-token limit."
+    },
+    "generated_output_tokens": {
+      "value": null,
+      "source": "provider-default",
+      "classification": "observable-only",
+      "rationale": "Unset: provider behavior and effective ceiling are unknown."
+    }
+  },
+  "output_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "project",
+      "proposal"
+    ],
+    "properties": {
+      "project": {
+        "const": {
+          "stack": "vanilla-static",
+          "dependency_install": "none",
+          "build": "node-check",
+          "preview": "loopback-python-http",
+          "browser_verification": "required"
+        }
+      },
+      "proposal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "objective",
+          "requirements",
+          "assumptions",
+          "acceptance",
+          "assignments",
+          "interfaces",
+          "dependencies",
+          "integration_strategy",
+          "verification_requirements",
+          "review_requirements",
+          "roles",
+          "model_profiles",
+          "resource_allocations",
+          "inventory_sha256",
+          "planner"
+        ],
+        "properties": {
+          "objective": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requirements": {
+            "const": [
+              {
+                "source": "user",
+                "text": "Build a polished browser-based daily focus board for a person managing a short list of tasks. They should be able to add tasks, mark them complete, filter all/active/completed items, remove individual tasks, and clear completed work. Preserve the list across reloads with local browser storage. Support efficient keyboard use as well as touch, responsive desktop and mobile layouts, concise instructions, readable accessible controls, visible focus states, and a cohesive calm visual design. Run locally with no account, backend, external service, dependency installation, or deployment."
+              }
+            ]
+          },
+          "assumptions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "acceptance": {
+            "const": [
+              {
+                "id": "task-mechanics",
+                "expected": "game.js exposes CommonJS functions createInitialState(), addTask(state, text), toggleTask(state, id), removeTask(state, id), clearCompleted(state), and filterTasks(state, filter); state transitions support adding, completing, filtering, removing, and clearing tasks without losing unrelated tasks."
+              },
+              {
+                "id": "persistence",
+                "expected": "The browser UI restores and saves the current task list with localStorage while remaining usable if storage access fails."
+              },
+              {
+                "id": "keyboard-touch",
+                "expected": "A user can add a task with Enter, navigate controls by keyboard with visible focus, and use comfortably sized pointer and touch controls."
+              },
+              {
+                "id": "responsive-layout",
+                "expected": "The interface remains readable and usable at desktop and narrow mobile viewport sizes without horizontal overflow."
+              },
+              {
+                "id": "instructions-and-states",
+                "expected": "The page includes concise instructions, an accessible task summary or status, clear empty/filter states, and readable labels for add, filter, remove, and clear actions."
+              },
+              {
+                "id": "local-product",
+                "expected": "The documented local build and preview commands work with the dependency-free static project and the main flow produces no unexplained browser errors."
+              }
+            ]
+          },
+          "assignments": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "objective",
+                "allowed_paths",
+                "dependencies",
+                "interfaces"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^implement-[A-Za-z0-9-]+$"
+                },
+                "objective": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2048
+                },
+                "allowed_paths": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "enum": [
+                      "README.md",
+                      "game.js",
+                      "index.html",
+                      "styles.css"
+                    ]
+                  }
+                },
+                "dependencies": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^implement-[A-Za-z0-9-]+$"
+                  }
+                },
+                "interfaces": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "interfaces": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "assignment",
+                "contract"
+              ],
+              "properties": {
+                "assignment": {
+                  "type": "string"
+                },
+                "contract": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "target"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "target": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "integration_strategy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "verification_requirements": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "review_requirements": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "roles": {
+            "const": [
+              "chief_of_staff",
+              "tech_lead",
+              "implementer",
+              "verifier",
+              "reviewer"
+            ]
+          },
+          "model_profiles": {
+            "const": {
+              "implementer": "controller-route",
+              "repair": "controller-route",
+              "reviewer": "controller-independent-route"
+            }
+          },
+          "resource_allocations": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "implementation_calls",
+              "verification_calls",
+              "review_calls",
+              "maximum_concurrent_implementers"
+            ],
+            "properties": {
+              "implementation_calls": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2
+              },
+              "verification_calls": {
+                "const": 1
+              },
+              "review_calls": {
+                "const": 1
+              },
+              "maximum_concurrent_implementers": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1
+              }
+            }
+          },
+          "inventory_sha256": {
+            "const": "0d9529dbc6d39cbe01636b79678b3b673c6c40d185a7493f25aafdf8d3abeb35"
+          },
+          "planner": {
+            "const": {
+              "kind": "provider-tech-lead",
+              "model_call": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "schema_version": 1,
+  "prompt_sha256": "d3619be16a4e92dffd8e0b12dac15dfb12135845451f0e7f7e930cdb3b3b043f",
+  "prompt_bytes": 16895
+}

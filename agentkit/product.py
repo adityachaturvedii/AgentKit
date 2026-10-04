@@ -204,7 +204,6 @@ def product_plan_schema(brief, acceptance, inventory, max_concurrency):
     }
     proposal_required = list(proposal_properties)
     return {
-        '$schema': 'https://json-schema.org/draft/2020-12/schema',
         'type': 'object', 'additionalProperties': False,
         'required': ['project', 'proposal'],
         'properties': {
@@ -741,8 +740,12 @@ class ProductWorkflow(Phase4Workflow):
                     retries_used += 1
                     continue
             if outcome.status != 'succeeded':
+                next_action = ('provider rejected the controller request before inference; '
+                               'update the reviewed adapter/schema compatibility'
+                               if outcome.details.get('error_class') == 'invalid_request' else
+                               'planning failed; inspect concise status or retained evidence')
                 self._transition(task_id, 'received', 'blocked', 'planning-blocked',
-                                 'planning failed; inspect concise status or retained evidence')
+                                 next_action)
                 self._write_product_preplan_status(task_id)
                 return self
             try:
