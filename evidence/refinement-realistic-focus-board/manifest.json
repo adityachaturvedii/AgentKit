@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "executable_revision": "fcaf591466b2d40c690cb304d3eadc9fb0e7cef3",
+  "files": [
+    {
+      "path": "attempt-1-auth-expired/controller-status.json",
+      "sha256": "6475f5ee28656124c87ca8af31698c2f39e2c4266406c480c5cc9d6f316bb826",
+      "bytes": 2727
+    },
+    {
+      "path": "attempt-1-auth-expired/planning-result.json",
+      "sha256": "0c08befbc77e825761d44af4bbcae03630c583668d330e3012c204b6ec656aba",
+      "bytes": 4847
+    },
+    {
+      "path": "attempt-1-auth-expired/product-request.json",
+      "sha256": "6074de17e5fae956c561e62557b5bbe02cb0870e33ec5494c02cbdde430593c7",
+      "bytes": 9082
+    },
+    {
+      "path": "attempt-1-auth-expired/registry.json",
+      "sha256": "b27b1c269bc25b58de998c3497ef14aa60d538d839bef95100b4e1ff867d2154",
+      "bytes": 1494
+    },
+    {
+      "path": "attempt-1-auth-expired/request.json",
+      "sha256": "c0fbc345e4f475dda10bed7f728d148ba562b3c70f4544bb449ff507aa952ce4",
+      "bytes": 1152
+    },
+    {
+      "path": "attempt-1-auth-expired/result.json",
+      "sha256": "f7ecf1284082b5a389f29d346d7c283ab7490f7b8fffc5c59830a327af5d371f",
+      "bytes": 5304
+    },
+    {
+      "path": "attempt-1-auth-expired/status.json",
+      "sha256": "b56972b522713f5a3e64df3bdc9682461f49e78a48f7cd90768f3de5436eeafe",
+      "bytes": 2727
+    },
+    {
+      "path": "attempt-1-auth-expired/stderr.redacted.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "attempt-1-auth-expired/stdout.redacted.jsonl",
+      "sha256": "4b69c46be4edaf9c7fdf7262dd31f7d04b5054e3cd46c371b9a5bc9c6eac5d47",
+      "bytes": 3194
+    },
+    {
+      "path": "attempt-2-plan-rejected/controller-status.json",
+      "sha256": "4384a2cac86511e650e674209c7c3011e004f5b5f5d4b665c3588a44340451f8",
+      "bytes": 2727
+    },
+    {
+      "path": "attempt-2-plan-rejected/planner-rejection.json",
+      "sha256": "df87009a62147cc52f69cb8e00dcf426871d9e93d6be7b2c77c14acec646beec",
+      "bytes": 201
+    },
+    {
+      "path": "attempt-2-plan-rejected/planning-result.json",
+      "sha256": "e7b9dc10d9e2e14611f79387ffc59f0b72d5c18fa9d31512a24e0913f7d19b52",
+      "bytes": 4843
+    },
+    {
+      "path": "attempt-2-plan-rejected/product-request.json",
+      "sha256": "ea132f8943c63361aac3df3cf3f098239d25590d4a19ae763bb55ec5737ec81d",
+      "bytes": 9082
+    },
+    {
+      "path": "attempt-2-plan-rejected/registry.json",
+      "sha256": "b27b1c269bc25b58de998c3497ef14aa60d538d839bef95100b4e1ff867d2154",
+      "bytes": 1494
+    },
+    {
+      "path": "attempt-2-plan-rejected/request.json",
+      "sha256": "4ee5b651ad7430277b4fa186f34e69a6a62657a75bedd8e9e1706e0eb467a775",
+      "bytes": 1152
+    },
+    {
+      "path": "attempt-2-plan-rejected/result.json",
+      "sha256": "78a7d36fc6b6495b7283a17be0b5df93a00eb95ee9809d264d011dbdf12fe6fe",
+      "bytes": 18720
+    },
+    {
+      "path": "attempt-2-plan-rejected/status.json",
+      "sha256": "885770c6f768fed5004ea9851a555052b13d44fee3882818fa5a4223c75f1cbb",
+      "bytes": 2727
+    },
+    {
+      "path": "attempt-2-plan-rejected/stderr.redacted.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "attempt-2-plan-rejected/stdout.redacted.jsonl",
+      "sha256": "45f564e8f7203469e87d6d6d380db0991b8f0a381ff195881a2e286b1f01db89",
+      "bytes": 36797
+    },
+    {
+      "path": "inputs/acceptance.json",
+      "sha256": "9a0957abcdb71e36052114c5e7b2c15254ff55c9bcc2b2366758b065fb08ef5c",
+      "bytes": 1244
+    },
+    {
+      "path": "inputs/brief.txt",
+      "sha256": "dbf926ea9b3728105d6a2f619b4da74e392ca43041aa1eb0bee09cafce58ec16",
+      "bytes": 588
+    },
+    {
+      "path": "inputs/mechanics.mjs",
+      "sha256": "5b888d475563f12d9329f0740be03a95aa34f7746b016b7243a9eea0b7c7980d",
+      "bytes": 1256
+    },
+    {
+      "path": "usage.json",
+      "sha256": "55f69e2680661e3ffcca9a7a7eadc3e02f46bed994b524922f2ed4c5763beac4",
+      "bytes": 1017
+    },
+    {
+      "path": "versions.json",
+      "sha256": "65e9267c6ea782842e373e6fbe3e4c48830691eaa6ea8a2bf50009e66c9a0896",
+      "bytes": 247
+    }
+  ]
+}

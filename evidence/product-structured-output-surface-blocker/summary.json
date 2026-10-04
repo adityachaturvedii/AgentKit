@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-05",
+  "executable_revision": "638e67cc851b98f58634457afcabb03c2c948c4f",
+  "task_id": "focus-board-schema-v2",
+  "result": "blocked_before_inference",
+  "cause": "AgentKit rejected Claude's schema-bound StructuredOutput protocol surface as an unexpected action tool",
+  "controller_state": "blocked",
+  "cli_launches": 1,
+  "provider_requests": null,
+  "reported_turns": 2,
+  "reported_usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cached_input_tokens": 0,
+    "cache_creation_tokens": 0,
+    "reasoning_tokens": null,
+    "estimated_cost_usd": 0,
+    "billed_cost_usd": null
+  },
+  "elapsed_seconds": 0.593969,
+  "candidate_revision": null,
+  "publication_approval_recorded": false,
+  "continuation": "No additional inference was launched after changing executable code."
+}

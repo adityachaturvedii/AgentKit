@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "executable_revision": "fcaf591466b2d40c690cb304d3eadc9fb0e7cef3",
+  "python": "Python 3.9.6",
+  "node": "v22.19.0",
+  "codex": "codex-cli 0.159.3",
+  "claude": "2.1.220 (Claude Code)",
+  "host": "Darwin 25.6.0 arm64"
+}

@@ -101,6 +101,17 @@ python3 -m agentkit refine intake \
 
 This produces an inspectable draft. It does not authorize repository execution, broaden paths, or start a provider.
 
+Reconnect to a durable fixture or static-product workflow through the concise refinement view:
+
+```sh
+python3 -m agentkit refine status \
+  --root /tmp/agentkit-task --task-id calculator-demo --kind fixture
+python3 -m agentkit refine result \
+  --root /tmp/agentkit-task --task-id calculator-demo --kind fixture --format json
+```
+
+`status` is read-only. `result` is available only for a clean exact candidate with an unapproved revision-bound package; a dirty worktree or stale package fails closed.
+
 ## Run a complete offline task
 
 The default task workflow uses deterministic fake providers and a controller-created fixture, so it consumes no model quota:
@@ -236,7 +247,7 @@ python3 -m agentkit task start \
   --authorize-subscription-smoke
 ```
 
-Live execution uses the installed CLI's existing subscription authentication. AgentKit does not introduce API keys, enable paid fallback, purchase credits or change authentication methods. If authentication is missing or expired, the task pauses at `authentication_required`. The official interactive login flow runs in an attached terminal and keeps passwords, MFA, tokens, codes and raw login output out of controller evidence and model context. See [guided authentication recovery](docs/authentication-recovery.md).
+Live execution uses the installed CLI's existing subscription authentication. AgentKit does not introduce API keys, enable paid fallback, purchase credits or change authentication methods. If authentication is missing or expired, the task pauses at `authentication_required` and reports an in-workflow recovery command. For static products, `agentkit product authenticate` runs the official interactive login in the attached terminal, verifies subscription mode and resumes only the interrupted stage. Passwords, MFA, tokens, codes and raw login output stay out of controller evidence and model context. See [guided authentication recovery](docs/authentication-recovery.md).
 
 Declare call, time and concurrency budgets when submitting a live task; inspect `task submit --help` and the [CLI guide](docs/phase4-cli-guide.md) before running it. Do not include live commands in ordinary CI.
 
@@ -256,7 +267,7 @@ See [resource policy and role capabilities](docs/cli-resource-policy.md) for enf
 
 ### Static web product work
 
-The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments; the controller validates scope, dependencies, acceptance and budget before execution. Product planning now receives hash-verified product-shaping, interaction-design and visual-design procedures. Protected mechanics checks and exact-revision browser evidence are required for acceptance. The browser-evidence path can create a private plain-file snapshot and validate an independent report against its revision, session, snapshot and screenshots. Browser interaction remains externally driven; the toolkit does not claim a general built-in browser agent or browser-process isolation.
+The `product` commands accept a brief for a fresh dependency-free static web project. A provider proposes assignments through a CLI structured-output schema; the controller still validates scope, dependencies, acceptance and budget before execution. One unambiguous prose-wrapped JSON object can be recovered and strictly checked, while a task-budgeted corrective retry can receive the precise validation failure. Product planning receives hash-verified product-shaping, interaction-design and visual-design procedures. Protected mechanics checks and exact-revision browser evidence are required for acceptance. The browser-evidence path can create a private plain-file snapshot and validate an independent report against its revision, session, snapshot and screenshots. Browser interaction remains externally driven; the toolkit does not claim a general built-in browser agent or browser-process isolation.
 
 The first Breakout attempt failed during planning; the later integration checkpoint stopped on Claude authentication failures. No playable game or completed product acceptance is claimed. See the [product workflow](docs/product-workflow.md) for commands, prerequisites and retained evidence.
 
@@ -275,7 +286,7 @@ The first Breakout attempt failed during planning; the later integration checkpo
 | `python3 -m agentkit controller-demo` | Exercise the Phase 3 delivery controller | Fake by default; live is opt-in |
 | `python3 -m agentkit auth-status`, `auth-login`, `auth-reconcile` | Inspect or recover official subscription login | Login is interactive and uncaptured |
 | `python3 -m agentkit task ...` | Propose, submit, run, inspect, cancel, resume and package disposable tasks | Fake by default; live is opt-in |
-| `python3 -m agentkit refine intake` | Derive an inspectable requirements/assumptions draft from a brief and bounded inventory | No |
+| `python3 -m agentkit refine intake`, `status`, `result` | Prepare intent or read concise durable status and exact-candidate results | No |
 | `python3 -m agentkit workflow ...` | Status, start, resume, cancel and package-summary views for an existing disposable task | Fake by default; live start/resume require explicit authorization |
 | `python3 -m agentkit pilot ...` | Freeze a consented matched protocol and record/report immutable offline observations | No |
 | `python3 -m agentkit resource-policy` | Explain resolved controls and capability profiles | No |
@@ -336,7 +347,7 @@ Skills reference shared contracts and notices, so copy or archive the complete r
 
 ## Validation
 
-The current offline refinement candidate ran 334 tests: **331 passed and 3 skipped** in the managed tool environment (two Seatbelt checks and one loopback preview). Eight dependency-free Node terminal tests also passed. Structural checks passed for fourteen skills, seven domain procedures, fourteen examples and three pinned foundation sources. These results validate the offline contracts and fixtures; they do not close host browser, general-repository or live-provider gates. Host-only results in earlier reports apply only to their tested paths and revisions.
+The current offline refinement candidate ran 336 tests: **333 passed and 3 skipped** in the managed tool environment (two Seatbelt checks and one loopback preview). Eight dependency-free Node terminal tests also passed. Structural checks passed for fourteen skills, seven domain procedures, fourteen examples and three pinned foundation sources. These results validate the offline contracts and fixtures; they do not close host browser, general-repository or live-provider gates. Host-only results in earlier reports apply only to their tested paths and revisions.
 
 ```sh
 python3 -m unittest discover -s tests -v

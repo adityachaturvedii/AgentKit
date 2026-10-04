@@ -1,0 +1,50 @@
+{
+  "files": [
+    {
+      "bytes": 4837,
+      "path": "controller/planning-result.json",
+      "sha256": "9454cf61e9567aba26ee9cc60735ef8ddf98b25ca25d1fba454a93e030112aaa"
+    },
+    {
+      "bytes": 9266,
+      "path": "controller/product-request.json",
+      "sha256": "3335b3dfdb25f34938d1352aa8b81ac960745cba6cf9466cf5116cff0915aac4"
+    },
+    {
+      "bytes": 1494,
+      "path": "controller/registry.json",
+      "sha256": "b27b1c269bc25b58de998c3497ef14aa60d538d839bef95100b4e1ff867d2154"
+    },
+    {
+      "bytes": 2766,
+      "path": "controller/status.json",
+      "sha256": "7d03dff14a8b534f3402b4b310b73377d380a150d2737f49b5737730472ae551"
+    },
+    {
+      "bytes": 9681,
+      "path": "planning/request.json",
+      "sha256": "c8f0d05294d97852f6866214fb3a47d19ca5041357a52cb3b1162e8cf611eaf7"
+    },
+    {
+      "bytes": 10426,
+      "path": "planning/result.json",
+      "sha256": "9bc938c06f8f695affe4751767a2d8457465baa15128e959685ebd71fb96f8ae"
+    },
+    {
+      "bytes": 0,
+      "path": "planning/stderr.redacted.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1954,
+      "path": "planning/stdout.redacted.jsonl",
+      "sha256": "0e4ef7be336a77dc4e2181a4ebd20a605ac45c7bfc9656133e86c179ad7d1a67"
+    },
+    {
+      "bytes": 836,
+      "path": "summary.json",
+      "sha256": "e5e12ef16f43a92dddb1f5a9b60a6fa093ebb779f0e7ecfefe6fa40f1bccd987"
+    }
+  ],
+  "schema_version": 1
+}

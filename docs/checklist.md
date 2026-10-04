@@ -387,3 +387,48 @@ Publication follow-up, 2026-09-19: the user subsequently authorized creating a p
 - [ ] Validate an actual controlled browser driver and host boundary; fixture report validation alone does not close REF-08.
 - [ ] Run separately authorized live specialist forward evaluations and a consented pilot; no inference or participant collection occurred in this batch.
 - [ ] General repository execution, full-screen TUI, browser credential/egress isolation, deployment and publication remain unsupported.
+
+## Product refinement workflow views
+
+- [x] Add read-only `refine status` for fixture and static-product controllers using the validated `RunView` projection.
+- [x] Add `refine result` only for an unapproved review-ready package whose actual clean candidate still matches its recorded head.
+- [x] Escape terminal control characters in plain output and keep JSON output machine-readable.
+- [x] Verify reconnecting never starts work and candidate tampering blocks result presentation.
+
+## Codex 0.159.3 compatibility gate
+
+- [x] Reproduce the realistic-trial preflight block before inference and retain its sanitized evidence separately.
+- [x] Inspect installed Codex root and `exec` help plus the official 0.159 release/source material.
+- [x] Pin managed execution to exact version 0.159.3 and require its advertised `--strict-config` and `--no-daemon` controls.
+- [x] Exercise the real owned-code request boundary with provider transport stubbed; assert the daemon and strict-config controls reach the launched argv.
+- [x] Re-run the bounded realistic product trial from corrected executable `fcaf591`; retain two live planning launches and stop within the four-launch authorization when only two launches remained for three mandatory stages.
+- [x] Record the stale Claude status/expired OAuth mismatch, missing forced recovery path, rejected nonconforming planner response, reported usage and absence of any implementation, verification, browser, review or approval evidence.
+- [x] Add planning-stage authentication checkpoints with an in-product official-login command, hash-bound protected inputs and automatic exact-stage resume after verified subscription login.
+- [x] Pass a strict schema through the installed Codex and Claude structured-output controls, recover one unambiguous prose-wrapped JSON fence, and retain deterministic rejection of changed controller requirements.
+- [x] Give one bounded corrective retry precise controller validation feedback without replaying the provider transcript; stop repeated identical failures and preserve every attempt in budgets and evidence.
+- [x] Cover expired OAuth classification, forced official-login refresh, protected-input staleness, automatic planning resume, schema propagation and corrective replanning with disposable offline tests.
+- [ ] Repeat the realistic product trial only under a new explicit live authorization after the recovery and structured-planning corrections pass offline tests.
+
+## Codex 0.160.0 compatibility follow-up
+
+- [x] Stop the next product preflight before inference when installed Codex 0.160.0 falls outside the reviewed set.
+- [x] Inspect the installed official package metadata plus root and `exec` help; retain all required daemon, strict-config, schema, JSONL, ephemeral, ignore-config/rules and sandbox controls.
+- [x] Accept only reviewed Codex 0.159.3 and 0.160.0; keep every other version fail-closed.
+- [x] Exercise both reviewed versions through doctor fixtures and the unchanged real adapter argument boundary without provider transport.
+- [ ] Re-run the product workflow from a host context where the existing macOS Seatbelt boundary initializes; this managed session adds no live inference evidence.
+
+## Provider schema compatibility correction
+
+- [x] Retain the bounded live preflight failure from executable `d86b61c`: Claude 2.1.220 rejected the Draft 2020-12 metaschema URI before returning any model event.
+- [x] Remove the remote metaschema declaration while keeping the strict provider-portable schema vocabulary and unchanged deterministic controller validation.
+- [x] Classify provider schema rejection as `invalid_request` and show an actionable controller/provider compatibility next action instead of generic planning failure.
+- [x] Add behavioral coverage for the schema shape, real adapter argument, error classification, product status and immutable failed evidence.
+- [ ] Live-validate the corrected schema and remaining product stages against a committed executable under a new bounded attempt; the failed `d86b61c` launch does not validate later code.
+
+## Claude structured-output protocol correction
+
+- [x] Retain the fresh `638e67c` live failure: Claude accepted the schema, advertised only `StructuredOutput`, and AgentKit stopped it as an unexpected tool before inference.
+- [x] Allow exactly Claude `StructuredOutput` only when the validated execution request contains an output schema; keep every action tool and MCP surface denied.
+- [x] Preserve the monitor's `unexpected_tools` cause when a provider terminal error follows controller termination.
+- [x] Add transport-level regressions for schema-bound success, schema-absent rejection and original stop-reason preservation.
+- [ ] Run a new bounded live workflow only against the committed correction; neither zero-token failed launch validates the corrected executable.

@@ -8,7 +8,8 @@ from dataclasses import asdict, dataclass
 import hashlib
 import json
 import re
-from pathlib import PurePosixPath
+import shlex
+from pathlib import Path, PurePosixPath
 
 
 SCHEMA_VERSION = 1
@@ -211,6 +212,42 @@ class RunView:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class ResultView:
+    task_id: str
+    status: str
+    summary: str
+    base_revision: str
+    head_revision: str
+    verification: tuple
+    browser_verification: tuple
+    review_findings: tuple
+    limitations: tuple
+    replay_commands: tuple
+    approval_recorded: bool = False
+    schema_version: int = SCHEMA_VERSION
+
+    def __post_init__(self):
+        if self.schema_version != SCHEMA_VERSION:
+            raise ValueError('unsupported result-view schema')
+        for name in ('task_id', 'status', 'summary', 'base_revision', 'head_revision'):
+            object.__setattr__(self, name, _text(getattr(self, name), name, 8192))
+        for name in ('verification', 'browser_verification', 'review_findings'):
+            value = getattr(self, name)
+            if not isinstance(value, tuple) or len(value) > 128 or any(
+                    not isinstance(item, dict) for item in value):
+                raise ValueError(name + ' must be bounded records')
+        object.__setattr__(self, 'limitations', _strings(
+            self.limitations, 'limitations', empty=True, maximum=64))
+        object.__setattr__(self, 'replay_commands', _strings(
+            self.replay_commands, 'replay commands', empty=True, maximum=16))
+        if self.approval_recorded is not False:
+            raise ValueError('result view cannot record publication approval')
+
+    def to_dict(self):
+        return asdict(self)
+
+
 def guided_intake(request, inventory, *, workflow_kind):
     """Produce a conservative draft from a request and controller inventory."""
     request = _text(request, 'request', 32768)
@@ -258,6 +295,68 @@ def run_view(status, task, *, workflow_kind, last_activity=None):
         last_activity, task.get('head_revision'), status.get('current_failure'), coverage,
         status.get('budget', {}).get('usage_reporting') or {}, next_actions,
         bool(status.get('attention') or status.get('blocker')))
+
+
+def result_view(package, status, *, replay_commands=()):
+    """Validate and project an exact-candidate local package for human review."""
+    if not isinstance(package, dict) or not isinstance(status, dict):
+        raise ValueError('authoritative package and status are required')
+    approval = package.get('approval')
+    if (package.get('status') != 'awaiting_pr_approval' or
+            not isinstance(approval, dict) or approval.get('recorded') is not False or
+            status.get('state') != 'awaiting_pr_approval' or
+            package.get('task_id') != status.get('task_id')):
+        raise ValueError('result requires an unapproved review-ready package')
+    candidate = status.get('candidate') or {}
+    status_head = candidate.get('head_revision')
+    if status_head is not None and status_head != package.get('head_revision'):
+        raise ValueError('result package is stale for the current candidate')
+    verification = tuple(package.get('verification') or ())
+    browser = tuple(package.get('browser_verification') or ())
+    findings = tuple(package.get('review_findings') or ())
+    if any(item.get('revision') != package.get('head_revision') or item.get('stale')
+           for item in verification + browser if isinstance(item, dict)):
+        raise ValueError('result contains stale or wrong-revision quality evidence')
+    return ResultView(
+        package['task_id'], package['status'], package.get('summary') or package.get('why', [''])[0],
+        package['base_revision'], package['head_revision'], verification, browser, findings,
+        tuple(package.get('limitations') or ()), tuple(replay_commands), False)
+
+
+def open_workflow_view(root, task_id, *, workflow_kind):
+    """Reconnect read-only to a supported durable workflow and project its state."""
+    root = Path(root).resolve()
+    if workflow_kind == 'static-product':
+        from .product import ProductWorkflow
+        workflow = ProductWorkflow(root)
+    elif workflow_kind == 'fixture':
+        from .orchestration import Phase4Workflow
+        workflow = Phase4Workflow(root)
+    else:
+        raise ValueError('workflow kind has no unified durable facade')
+    task = workflow.store.task(task_id)
+    status = workflow.status(task_id)
+    return workflow, run_view(status, task, workflow_kind=workflow_kind)
+
+
+def open_result_view(root, task_id, *, workflow_kind):
+    workflow, _ = open_workflow_view(root, task_id, workflow_kind=workflow_kind)
+    task = workflow.store.task(task_id)
+    package = workflow.result(task_id).get('approval_package')
+    if package is None:
+        raise ValueError('workflow has no local approval package')
+    identity = workflow._candidate_identity(task_id)
+    if (identity['revision'] != task.get('head_revision') or not identity['clean'] or
+            identity['revision'] != package.get('head_revision')):
+        raise ValueError('actual candidate is dirty or differs from the package')
+    status = workflow.status(task_id)
+    status = dict(status, candidate={
+        'branch': identity['branch'], 'base_revision': task['base_revision'],
+        'head_revision': identity['revision']})
+    replay = (shlex.join(('python3', '-m', 'agentkit', 'workflow', 'status', '--root',
+                          str(Path(root).resolve()), '--task-id', task_id, '--kind',
+                          workflow_kind)),)
+    return result_view(package, status, replay_commands=replay)
 
 
 def refinement_decision(*, prior_revision, current_revision, requested_paths, allowed_paths,

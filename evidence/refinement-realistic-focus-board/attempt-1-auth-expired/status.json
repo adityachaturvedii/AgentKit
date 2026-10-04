@@ -1,0 +1,27 @@
+{
+  "approval_package": null,
+  "executions": [
+    {
+      "allocation_seconds": 300.0,
+      "effort": null,
+      "elapsed_seconds": 3.213868,
+      "engine": "claude",
+      "execution_id": "d1f6a17c-8312-4866-bde6-45a929f7287b",
+      "finished_at": "2026-10-02T05:30:16.566224+00:00",
+      "model": null,
+      "pid": 90830,
+      "process_token": "phase4-controller-supervised:90830:0d76604402b64cd6a3f0e40bbd34ccb0",
+      "reconciliation_note": null,
+      "result_json": "{\"artifacts\":{\"request.json\":\"c0fbc345e4f475dda10bed7f728d148ba562b3c70f4544bb449ff507aa952ce4\",\"stderr.redacted.txt\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\",\"stdout.redacted.jsonl\":\"4b69c46be4edaf9c7fdf7262dd31f7d04b5054e3cd46c371b9a5bc9c6eac5d47\"},\"authentication_failure\":\"missing\",\"error_class\":\"authentication\",\"limitations\":[\"Provider events and final text are claims; fixture acceptance is independently computed.\",\"Usage counts are provider-reported. Missing fields stay null. Cost estimates are not billing.\",\"Process groups cannot prove detached-descendant or remote cancellation.\",\"Whole-process guard denies global writes; parent provider network and auth access remain available.\",\"Tool-enabled execution is unsupported. Tool disabling is not OS credential isolation.\",\"No API keys, paid-mode fallback, purchase or billing-setting change is performed. Stop on reported limits; no controller retry.\"],\"proposal_document\":null,\"provider_reported_configuration\":{\"effort\":null,\"model\":\"claude-opus-5[1m]\"},\"requested_configuration\":{\"effort\":null,\"model\":null},\"resource_resolution\":{\"generated_output_tokens\":{\"classification\":\"observable-only\",\"rationale\":\"Unset: provider behavior and effective ceiling are unknown.\",\"source\":\"provider-default\",\"value\":null},\"max_capture_bytes\":{\"classification\":\"enforced\",\"rationale\":\"Controller transport capture bound; not a generated-token limit.\",\"source\":\"task-override\",\"value\":1048576},\"timeout_seconds\":{\"classification\":\"enforced\",\"rationale\":\"Controller wall-clock process deadline.\",\"source\":\"task-override\",\"value\":300.0}}}",
+      "role": "planning",
+      "started_at": "2026-10-02T05:30:12.333677+00:00",
+      "status": "failed",
+      "task_id": "focus-board-realistic",
+      "usage_json": "{\"billed_cost_usd\":null,\"cache_creation_tokens\":0,\"cached_input_tokens\":0,\"estimated_cost_usd\":0,\"input_tokens\":0,\"output_tokens\":0,\"reasoning_tokens\":null,\"source\":\"claude.result\"}"
+    }
+  ],
+  "next_action": "inspect bounded product planning failure",
+  "stage": "planning",
+  "state": "blocked",
+  "task_id": "focus-board-realistic"
+}
