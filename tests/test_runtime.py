@@ -2,9 +2,11 @@ import json
 import os
 from pathlib import Path
 import signal
+import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -12,7 +14,7 @@ from agentkit.adapters import (ADAPTERS, effective_allowed_tools, execute,
                                execute_owned_code, normalize, persist_result, stop_on_limit,
                                structured_json_text)
 from agentkit.doctor import auth_summary, clean_environment, detect_engine, owned_code_profile
-from agentkit.process import ProcessOutcome, run_process
+from agentkit.process import ProcessOutcome, group_exists, run_process
 from agentkit.redaction import redact, redacted_stream
 from agentkit.runtime_contracts import (Capability, CancellationStatus, EngineCapabilities,
                                         ExecutionBoundary, ExecutionRequest, LivePolicy)
@@ -148,9 +150,20 @@ class RuntimeTests(unittest.TestCase):
         self.assertTrue(out.cancellation.kill_sent)
         self.assertTrue(out.cancellation.leader_reaped)
         self.assertTrue(out.cancellation.process_group_gone)
-        pid = int((self.root / 'child.pid').read_text())
-        with self.assertRaises(ProcessLookupError):
+        self.assertProcessExited(int((self.root / 'child.pid').read_text()))
+
+    def assertProcessExited(self, pid):
+        """An exit record still answers signal probing until its parent reaps it."""
+        try:
             os.kill(pid, 0)
+        except ProcessLookupError:
+            return
+        try:
+            with open('/proc/%d/stat' % pid, 'rb') as handle:
+                state = handle.read().rpartition(b')')[2].split()[0]
+        except OSError:
+            return
+        self.assertEqual(state, b'Z', 'process %d is still running' % pid)
 
     def test_normal_leader_exit_still_cleans_child(self):
         out = self.fixture('claude', 'orphan')
@@ -523,6 +536,8 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(result.provider_details['observed_retry_events'], 2)
         self.assertEqual(result.provider_details['reported_turns'], 1)
 
+    @unittest.skipUnless(sys.platform == 'darwin',
+                         'the managed launch wraps the tested macOS Seatbelt profile')
     def test_managed_adapter_pipeline_with_fake_subscription_cli(self):
         from agentkit.doctor import COMPATIBLE, REQUIRED
         for engine in ADAPTERS:
@@ -556,6 +571,28 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(launch['provider_limit_environment']
                              ['CLAUDE_CODE_MAX_OUTPUT_TOKENS'],
                              'set' if engine == 'claude' else 'unset')
+
+
+class ProcessGroupLivenessTests(unittest.TestCase):
+    """An exited-but-unreaped member is contained, not an outstanding process."""
+
+    @unittest.skipUnless(os.path.isdir('/proc'), 'requires a procfs host')
+    def test_unreaped_exited_group_member_is_not_reported_live(self):
+        process = subprocess.Popen([sys.executable, '-c', 'pass'], start_new_session=True)
+        try:
+            for _ in range(200):
+                if os.path.exists('/proc/%d/stat' % process.pid):
+                    with open('/proc/%d/stat' % process.pid, 'rb') as handle:
+                        if handle.read().rpartition(b')')[2].split()[0] == b'Z':
+                            break
+                time.sleep(0.01)
+            else:
+                self.skipTest('the child was reaped before it could be observed')
+            os.killpg(process.pid, 0)  # Still addressable by signal probing.
+            self.assertFalse(group_exists(process.pid))
+        finally:
+            process.wait(timeout=5)
+        self.assertFalse(group_exists(process.pid))
 
 
 if __name__ == '__main__':
